@@ -5,6 +5,8 @@ Picocomputer 6502 (RP6502), created by Rumbledethumps. Learn about the
 computer and its SDK at:
     https://picocomputer.github.io/
 
+For the current port status and next steps, see NEXT_STEPS.md.
+
 NetHack 3.6 is an enhancement to the dungeon exploration game NetHack,
 which is a distant descendent of Rogue and Hack, and a direct descendent of
 NetHack 3.4 as there was no NetHack 3.5 release.
