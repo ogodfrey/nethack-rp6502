@@ -592,7 +592,7 @@ newgame()
     context.tribute.tributesz = sizeof(struct tribute_info);
 
     for (i = LOW_PM; i < NUMMONS; i++)
-        mvitals[i].mvflags = mons[i].geno & G_NOCORPSE;
+        mvitals[i].mvflags = pm_get(&mons[i])->geno & G_NOCORPSE;
 
     init_objects(); /* must be before u_init() */
 
