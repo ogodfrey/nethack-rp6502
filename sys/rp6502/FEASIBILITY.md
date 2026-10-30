@@ -195,8 +195,49 @@ save/restore, and recovery of a game cut off by a reset (`SELF_RECOVER`) all wor
   (DECgraphics and color by default).
 * `sys/rp6502/sources.txt` — the module list shared by the host script and CMake.
 
-Still to do for milestone 2: compile for the target with llvm-mos. Known gap: the screen
+All 114 game modules compile for the target with llvm-mos (`extralev.c` only needs a
+static named `r` renamed before its assembly can be re-parsed). Known gap: the screen
 size is fixed at 80x24.
+
+Milestone 3 status (overlay toolchain):
+
+* Code size, llvm-mos, no LTO: 2.72 MB of text at `-Os`. `-Oz -fno-inline` is ~9%
+  smaller and keeps single-caller statics out of line (`sp_level_coder` 80 KB → 13 KB),
+  so it is now the target setting. ~2,950 functions, average ~0.9 KB; about 35 are
+  still over 8 KB and a handful over 12 KB (`hmon_hitmon`, `sp_level_coder`, ...) and
+  will need splitting to fit a slot. Much of the size is register spills to the soft
+  stack.
+* `include/rp6502mac.h` turns the property and vision macros (`Blind`, `canseemon`,
+  `Levitation`, ...) into out-of-line `rpm_*` functions (`sys/rp6502/rp6502mac.c`);
+  this cut 30–70% of the code of the combat and movement modules.
+* Overlays (`sys/rp6502/ovl/`, `sys/rp6502/tools/ovlpack.py`): the packer splits the
+  compiler's assembly into functions and rewrites it into a resident program plus
+  relocatable overlays in a ROM asset. A cross-overlay call is `jsr __ovl_far` followed by
+  the XRAM address of a 3-byte descriptor (overlay, entry); only functions whose address
+  is taken get a resident 5-byte thunk. Slots are page aligned and loaded from
+  `ROM:<file>` with a list of high-byte relocations. The overlay stack pins the slots of
+  callers; a caller evicted anyway is reloaded on return. The test program in
+  `sys/rp6502/ovl/test` (jump tables, varargs, function pointers through `qsort`,
+  static stacks, tail calls) gives the host output on the emulator with 2 slots and with
+  1 slot (2,511 loads).
+* Profiling: `PROFILE=1 hostbuild.sh` instruments the host build; `autoplay.py` plays
+  games and `cgreport.py` turns the counts into a call graph for packing.
+
+Data (bytes, llvm-mos): data 41 KB and bss 68 KB before any diet. Largest: `mons`
+20.6 K, `level` 16.8 K (`levl` 10 K + two 3.4 K pointer grids), `objects` 11.8 K, `rooms`
+5.2 K, `gbuf` 5 K, vision tables 3.4 K + 3 × 1.7 K, `obufs` 3 K. RAM must also hold the
+heap (objects and monsters of the level), the soft stack, resident code and the slots, so
+`mons[]` and `objects[]` move to XRAM:
+
+* The tables keep their byte layout in XRAM, and `mons`/`objects` get link-time
+  addresses with no RAM behind them, so pointers into them still compare, subtract and
+  index as before; a field is at XRAM `(uintptr_t) p + offsetof(field)`.
+* Field accesses become accessor macros (plain member accesses in the host build).
+  `sys/rp6502/tools/farscan.py` (libclang) finds them by type: 2,492 `permonst`
+  accesses (71% inside `mondata.h` macros, 11 writes) and 1,153 `objclass` accesses
+  (59% in macros, 42 writes, mostly discovery state). Only 10 sites need hand work:
+  `mattk` used as a pointer (2), whole-struct copies of `objects[]` in `objnam.c` (6) and
+  the save/restore of `objects[]` in `o_init.c` (2).
 
 ## 8. Reproducing the measurements
 

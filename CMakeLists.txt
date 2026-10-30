@@ -41,4 +41,8 @@ if(DEFINED LLVM_MOS_PLATFORM)
     add_dependencies(nethack_objs nethack_gen)
     target_include_directories(nethack_objs PRIVATE ${NH_GEN}/include include)
     target_compile_definitions(nethack_objs PRIVATE RP6502)
+    # -Oz -fno-inline is ~9% smaller than -Os and keeps single-caller statics
+    # out of line, so no function is too big for an overlay slot.
+    target_compile_options(nethack_objs PRIVATE -Oz -fno-inline -fno-lto
+        -ffunction-sections -fdata-sections)
 endif()
