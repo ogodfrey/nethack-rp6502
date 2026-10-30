@@ -295,7 +295,7 @@ struct obj *obj; /* item to make known if effect can be seen */
         mon->mspeed = mon->permspeed;
 
     /* no message if monster is immobile (temp or perm) or unseen */
-    if (give_msg && (mon->mspeed != oldspeed || petrify) && mon->data->mmove
+    if (give_msg && (mon->mspeed != oldspeed || petrify) && pm_get(mon->data)->mmove
         && !(mon->mfrozen || mon->msleeping) && canseemon(mon)) {
         /* fast to slow (skipping intermediate state) or vice versa */
         const char *howmuch =
@@ -481,7 +481,7 @@ boolean creation;
     /* give mummies a chance to wear their wrappings
      * and let skeletons wear their initial armor */
     if (mindless(mon->data)
-        && (!creation || (mon->data->mlet != S_MUMMY
+        && (!creation || (pm_get(mon->data)->mlet != S_MUMMY
                           && mon->data != &mons[PM_SKELETON])))
         return;
 
@@ -491,13 +491,13 @@ boolean creation;
         m_dowear_type(mon, W_ARMU, creation, FALSE);
     /* treating small as a special case allows
        hobbits, gnomes, and kobolds to wear cloaks */
-    if (!cantweararm(mon->data) || mon->data->msize == MZ_SMALL)
+    if (!cantweararm(mon->data) || pm_get(mon->data)->msize == MZ_SMALL)
         m_dowear_type(mon, W_ARMC, creation, FALSE);
     m_dowear_type(mon, W_ARMH, creation, FALSE);
     if (!MON_WEP(mon) || !bimanual(MON_WEP(mon)))
         m_dowear_type(mon, W_ARMS, creation, FALSE);
     m_dowear_type(mon, W_ARMG, creation, FALSE);
-    if (!slithy(mon->data) && mon->data->mlet != S_CENTAUR)
+    if (!slithy(mon->data) && pm_get(mon->data)->mlet != S_CENTAUR)
         m_dowear_type(mon, W_ARMF, creation, FALSE);
     if (!cantweararm(mon->data))
         m_dowear_type(mon, W_ARM, creation, FALSE);
@@ -947,7 +947,7 @@ boolean polyspot;
             m_lose_armor(mon, otmp);
         }
     }
-    if (handless_or_tiny || slithy(mdat) || mdat->mlet == S_CENTAUR) {
+    if (handless_or_tiny || slithy(mdat) || pm_get(mdat)->mlet == S_CENTAUR) {
         if ((otmp = which_armor(mon, W_ARMF)) != 0) {
             if (vis) {
                 if (is_whirly(mon->data))
@@ -978,7 +978,7 @@ boolean polyspot;
             char buf[BUFSZ];
 
             You("touch %s.", mon_nam(u.usteed));
-            Sprintf(buf, "falling off %s", an(u.usteed->data->mname));
+            Sprintf(buf, "falling off %s", an(pm_get(u.usteed->data)->mname));
             instapetrify(buf);
         }
         dismount_steed(DISMOUNT_FELL);

@@ -332,7 +332,7 @@ struct monst *mtmp;
     struct trap *t;
     int x = mtmp->mx, y = mtmp->my;
     boolean stuck = (mtmp == u.ustuck);
-    boolean immobile = (mtmp->data->mmove == 0);
+    boolean immobile = (pm_get(mtmp->data)->mmove == 0);
     int fraction;
 
     if (is_animal(mtmp->data) || mindless(mtmp->data))
@@ -1016,11 +1016,11 @@ rnd_defensive_item(mtmp)
 struct monst *mtmp;
 {
     struct permonst *pm = mtmp->data;
-    int difficulty = mons[(monsndx(pm))].difficulty;
+    int difficulty = pm_get(&mons[(monsndx(pm))])->difficulty;
     int trycnt = 0;
 
     if (is_animal(pm) || attacktype(pm, AT_EXPL) || mindless(mtmp->data)
-        || pm->mlet == S_GHOST || pm->mlet == S_KOP)
+        || pm_get(pm)->mlet == S_GHOST || pm_get(pm)->mlet == S_KOP)
         return 0;
  try_again:
     switch (rn2(8 + (difficulty > 3) + (difficulty > 6) + (difficulty > 8))) {
@@ -1574,10 +1574,10 @@ rnd_offensive_item(mtmp)
 struct monst *mtmp;
 {
     struct permonst *pm = mtmp->data;
-    int difficulty = mons[(monsndx(pm))].difficulty;
+    int difficulty = pm_get(&mons[(monsndx(pm))])->difficulty;
 
     if (is_animal(pm) || attacktype(pm, AT_EXPL) || mindless(mtmp->data)
-        || pm->mlet == S_GHOST || pm->mlet == S_KOP)
+        || pm_get(pm)->mlet == S_GHOST || pm_get(pm)->mlet == S_KOP)
         return 0;
     if (difficulty > 7 && !rn2(35))
         return WAN_DEATH;
@@ -1636,7 +1636,7 @@ struct monst *mtmp;
     int x = mtmp->mx, y = mtmp->my;
     struct trap *t;
     int xx, yy, pmidx = NON_PM;
-    boolean immobile = (mdat->mmove == 0);
+    boolean immobile = (pm_get(mdat)->mmove == 0);
     boolean stuck = (mtmp == u.ustuck);
 
     m.misc = (struct obj *) 0;
@@ -1654,7 +1654,7 @@ struct monst *mtmp;
         return FALSE;
 
     if (!stuck && !immobile && (mtmp->cham == NON_PM)
-        && mons[(pmidx = monsndx(mdat))].difficulty < 6) {
+        && pm_get(&mons[(pmidx = monsndx(mdat))])->difficulty < 6) {
         boolean ignore_boulders = (verysmall(mdat) || throws_rocks(mdat)
                                    || passes_walls(mdat)),
             diag_ok = !NODIAG(pmidx);
@@ -1740,13 +1740,13 @@ struct monst *mtmp;
         }
         nomore(MUSE_WAN_POLYMORPH);
         if (obj->otyp == WAN_POLYMORPH && obj->spe > 0
-            && (mtmp->cham == NON_PM) && mons[monsndx(mdat)].difficulty < 6) {
+            && (mtmp->cham == NON_PM) && pm_get(&mons[monsndx(mdat)])->difficulty < 6) {
             m.misc = obj;
             m.has_misc = MUSE_WAN_POLYMORPH;
         }
         nomore(MUSE_POT_POLYMORPH);
         if (obj->otyp == POT_POLYMORPH && (mtmp->cham == NON_PM)
-            && mons[monsndx(mdat)].difficulty < 6) {
+            && pm_get(&mons[monsndx(mdat)])->difficulty < 6) {
             m.misc = obj;
             m.has_misc = MUSE_POT_POLYMORPH;
         }
@@ -2014,10 +2014,10 @@ rnd_misc_item(mtmp)
 struct monst *mtmp;
 {
     struct permonst *pm = mtmp->data;
-    int difficulty = mons[(monsndx(pm))].difficulty;
+    int difficulty = pm_get(&mons[(monsndx(pm))])->difficulty;
 
     if (is_animal(pm) || attacktype(pm, AT_EXPL) || mindless(mtmp->data)
-        || pm->mlet == S_GHOST || pm->mlet == S_KOP)
+        || pm_get(pm)->mlet == S_GHOST || pm_get(pm)->mlet == S_KOP)
         return 0;
     /* Unlike other rnd_item functions, we only allow _weak_ monsters
      * to have this item; after all, the item will be used to strengthen
@@ -2069,7 +2069,7 @@ struct obj *obj;
         if (typ == WAN_DIGGING)
             return (boolean) !is_floater(mon->data);
         if (typ == WAN_POLYMORPH)
-            return (boolean) (mons[monsndx(mon->data)].difficulty < 6);
+            return (boolean) (pm_get(&mons[monsndx(mon->data)])->difficulty < 6);
         if (objects[typ].oc_dir == RAY || typ == WAN_STRIKING
             || typ == WAN_TELEPORTATION || typ == WAN_CREATE_MONSTER)
             return TRUE;
@@ -2407,7 +2407,7 @@ boolean by_you;
                 return muse_unslime(mon, obj, (struct trap *) 0, by_you);
 
         if (((t = t_at(mon->mx, mon->my)) == 0 || t->ttyp != FIRE_TRAP)
-            && mptr->mmove && !mon->mtrapped) {
+            && pm_get(mptr)->mmove && !mon->mtrapped) {
             int xy[2][8], x, y, idx, ridx, nxy = 0;
 
             for (x = mon->mx - 1; x <= mon->mx + 1; ++x)
@@ -2580,10 +2580,10 @@ struct monst *mon;
         return FALSE;
 #ifdef TEXTCOLOR
     if (iflags.use_color)
-        return (ptr->mcolor == CLR_GREEN || ptr->mcolor == CLR_BRIGHT_GREEN);
+        return (pm_get(ptr)->mcolor == CLR_GREEN || pm_get(ptr)->mcolor == CLR_BRIGHT_GREEN);
 #endif
     /* approximation */
-    if (strstri(ptr->mname, "green"))
+    if (strstri(pm_get(ptr)->mname, "green"))
         return TRUE;
     switch (monsndx(ptr)) {
     case PM_FOREST_CENTAUR:

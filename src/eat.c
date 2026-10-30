@@ -316,7 +316,7 @@ STATIC_OVL unsigned
 obj_nutrition(otmp)
 struct obj *otmp;
 {
-    unsigned nut = (otmp->otyp == CORPSE) ? mons[otmp->corpsenm].cnutrit
+    unsigned nut = (otmp->otyp == CORPSE) ? pm_get(&mons[otmp->corpsenm])->cnutrit
                       : otmp->globby ? otmp->owt
                          : (unsigned) objects[otmp->otyp].oc_nutrition;
 
@@ -522,7 +522,7 @@ int *dmg_p; /* for dishing out extra damage in lieu of Int loss */
            tentacle-touch should have been caught before reaching this far) */
         if (magr == &youmonst) {
             if (!Stone_resistance && !Stoned)
-                make_stoned(5L, (char *) 0, KILLED_BY_AN, pd->mname);
+                make_stoned(5L, (char *) 0, KILLED_BY_AN, pm_get(pd)->mname);
         } else {
             /* no need to check for poly_when_stoned or Stone_resistance;
                mind flayers don't have those capabilities */
@@ -552,7 +552,7 @@ int *dmg_p; /* for dishing out extra damage in lieu of Int loss */
             return MM_MISS;
         } else if (is_rider(pd)) {
             pline("Ingesting that is fatal.");
-            Sprintf(killer.name, "unwisely ate the brain of %s", pd->mname);
+            Sprintf(killer.name, "unwisely ate the brain of %s", pm_get(pd)->mname);
             killer.format = NO_KILLER_PREFIX;
             done(DIED);
             /* life-saving needed to reach here */
@@ -682,7 +682,7 @@ register int pm;
         if (!Stone_resistance
             && !(poly_when_stoned(youmonst.data)
                  && polymon(PM_STONE_GOLEM))) {
-            Sprintf(killer.name, "tasting %s meat", mons[pm].mname);
+            Sprintf(killer.name, "tasting %s meat", pm_get(&mons[pm])->mname);
             killer.format = KILLED_BY;
             You("turn to stone.");
             done(STONING);
@@ -701,7 +701,7 @@ register int pm;
     case PM_LARGE_CAT:
         /* cannibals are allowed to eat domestic animals without penalty */
         if (!CANNIBAL_ALLOWED()) {
-            You_feel("that eating the %s was a bad idea.", mons[pm].mname);
+            You_feel("that eating the %s was a bad idea.", pm_get(&mons[pm])->mname);
             HAggravate_monster |= FROMOUTSIDE;
         }
         break;
@@ -713,7 +713,7 @@ register int pm;
     case PM_PESTILENCE:
     case PM_FAMINE: {
         pline("Eating that is instantly fatal.");
-        Sprintf(killer.name, "unwisely ate the body of %s", mons[pm].mname);
+        Sprintf(killer.name, "unwisely ate the body of %s", pm_get(&mons[pm])->mname);
         killer.format = NO_KILLER_PREFIX;
         done(DIED);
         /* life-saving needed to reach here */
@@ -782,27 +782,27 @@ register struct permonst *ptr;
 #endif
     switch (type) {
     case FIRE_RES:
-        res = (ptr->mconveys & MR_FIRE) != 0;
+        res = (pm_get(ptr)->mconveys & MR_FIRE) != 0;
         ifdebugresist("can get fire resistance");
         break;
     case SLEEP_RES:
-        res = (ptr->mconveys & MR_SLEEP) != 0;
+        res = (pm_get(ptr)->mconveys & MR_SLEEP) != 0;
         ifdebugresist("can get sleep resistance");
         break;
     case COLD_RES:
-        res = (ptr->mconveys & MR_COLD) != 0;
+        res = (pm_get(ptr)->mconveys & MR_COLD) != 0;
         ifdebugresist("can get cold resistance");
         break;
     case DISINT_RES:
-        res = (ptr->mconveys & MR_DISINT) != 0;
+        res = (pm_get(ptr)->mconveys & MR_DISINT) != 0;
         ifdebugresist("can get disintegration resistance");
         break;
     case SHOCK_RES: /* shock (electricity) resistance */
-        res = (ptr->mconveys & MR_ELEC) != 0;
+        res = (pm_get(ptr)->mconveys & MR_ELEC) != 0;
         ifdebugresist("can get shock resistance");
         break;
     case POISON_RES:
-        res = (ptr->mconveys & MR_POISON) != 0;
+        res = (pm_get(ptr)->mconveys & MR_POISON) != 0;
         ifdebugresist("can get poison resistance");
         break;
     case TELEPORT:
@@ -859,7 +859,7 @@ register struct permonst *ptr;
         break;
     }
 
-    if (ptr->mlevel <= rn2(chance))
+    if (pm_get(ptr)->mlevel <= rn2(chance))
         return; /* failed die roll */
 
     switch (type) {
@@ -1021,7 +1021,7 @@ int pm;
         /*FALLTHRU*/
     case PM_SMALL_MIMIC:
         tmp += 20;
-        if (youmonst.data->mlet != S_MIMIC && !Unchanging) {
+        if (pm_get(youmonst.data)->mlet != S_MIMIC && !Unchanging) {
             char buf[BUFSZ];
 
             u.uconduct.polyselfs++; /* you're changing form */
@@ -1036,7 +1036,7 @@ int pm;
                     Hallucination
                        ? "You suddenly dread being peeled and mimic %s again!"
                        : "You now prefer mimicking %s again.",
-                    an(Upolyd ? youmonst.data->mname : urace.noun));
+                    an(Upolyd ? pm_get(youmonst.data)->mname : urace.noun));
             eatmbuf = dupstr(buf);
             nomovemsg = eatmbuf;
             afternmv = eatmdone;
@@ -1237,9 +1237,9 @@ char *buf;
                 Strcpy(eos(buf), " of ");
             }
             if (vegetarian(&mons[mnum]))
-                Sprintf(eos(buf), "%s", mons[mnum].mname);
+                Sprintf(eos(buf), "%s", pm_get(&mons[mnum])->mname);
             else
-                Sprintf(eos(buf), "%s meat", mons[mnum].mname);
+                Sprintf(eos(buf), "%s meat", pm_get(&mons[mnum])->mname);
         }
     }
 }
@@ -1333,7 +1333,7 @@ const char *mesg;
         } else if (Hallucination) {
             what = rndmonnam(NULL);
         } else {
-            what = mons[mnum].mname;
+            what = pm_get(&mons[mnum])->mname;
             if (the_unique_pm(&mons[mnum]))
                 which = 2;
             else if (type_is_pname(&mons[mnum]))
@@ -1360,7 +1360,7 @@ const char *mesg;
         context.victual.fullwarn = context.victual.eating =
             context.victual.doreset = FALSE;
 
-        You("consume %s %s.", tintxts[r].txt, mons[mnum].mname);
+        You("consume %s %s.", tintxts[r].txt, pm_get(&mons[mnum])->mname);
 
         eating_conducts(&mons[mnum]);
 
@@ -1617,7 +1617,7 @@ struct obj *otmp;
         boolean cannibal = maybe_cannibal(mnum, FALSE);
 
         pline("Ulch - that %s was tainted%s!",
-              (mons[mnum].mlet == S_FUNGUS) ? "fungoid vegetation"
+              (pm_get(&mons[mnum])->mlet == S_FUNGUS) ? "fungoid vegetation"
                   : glob ? "glob"
                       : vegetarian(&mons[mnum]) ? "protoplasm"
                           : "meat",
@@ -1663,7 +1663,7 @@ struct obj *otmp;
     }
 
     /* delay is weight dependent */
-    context.victual.reqtime = 3 + ((!glob ? mons[mnum].cwt : otmp->owt) >> 6);
+    context.victual.reqtime = 3 + ((!glob ? pm_get(&mons[mnum])->cwt : otmp->owt) >> 6);
 
     if (!tp && !nonrotting_corpse(mnum) && (otmp->orotten || !rn2(7))) {
         if (rottenfood(otmp)) {
@@ -1672,7 +1672,7 @@ struct obj *otmp;
             retcode = 1;
         }
 
-        if (!mons[otmp->corpsenm].cnutrit) {
+        if (!pm_get(&mons[otmp->corpsenm])->cnutrit) {
             /* no nutrition: rots away, no message if you passed out */
             if (!retcode)
                 pline_The("corpse rots away completely.");
@@ -2236,7 +2236,7 @@ struct obj *otmp;
                      && polymon(PM_STONE_GOLEM))) {
                 if (!Stoned) {
                     Sprintf(killer.name, "%s egg",
-                            mons[otmp->corpsenm].mname);
+                            pm_get(&mons[otmp->corpsenm])->mname);
                     make_stoned(5L, (char *) 0, KILLED_BY_AN, killer.name);
                 }
             }

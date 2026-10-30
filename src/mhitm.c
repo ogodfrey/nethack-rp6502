@@ -321,7 +321,7 @@ register struct monst *magr, *mdef;
         newsym(mdef->mx, mdef->my);
         if (canseemon(mdef) && !sensemon(mdef)) {
             if (Unaware) {
-                boolean justone = (mdef->data->geno & G_UNIQ) != 0L;
+                boolean justone = (pm_get(mdef->data)->geno & G_UNIQ) != 0L;
                 const char *montype;
 
                 montype = noname_monnam(mdef, justone ? ARTICLE_THE
@@ -649,7 +649,7 @@ struct attack *mattk;
     char buf[BUFSZ];
 
     if (vis) {
-        if (mdef->data->mlet == S_MIMIC
+        if (pm_get(mdef->data)->mlet == S_MIMIC
             && M_AP_TYPE(mdef) != M_AP_NOTHING)
             seemimic(mdef);
         Sprintf(buf, "%s gazes at", Monnam(magr));
@@ -703,7 +703,7 @@ struct monst *magr, *mdef;
     int dx, dy;
 
     /* can't swallow something that's too big */
-    if (mdef->data->msize >= MZ_HUGE)
+    if (pm_get(mdef->data)->msize >= MZ_HUGE)
         return FALSE;
 
     /* (hypothetical) engulfers who can pass through walls aren't
@@ -1247,7 +1247,7 @@ register struct attack *mattk;
         if (!magr->mcan && !rn2(10)) {
             mdef->mcan = 1; /* cancelled regardless of lifesave */
             mdef->mstrategy &= ~STRAT_WAITFORU;
-            if (is_were(pd) && pd->mlet != S_HUMAN)
+            if (is_were(pd) && pm_get(pd)->mlet != S_HUMAN)
                 were_change(mdef);
             if (pd == &mons[PM_CLAY_GOLEM]) {
                 if (vis && canseemon(mdef)) {
@@ -1358,7 +1358,7 @@ register struct attack *mattk;
             if (DEADMONSTER(mdef))
                 return (MM_DEF_DIED
                         | (grow_up(magr, mdef) ? 0 : MM_AGR_DIED));
-            if (pa->mlet == S_NYMPH && !tele_restrict(magr)) {
+            if (pm_get(pa)->mlet == S_NYMPH && !tele_restrict(magr)) {
                 boolean couldspot = canspotmon(magr);
 
                 (void) rloc(magr, TRUE);
@@ -1593,18 +1593,18 @@ int mdead;
     for (i = 0;; i++) {
         if (i >= NATTK)
             return (mdead | mhit); /* no passive attacks */
-        if (mddat->mattk[i].aatyp == AT_NONE)
+        if (pm_get(mddat)->mattk[i].aatyp == AT_NONE)
             break;
     }
-    if (mddat->mattk[i].damn)
-        tmp = d((int) mddat->mattk[i].damn, (int) mddat->mattk[i].damd);
-    else if (mddat->mattk[i].damd)
-        tmp = d((int) mddat->mlevel + 1, (int) mddat->mattk[i].damd);
+    if (pm_get(mddat)->mattk[i].damn)
+        tmp = d((int) pm_get(mddat)->mattk[i].damn, (int) pm_get(mddat)->mattk[i].damd);
+    else if (pm_get(mddat)->mattk[i].damd)
+        tmp = d((int) pm_get(mddat)->mlevel + 1, (int) pm_get(mddat)->mattk[i].damd);
     else
         tmp = 0;
 
     /* These affect the enemy even if defender killed */
-    switch (mddat->mattk[i].adtyp) {
+    switch (pm_get(mddat)->mattk[i].adtyp) {
     case AD_ACID:
         if (mhit && !rn2(2)) {
             Strcpy(buf, Monnam(magr));
@@ -1637,7 +1637,7 @@ int mdead;
 
     /* These affect the enemy only if defender is still alive */
     if (rn2(3))
-        switch (mddat->mattk[i].adtyp) {
+        switch (pm_get(mddat)->mattk[i].adtyp) {
         case AD_PLYS: /* Floating eye */
             if (tmp > 127)
                 tmp = 127;
@@ -1727,7 +1727,7 @@ int mdead;
 
  assess_dmg:
     if ((magr->mhp -= tmp) <= 0) {
-        monkilled(magr, "", (int) mddat->mattk[i].adtyp);
+        monkilled(magr, "", (int) pm_get(mddat)->mattk[i].adtyp);
         return (mdead | mhit | MM_AGR_DIED);
     }
     return (mdead | mhit);

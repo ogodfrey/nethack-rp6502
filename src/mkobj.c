@@ -370,7 +370,7 @@ rndmonnum()
     do {
         i = rn1(SPECIAL_PM - LOW_PM, LOW_PM);
         ptr = &mons[i];
-    } while ((ptr->geno & excludeflags) != 0);
+    } while ((pm_get(ptr)->geno & excludeflags) != 0);
 
     return i;
 }
@@ -853,7 +853,7 @@ boolean artif;
                 else
                     for (tryct = 200; tryct > 0; --tryct) {
                         mndx = undead_to_corpse(rndmonnum());
-                        if (mons[mndx].cnutrit
+                        if (pm_get(&mons[mndx])->cnutrit
                             && !(mvitals[mndx].mvflags & G_NOCORPSE)) {
                             otmp->corpsenm = mndx;
                             set_tin_variety(otmp, RANDOM_TIN);
@@ -1210,7 +1210,7 @@ struct obj *body;
             if (!rn2(3))
                 break;
 
-    } else if (mons[body->corpsenm].mlet == S_TROLL && !body->norevive) {
+    } else if (pm_get(&mons[body->corpsenm])->mlet == S_TROLL && !body->norevive) {
         long age;
         for (age = 2; age <= TAINT_AGE; age++)
             if (!rn2(TROLL_REVIVE_CHANCE)) { /* troll revives */
@@ -1430,7 +1430,7 @@ register struct obj *obj;
         register int cwt = 0;
 
         if (obj->otyp == STATUE && obj->corpsenm >= LOW_PM)
-            wt = (int) obj->quan * ((int) mons[obj->corpsenm].cwt * 3 / 2);
+            wt = (int) obj->quan * ((int) pm_get(&mons[obj->corpsenm])->cwt * 3 / 2);
 
         for (contents = obj->cobj; contents; contents = contents->nobj)
             cwt += weight(contents);
@@ -1455,7 +1455,7 @@ register struct obj *obj;
         return wt + cwt;
     }
     if (obj->otyp == CORPSE && obj->corpsenm >= LOW_PM) {
-        long long_wt = obj->quan * (long) mons[obj->corpsenm].cwt;
+        long long_wt = obj->quan * (long) pm_get(&mons[obj->corpsenm])->cwt;
 
         wt = (long_wt > LARGEST_INT) ? LARGEST_INT : (int) long_wt;
         if (obj->oeaten)
@@ -1510,7 +1510,7 @@ int x, y;
    lizards and lichen don't rot, trolls and Riders auto-revive */
 #define special_corpse(num) \
     (((num) == PM_LIZARD || (num) == PM_LICHEN)                 \
-     || (mons[num].mlet == S_TROLL || is_rider(&mons[num])))
+     || (pm_get(&mons[num])->mlet == S_TROLL || is_rider(&mons[num])))
 
 /* mkcorpstat: make a corpse or statue; never returns Null.
  *

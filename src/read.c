@@ -1196,7 +1196,7 @@ struct obj *sobj; /* scroll, or fake spellbook object for scroll-like spell */
     } break;
     case SCR_CONFUSE_MONSTER:
     case SPE_CONFUSE_MONSTER:
-        if (youmonst.data->mlet != S_HUMAN || scursed) {
+        if (pm_get(youmonst.data)->mlet != S_HUMAN || scursed) {
             if (!HConfusion)
                 You_feel("confused.");
             make_confused(HConfusion + rnd(100), FALSE);
@@ -2054,11 +2054,11 @@ do_class_genocide()
 
         class = name_to_monclass(buf, (int *) 0);
         if (class == 0 && (i = name_to_mon(buf)) != NON_PM)
-            class = mons[i].mlet;
+            class = pm_get(&mons[i])->mlet;
         immunecnt = gonecnt = goodcnt = 0;
         for (i = LOW_PM; i < NUMMONS; i++) {
-            if (mons[i].mlet == class) {
-                if (!(mons[i].geno & G_GENO))
+            if (pm_get(&mons[i])->mlet == class) {
+                if (!(pm_get(&mons[i])->geno & G_GENO))
                     immunecnt++;
                 else if (mvitals[i].mvflags & G_GENOD)
                     gonecnt++;
@@ -2066,8 +2066,8 @@ do_class_genocide()
                     goodcnt++;
             }
         }
-        if (!goodcnt && class != mons[urole.malenum].mlet
-            && class != mons[urace.malenum].mlet) {
+        if (!goodcnt && class != pm_get(&mons[urole.malenum])->mlet
+            && class != pm_get(&mons[urace.malenum])->mlet) {
             if (gonecnt)
                 pline("All such monsters are already nonexistent.");
             else if (immunecnt || class == S_invisible)
@@ -2092,15 +2092,15 @@ do_class_genocide()
         }
 
         for (i = LOW_PM; i < NUMMONS; i++) {
-            if (mons[i].mlet == class) {
+            if (pm_get(&mons[i])->mlet == class) {
                 char nam[BUFSZ];
 
-                Strcpy(nam, makeplural(mons[i].mname));
+                Strcpy(nam, makeplural(pm_get(&mons[i])->mname));
                 /* Although "genus" is Latin for race, the hero benefits
                  * from both race and role; thus genocide affects either.
                  */
                 if (Your_Own_Role(i) || Your_Own_Race(i)
-                    || ((mons[i].geno & G_GENO)
+                    || ((pm_get(&mons[i])->geno & G_GENO)
                         && !(mvitals[i].mvflags & G_GENOD))) {
                     /* This check must be first since player monsters might
                      * have G_GENOD or !G_GENO.
@@ -2141,11 +2141,11 @@ do_class_genocide()
                 } else if (!gameover) {
                     /* suppress feedback about quest beings except
                        for those applicable to our own role */
-                    if ((mons[i].msound != MS_LEADER
+                    if ((pm_get(&mons[i])->msound != MS_LEADER
                          || quest_info(MS_LEADER) == i)
-                        && (mons[i].msound != MS_NEMESIS
+                        && (pm_get(&mons[i])->msound != MS_NEMESIS
                             || quest_info(MS_NEMESIS) == i)
-                        && (mons[i].msound != MS_GUARDIAN
+                        && (pm_get(&mons[i])->msound != MS_GUARDIAN
                             || quest_info(MS_GUARDIAN) == i)
                         /* non-leader/nemesis/guardian role-specific monster
                            */
@@ -2154,14 +2154,14 @@ do_class_genocide()
                         boolean named, uniq;
 
                         named = type_is_pname(&mons[i]) ? TRUE : FALSE;
-                        uniq = (mons[i].geno & G_UNIQ) ? TRUE : FALSE;
+                        uniq = (pm_get(&mons[i])->geno & G_UNIQ) ? TRUE : FALSE;
                         /* one special case */
                         if (i == PM_HIGH_PRIEST)
                             uniq = FALSE;
 
                         You("aren't permitted to genocide %s%s.",
                             (uniq && !named) ? "the " : "",
-                            (uniq || named) ? mons[i].mname : nam);
+                            (uniq || named) ? pm_get(&mons[i])->mname : nam);
                     }
                 }
             }
@@ -2196,7 +2196,7 @@ int how;
     if (how & PLAYER) {
         mndx = u.umonster; /* non-polymorphed mon num */
         ptr = &mons[mndx];
-        Strcpy(buf, ptr->mname);
+        Strcpy(buf, pm_get(ptr)->mname);
         killplayer++;
     } else {
         for (i = 0;; i++) {
@@ -2240,7 +2240,7 @@ int how;
             if (is_demon(ptr))
                 adjalign(sgn(u.ualign.type));
 
-            if (!(ptr->geno & G_GENO)) {
+            if (!(pm_get(ptr)->geno & G_GENO)) {
                 if (!Deaf) {
                     /* FIXME: unconditional "caverns" will be silly in some
                      * circumstances.  Who's speaking?  Divine pronouncements
@@ -2263,15 +2263,15 @@ int how;
     which = "all ";
     if (Hallucination) {
         if (Upolyd)
-            Strcpy(buf, youmonst.data->mname);
+            Strcpy(buf, pm_get(youmonst.data)->mname);
         else {
             Strcpy(buf, (flags.female && urole.name.f) ? urole.name.f
                                                        : urole.name.m);
             buf[0] = lowc(buf[0]);
         }
     } else {
-        Strcpy(buf, ptr->mname); /* make sure we have standard singular */
-        if ((ptr->geno & G_UNIQ) && ptr != &mons[PM_HIGH_PRIEST])
+        Strcpy(buf, pm_get(ptr)->mname); /* make sure we have standard singular */
+        if ((pm_get(ptr)->geno & G_UNIQ) && ptr != &mons[PM_HIGH_PRIEST])
             which = !type_is_pname(ptr) ? "the " : "";
     }
     if (how & REALLY) {
@@ -2321,7 +2321,7 @@ int how;
     } else {
         int cnt = 0, census = monster_census(FALSE);
 
-        if (!(mons[mndx].geno & G_UNIQ)
+        if (!(pm_get(&mons[mndx])->geno & G_UNIQ)
             && !(mvitals[mndx].mvflags & (G_GENOD | G_EXTINCT)))
             for (i = rn1(3, 4); i > 0; i--) {
                 if (!makemon(ptr, u.ux, u.uy, NO_MINVENT))
@@ -2536,7 +2536,7 @@ struct _create_particular_data *d;
             char buf[BUFSZ];
 
             Sprintf(buf, "Creating %s instead; force %s?",
-                    mons[d->which].mname, mons[firstchoice].mname);
+                    pm_get(&mons[d->which])->mname, pm_get(&mons[firstchoice])->mname);
             if (yn(buf) == 'y')
                 d->which = firstchoice;
         }
@@ -2579,9 +2579,9 @@ struct _create_particular_data *d;
                 unblock_point(mx, my);
         }
        if (d->hidden
-           && ((is_hider(mtmp->data) && mtmp->data->mlet != S_MIMIC)
+           && ((is_hider(mtmp->data) && pm_get(mtmp->data)->mlet != S_MIMIC)
                || (hides_under(mtmp->data) && OBJ_AT(mx, my))
-               || (mtmp->data->mlet == S_EEL && is_pool(mx, my))))
+               || (pm_get(mtmp->data)->mlet == S_EEL && is_pool(mx, my))))
             mtmp->mundetected = 1;
         if (d->sleeping)
             mtmp->msleeping = 1;

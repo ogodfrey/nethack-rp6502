@@ -128,7 +128,7 @@ dosounds()
         for (mtmp = fmon; mtmp; mtmp = mtmp->nmon) {
             if (DEADMONSTER(mtmp))
                 continue;
-            if ((mtmp->data->mlet == S_ANT && is_flyer(mtmp->data))
+            if ((pm_get(mtmp->data)->mlet == S_ANT && is_flyer(mtmp->data))
                 && mon_in_room(mtmp, BEEHIVE)) {
                 switch (rn2(2) + hallu) {
                 case 0:
@@ -183,8 +183,8 @@ dosounds()
                 continue;
             if (is_mercenary(mtmp->data)
 #if 0 /* don't bother excluding these */
-                && !strstri(mtmp->data->mname, "watch")
-                && !strstri(mtmp->data->mname, "guard")
+                && !strstri(pm_get(mtmp->data)->mname, "watch")
+                && !strstri(pm_get(mtmp->data)->mname, "guard")
 #endif
                 && mon_in_room(mtmp, BARRACKS)
                 /* sleeping implies not-yet-disturbed (usually) */
@@ -254,7 +254,7 @@ dosounds()
             const char *msg;
             int trycount = 0, ax = EPRI(mtmp)->shrpos.x,
                 ay = EPRI(mtmp)->shrpos.y;
-            boolean speechless = (mtmp->data->msound <= MS_ANIMAL),
+            boolean speechless = (pm_get(mtmp->data)->msound <= MS_ANIMAL),
                     in_sight = canseemon(mtmp) || cansee(ax, ay);
 
             do {
@@ -312,7 +312,7 @@ register struct monst *mtmp;
 {
     const char *ret;
 
-    switch (mtmp->data->msound) {
+    switch (pm_get(mtmp->data)->msound) {
     case MS_MEW:
     case MS_HISS:
         ret = "hiss";
@@ -355,7 +355,7 @@ register struct monst *mtmp;
 {
     register const char *growl_verb = 0;
 
-    if (mtmp->msleeping || !mtmp->mcanmove || !mtmp->data->msound)
+    if (mtmp->msleeping || !mtmp->mcanmove || !pm_get(mtmp->data)->msound)
         return;
 
     /* presumably nearness and soundok checks have already been made */
@@ -367,7 +367,7 @@ register struct monst *mtmp;
         pline("%s %s!", Monnam(mtmp), vtense((char *) 0, growl_verb));
         if (context.run)
             nomul(0);
-        wake_nearto(mtmp->mx, mtmp->my, mtmp->data->mlevel * 18);
+        wake_nearto(mtmp->mx, mtmp->my, pm_get(mtmp->data)->mlevel * 18);
     }
 }
 
@@ -378,14 +378,14 @@ register struct monst *mtmp;
 {
     register const char *yelp_verb = 0;
 
-    if (mtmp->msleeping || !mtmp->mcanmove || !mtmp->data->msound)
+    if (mtmp->msleeping || !mtmp->mcanmove || !pm_get(mtmp->data)->msound)
         return;
 
     /* presumably nearness and soundok checks have already been made */
     if (Hallucination)
         yelp_verb = h_sounds[rn2(SIZE(h_sounds))];
     else
-        switch (mtmp->data->msound) {
+        switch (pm_get(mtmp->data)->msound) {
         case MS_MEW:
             yelp_verb = (!Deaf) ? "yowl" : "arch";
             break;
@@ -410,7 +410,7 @@ register struct monst *mtmp;
         pline("%s %s!", Monnam(mtmp), vtense((char *) 0, yelp_verb));
         if (context.run)
             nomul(0);
-        wake_nearto(mtmp->mx, mtmp->my, mtmp->data->mlevel * 12);
+        wake_nearto(mtmp->mx, mtmp->my, pm_get(mtmp->data)->mlevel * 12);
     }
 }
 
@@ -421,14 +421,14 @@ register struct monst *mtmp;
 {
     register const char *whimper_verb = 0;
 
-    if (mtmp->msleeping || !mtmp->mcanmove || !mtmp->data->msound)
+    if (mtmp->msleeping || !mtmp->mcanmove || !pm_get(mtmp->data)->msound)
         return;
 
     /* presumably nearness and soundok checks have already been made */
     if (Hallucination)
         whimper_verb = h_sounds[rn2(SIZE(h_sounds))];
     else
-        switch (mtmp->data->msound) {
+        switch (pm_get(mtmp->data)->msound) {
         case MS_MEW:
         case MS_GROWL:
             whimper_verb = "whimper";
@@ -444,7 +444,7 @@ register struct monst *mtmp;
         pline("%s %s.", Monnam(mtmp), vtense((char *) 0, whimper_verb));
         if (context.run)
             nomul(0);
-        wake_nearto(mtmp->mx, mtmp->my, mtmp->data->mlevel * 6);
+        wake_nearto(mtmp->mx, mtmp->my, pm_get(mtmp->data)->mlevel * 6);
     }
 }
 
@@ -458,9 +458,9 @@ register struct monst *mtmp;
         return;
 
     /* presumably nearness and soundok checks have already been made */
-    if (!is_silent(mtmp->data) && mtmp->data->msound <= MS_ANIMAL)
+    if (!is_silent(mtmp->data) && pm_get(mtmp->data)->msound <= MS_ANIMAL)
         (void) domonnoise(mtmp);
-    else if (mtmp->data->msound >= MS_HUMANOID) {
+    else if (pm_get(mtmp->data)->msound >= MS_HUMANOID) {
         if (!canspotmon(mtmp))
             map_invisible(mtmp->mx, mtmp->my);
         verbalize("I'm hungry.");
@@ -496,7 +496,7 @@ register struct monst *mtmp;
         *verbl_msg = 0,                 /* verbalize() */
         *verbl_msg_mcan = 0;            /* verbalize() if cancelled */
     struct permonst *ptr = mtmp->data;
-    int msound = ptr->msound, gnomeplan = 0;
+    int msound = pm_get(ptr)->msound, gnomeplan = 0;
 
     /* presumably nearness and sleep checks have already been made */
     if (Deaf)
@@ -509,7 +509,7 @@ register struct monst *mtmp;
         msound = MS_LEADER;
     /* make sure it's your role's quest guardian; adjust if not */
     else if (msound == MS_GUARDIAN && ptr != &mons[urole.guardnum])
-        msound = mons[genus(monsndx(ptr), 1)].msound;
+        msound = pm_get(&mons[genus(monsndx(ptr), 1)])->msound;
     /* some normally non-speaking types can/will speak if hero is similar */
     else if (msound == MS_ORC         /* note: MS_ORC is same as MS_GRUNT */
              && ((same_race(ptr, youmonst.data)          /* current form, */
@@ -615,7 +615,7 @@ register struct monst *mtmp;
                     verbl_msg = verbuf;
                 } else if (vampindex == 1) {
                     Sprintf(verbuf, vampmsg[vampindex],
-                            Upolyd ? an(mons[u.umonnum].mname)
+                            Upolyd ? an(pm_get(&mons[u.umonnum])->mname)
                                    : an(racenoun));
                     verbl_msg = verbuf;
                 } else
@@ -803,7 +803,7 @@ register struct monst *mtmp;
             pline_msg = "talks about mining.";
         else if (likes_magic(ptr))
             pline_msg = "talks about spellcraft.";
-        else if (ptr->mlet == S_CENTAUR)
+        else if (pm_get(ptr)->mlet == S_CENTAUR)
             pline_msg = "discusses hunting.";
         else if (is_gnome(ptr) && Hallucination && (gnomeplan = rn2(4)) % 2)
             /* skipped for rn2(4) result of 0 or 2;
@@ -841,7 +841,7 @@ register struct monst *mtmp;
         int swval;
 
         if (SYSOPT_SEDUCE) {
-            if (ptr->mlet != S_NYMPH
+            if (pm_get(ptr)->mlet != S_NYMPH
                 && could_seduce(mtmp, &youmonst, (struct attack *) 0) == 1) {
                 (void) doseduce(mtmp);
                 break;
@@ -989,7 +989,7 @@ dochat()
     struct obj *otmp;
 
     if (is_silent(youmonst.data)) {
-        pline("As %s, you cannot speak.", an(youmonst.data->mname));
+        pline("As %s, you cannot speak.", an(pm_get(youmonst.data)->mname));
         return 0;
     }
     if (Strangled) {

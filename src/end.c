@@ -431,7 +431,7 @@ int how;
     killer.format = KILLED_BY_AN;
     /* "killed by the high priest of Crom" is okay,
        "killed by the high priest" alone isn't */
-    if ((mptr->geno & G_UNIQ) != 0 && !(imitator && !mimicker)
+    if ((pm_get(mptr)->geno & G_UNIQ) != 0 && !(imitator && !mimicker)
         && !(mptr == &mons[PM_HIGH_PRIEST] && !mtmp->ispriest)) {
         if (!type_is_pname(mptr))
             Strcat(buf, "the ");
@@ -449,14 +449,14 @@ int how;
 
     if (imitator) {
         char shape[BUFSZ];
-        const char *realnm = champtr->mname, *fakenm = mptr->mname;
+        const char *realnm = pm_get(champtr)->mname, *fakenm = pm_get(mptr)->mname;
         boolean alt = is_vampshifter(mtmp);
 
         if (mimicker) {
             /* realnm is already correct because champtr==mptr;
                set up fake mptr for type_is_pname/the_unique_pm */
             mptr = &mons[mtmp->mappearance];
-            fakenm = mptr->mname;
+            fakenm = pm_get(mptr)->mname;
         } else if (alt && strstri(realnm, "vampire")
                    && !strcmp(fakenm, "vampire bat")) {
             /* special case: use "vampire in bat form" in preference
@@ -495,7 +495,7 @@ int how;
            it overrides the effect of Hallucination on priestname() */
         Strcat(buf, m_monnam(mtmp));
     } else {
-        Strcat(buf, mptr->mname);
+        Strcat(buf, pm_get(mptr)->mname);
         if (has_mname(mtmp))
             Sprintf(eos(buf), " called %s", MNAME(mtmp));
     }
@@ -510,11 +510,11 @@ int how;
      *  transformation.  (Turning to slime isn't an issue here because
      *  Unchanging prevents that from happening.)
      */
-    if (mptr->mlet == S_WRAITH)
+    if (pm_get(mptr)->mlet == S_WRAITH)
         u.ugrave_arise = PM_WRAITH;
-    else if (mptr->mlet == S_MUMMY && urace.mummynum != NON_PM)
+    else if (pm_get(mptr)->mlet == S_MUMMY && urace.mummynum != NON_PM)
         u.ugrave_arise = urace.mummynum;
-    else if (mptr->mlet == S_VAMPIRE && Race_if(PM_HUMAN))
+    else if (pm_get(mptr)->mlet == S_VAMPIRE && Race_if(PM_HUMAN))
         u.ugrave_arise = PM_VAMPIRE;
     else if (mptr == &mons[PM_GHOUL])
         u.ugrave_arise = PM_GHOUL;
@@ -1414,7 +1414,7 @@ int how;
              (u.ugrave_arise != PM_GREEN_SLIME)
                  ? "body rises from the dead"
                  : "revenant persists",
-             an(mons[u.ugrave_arise].mname));
+             an(pm_get(&mons[u.ugrave_arise])->mname));
         display_nhwindow(WIN_MESSAGE, FALSE);
     }
 
@@ -1773,24 +1773,24 @@ const genericptr vptr2;
     default:
     case VANQ_MLVL_MNDX:
         /* sort by monster level */
-        mlev1 = mons[indx1].mlevel, mlev2 = mons[indx2].mlevel;
+        mlev1 = pm_get(&mons[indx1])->mlevel, mlev2 = pm_get(&mons[indx2])->mlevel;
         res = mlev2 - mlev1; /* mlevel high to low */
         break;
     case VANQ_MSTR_MNDX:
         /* sort by monster toughness */
-        mstr1 = mons[indx1].difficulty, mstr2 = mons[indx2].difficulty;
+        mstr1 = pm_get(&mons[indx1])->difficulty, mstr2 = pm_get(&mons[indx2])->difficulty;
         res = mstr2 - mstr1; /* monstr high to low */
         break;
     case VANQ_ALPHA_SEP:
-        uniq1 = ((mons[indx1].geno & G_UNIQ) && indx1 != PM_HIGH_PRIEST);
-        uniq2 = ((mons[indx2].geno & G_UNIQ) && indx2 != PM_HIGH_PRIEST);
+        uniq1 = ((pm_get(&mons[indx1])->geno & G_UNIQ) && indx1 != PM_HIGH_PRIEST);
+        uniq2 = ((pm_get(&mons[indx2])->geno & G_UNIQ) && indx2 != PM_HIGH_PRIEST);
         if (uniq1 ^ uniq2) { /* one or other uniq, but not both */
             res = uniq2 - uniq1;
             break;
         } /* else both unique or neither unique */
         /*FALLTHRU*/
     case VANQ_ALPHA_MIX:
-        name1 = mons[indx1].mname, name2 = mons[indx2].mname;
+        name1 = pm_get(&mons[indx1])->mname, name2 = pm_get(&mons[indx2])->mname;
         res = strcmpi(name1, name2); /* caseblind alhpa, low to high */
         break;
     case VANQ_MCLS_HTOL:
@@ -1799,7 +1799,7 @@ const genericptr vptr2;
            if 'char' happens to be unsigned, (mlet1 - mlet2) would yield
            an inappropriate result when mlet2 is greater than mlet1,
            so force our copies (mcls1, mcls2) to be signed */
-        mcls1 = (schar) mons[indx1].mlet, mcls2 = (schar) mons[indx2].mlet;
+        mcls1 = (schar) pm_get(&mons[indx1])->mlet, mcls2 = (schar) pm_get(&mons[indx2])->mlet;
         /* S_ANT through S_ZRUTY correspond to lowercase monster classes,
            S_ANGEL through S_ZOMBIE correspond to uppercase, and various
            punctuation characters are used for classes beyond those */
@@ -1819,7 +1819,7 @@ const genericptr vptr2;
         }
         res = mcls1 - mcls2; /* class */
         if (res == 0) {
-            mlev1 = mons[indx1].mlevel, mlev2 = mons[indx2].mlevel;
+            mlev1 = pm_get(&mons[indx1])->mlevel, mlev2 = pm_get(&mons[indx2])->mlevel;
             res = mlev1 - mlev2; /* mlevel low to high */
             if (vanq_sortmode == VANQ_MCLS_HTOL)
                 res = -res; /* mlevel high to low */
@@ -1882,7 +1882,7 @@ dovanquished()
 }
 
 /* high priests aren't unique but are flagged as such to simplify something */
-#define UniqCritterIndx(mndx) ((mons[mndx].geno & G_UNIQ) \
+#define UniqCritterIndx(mndx) ((pm_get(&mons[mndx])->geno & G_UNIQ) \
                                && mndx != PM_HIGH_PRIEST)
 
 STATIC_OVL void
@@ -1945,7 +1945,7 @@ boolean ask;
             for (ni = 0; ni < ntypes; ni++) {
                 i = mindx[ni];
                 nkilled = mvitals[i].died;
-                mlet = mons[i].mlet;
+                mlet = pm_get(&mons[i])->mlet;
                 if (class_header && mlet != prev_mlet) {
                     Strcpy(buf, def_monsyms[(int) mlet].explain);
                     putstr(klwin, ask ? 0 : iflags.menu_headings,
@@ -1955,7 +1955,7 @@ boolean ask;
                 if (UniqCritterIndx(i)) {
                     Sprintf(buf, "%s%s",
                             !type_is_pname(&mons[i]) ? "the " : "",
-                            mons[i].mname);
+                            pm_get(&mons[i])->mname);
                     if (nkilled > 1) {
                         switch (nkilled) {
                         case 2:
@@ -1978,10 +1978,10 @@ boolean ask;
                     /* trolls or undead might have come back,
                        but we don't keep track of that */
                     if (nkilled == 1)
-                        Strcpy(buf, an(mons[i].mname));
+                        Strcpy(buf, an(pm_get(&mons[i])->mname));
                     else
                         Sprintf(buf, "%3d %s", nkilled,
-                                makeplural(mons[i].mname));
+                                makeplural(pm_get(&mons[i])->mname));
                 }
                 /* number of leading spaces to match 3 digit prefix */
                 pfx = !strncmpi(buf, "the ", 3) ? 0
@@ -2027,7 +2027,7 @@ num_genocides()
             ++n;
             if (UniqCritterIndx(i))
                 impossible("unique creature '%d: %s' genocided?",
-                           i, mons[i].mname);
+                           i, pm_get(&mons[i])->mname);
         }
     }
     return n;
@@ -2090,7 +2090,7 @@ boolean ask;
                 if (UniqCritterIndx(i))
                     continue;
                 if (mvitals[i].mvflags & G_GONE) {
-                    Sprintf(buf, " %s", makeplural(mons[i].mname));
+                    Sprintf(buf, " %s", makeplural(pm_get(&mons[i])->mname));
                     /*
                      * "Extinct" is unfortunate terminology.  A species
                      * is marked extinct when its birth limit is reached,

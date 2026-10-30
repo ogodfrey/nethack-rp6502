@@ -702,7 +702,7 @@ aligntyp resp_god;
               (ugod_is_angry() && resp_god == u.ualign.type)
                   ? "hast strayed from the path"
                   : "art arrogant",
-              youmonst.data->mlet == S_HUMAN ? "mortal" : "creature");
+              pm_get(youmonst.data)->mlet == S_HUMAN ? "mortal" : "creature");
         verbalize("Thou must relearn thy lessons!");
         (void) adjattrib(A_WIS, -1, FALSE);
         losexp((char *) 0);
@@ -729,7 +729,7 @@ aligntyp resp_god;
                       : "call upon");
         /* [why isn't this using verbalize()?] */
         pline("\"Then die, %s!\"",
-              (youmonst.data->mlet == S_HUMAN) ? "mortal" : "creature");
+              (pm_get(youmonst.data)->mlet == S_HUMAN) ? "mortal" : "creature");
         summon_minion(resp_god, FALSE);
         break;
 
@@ -1071,7 +1071,7 @@ aligntyp g_align;
             if (!u.uevent.uopened_dbridge && !u.uevent.gehennom_entered) {
                 if (u.uevent.uheard_tune < 1) {
                     godvoice(g_align, (char *) 0);
-                    verbalize("Hark, %s!", youmonst.data->mlet == S_HUMAN
+                    verbalize("Hark, %s!", pm_get(youmonst.data)->mlet == S_HUMAN
                                                ? "mortal"
                                                : "creature");
                     verbalize(
@@ -1369,7 +1369,7 @@ dosacrifice()
 
         if (otmp->corpsenm == PM_ACID_BLOB
             || (monstermoves <= peek_at_iced_corpse_age(otmp) + 50)) {
-            value = mons[otmp->corpsenm].difficulty + 1;
+            value = pm_get(&mons[otmp->corpsenm])->difficulty + 1;
             if (otmp->oeaten)
                 value = eaten_stat(value, otmp);
         }
@@ -1423,7 +1423,7 @@ dosacrifice()
                     else
                         dmon->mstrategy &= ~STRAT_APPEARMSG;
                     You("have summoned %s!", dbuf);
-                    if (sgn(u.ualign.type) == sgn(dmon->data->maligntyp))
+                    if (sgn(u.ualign.type) == sgn(pm_get(dmon->data)->maligntyp))
                         dmon->mpeaceful = TRUE;
                     You("are terrified, and unable to move.");
                     nomul(-3);
@@ -1460,7 +1460,7 @@ dosacrifice()
             if (u.ualign.type != A_CHAOTIC)
                 value += 1;
         } else if (is_unicorn(ptr)) {
-            int unicalign = sgn(ptr->maligntyp);
+            int unicalign = sgn(pm_get(ptr)->maligntyp);
 
             if (unicalign == altaralign) {
                 /* When same as altar, always a very bad action.
@@ -2024,7 +2024,7 @@ doturn()
                 mtmp->mcanmove = 1;
             } else if (!resist(mtmp, '\0', 0, TELL)) {
                 xlev = 6;
-                switch (mtmp->data->mlet) {
+                switch (pm_get(mtmp->data)->mlet) {
                 /* this is intentional, lichs are tougher
                    than zombies. */
                 case S_LICH:

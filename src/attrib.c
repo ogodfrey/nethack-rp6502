@@ -1049,7 +1049,7 @@ int x;
 #endif
     } else if (x == A_CHA) {
         if (tmp < 18
-            && (youmonst.data->mlet == S_NYMPH || u.umonnum == PM_SUCCUBUS
+            && (pm_get(youmonst.data)->mlet == S_NYMPH || u.umonnum == PM_SUCCUBUS
                 || u.umonnum == PM_INCUBUS))
             return (schar) 18;
     } else if (x == A_CON) {

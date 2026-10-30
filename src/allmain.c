@@ -132,7 +132,7 @@ boolean resuming;
                         /* your speed doesn't augment steed's speed */
                         moveamt = mcalcmove(u.usteed);
                     } else {
-                        moveamt = youmonst.data->mmove;
+                        moveamt = pm_get(youmonst.data)->mmove;
 
                         if (Very_fast) { /* speed boots, potion, or spell */
                             /* gain a free action on 2/3 of turns */
@@ -199,7 +199,7 @@ boolean resuming;
                         wtcap = UNENCUMBERED;
                     } else if (!Upolyd ? (u.uhp < u.uhpmax)
                                        : (u.mh < u.mhmax
-                                          || youmonst.data->mlet == S_EEL)) {
+                                          || pm_get(youmonst.data)->mlet == S_EEL)) {
                         /* maybe heal */
                         regen_hp(wtcap);
                     }
@@ -465,7 +465,7 @@ int wtcap;
     if (Upolyd) {
         if (u.mh < 1) { /* shouldn't happen... */
             rehumanize();
-        } else if (youmonst.data->mlet == S_EEL
+        } else if (pm_get(youmonst.data)->mlet == S_EEL
                    && !is_pool(u.ux, u.uy) && !Is_waterlevel(&u.uz)) {
             /* eel out of water loses hp, similar to monster eels;
                as hp gets lower, rate of further loss slows down */

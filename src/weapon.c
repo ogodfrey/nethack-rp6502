@@ -157,14 +157,14 @@ struct monst *mon;
         && (is_demon(ptr) || is_undead(ptr) || is_vampshifter(mon)))
         tmp += 2;
 
-    if (is_spear(otmp) && index(kebabable, ptr->mlet))
+    if (is_spear(otmp) && index(kebabable, pm_get(ptr)->mlet))
         tmp += 2;
 
     /* trident is highly effective against swimmers */
     if (otmp->otyp == TRIDENT && is_swimmer(ptr)) {
         if (is_pool(mon->mx, mon->my))
             tmp += 4;
-        else if (ptr->mlet == S_EEL || ptr->mlet == S_SNAKE)
+        else if (pm_get(ptr)->mlet == S_EEL || pm_get(ptr)->mlet == S_SNAKE)
             tmp += 2;
     }
 
@@ -511,7 +511,7 @@ register struct monst *mtmp;
     boolean mweponly;
     int i;
 
-    char mlet = mtmp->data->mlet;
+    char mlet = pm_get(mtmp->data)->mlet;
 
     propellor = (struct obj *) &zeroobj;
     Oselect(EGG);      /* cockatrice egg */

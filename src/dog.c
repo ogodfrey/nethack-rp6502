@@ -792,7 +792,7 @@ register struct obj *obj;
         case CORPSE:
             if ((peek_at_iced_corpse_age(obj) + 50L <= monstermoves
                  && obj->corpsenm != PM_LIZARD && obj->corpsenm != PM_LICHEN
-                 && mptr->mlet != S_FUNGUS)
+                 && pm_get(mptr)->mlet != S_FUNGUS)
                 || (acidic(fptr) && !resists_acid(mon))
                 || (poisonous(fptr) && !resists_poison(mon)))
                 return POISON;
@@ -804,8 +804,8 @@ register struct obj *obj;
             /* most humanoids will avoid cannibalism unless starving;
                arbitrary: elves won't eat other elves even then */
             else if (humanoid(mptr) && same_race(mptr, fptr)
-                     && (!is_undead(mptr) && fptr->mlet != S_KOBOLD
-                         && fptr->mlet != S_ORC && fptr->mlet != S_OGRE))
+                     && (!is_undead(mptr) && pm_get(fptr)->mlet != S_KOBOLD
+                         && pm_get(fptr)->mlet != S_ORC && pm_get(fptr)->mlet != S_OGRE))
                 return (starving && carni && !is_elf(mptr)) ? ACCFOOD : TABU;
             else
                 return carni ? CADAVER : MANFOOD;
@@ -822,7 +822,7 @@ register struct obj *obj;
         case CARROT:
             return (herbi || mblind) ? DOGFOOD : starving ? ACCFOOD : MANFOOD;
         case BANANA:
-            return (mptr->mlet == S_YETI && herbi)
+            return (pm_get(mptr)->mlet == S_YETI && herbi)
                       ? DOGFOOD /* for monkey and ape (tameable), sasquatch */
                       : (herbi || starving)
                          ? ACCFOOD
@@ -869,14 +869,14 @@ register struct obj *obj;
 {
     /* The Wiz, Medusa and the quest nemeses aren't even made peaceful. */
     if (mtmp->iswiz || mtmp->data == &mons[PM_MEDUSA]
-        || (mtmp->data->mflags3 & M3_WANTSARTI))
+        || (pm_get(mtmp->data)->mflags3 & M3_WANTSARTI))
         return FALSE;
 
     /* worst case, at least it'll be peaceful. */
     mtmp->mpeaceful = 1;
     set_malign(mtmp);
     if (flags.moonphase == FULL_MOON && night() && rn2(6) && obj
-        && mtmp->data->mlet == S_DOG)
+        && pm_get(mtmp->data)->mlet == S_DOG)
         return FALSE;
 
     /* If we cannot tame it, at least it's no longer afraid. */

@@ -1337,7 +1337,7 @@ struct trap *desttrap; /* nonnull if another trap at <x,y> */
 boolean
 u_rooted()
 {
-    if (!youmonst.data->mmove) {
+    if (!pm_get(youmonst.data)->mmove) {
         You("are rooted %s.",
             Levitation || Is_airlevel(&u.uz) || Is_waterlevel(&u.uz)
                 ? "in place"
@@ -1620,7 +1620,7 @@ domove_core()
             return;
         }
         if (context.forcefight || !mtmp->mundetected || sensemon(mtmp)
-            || ((hides_under(mtmp->data) || mtmp->data->mlet == S_EEL)
+            || ((hides_under(mtmp->data) || pm_get(mtmp->data)->mlet == S_EEL)
                 && !is_safepet(mtmp))) {
             /* try to attack; note that it might evade */
             /* also, we don't attack tame when _safepet_ */
@@ -1901,7 +1901,7 @@ domove_core()
                 nomul(0);
     }
 
-    if (hides_under(youmonst.data) || youmonst.data->mlet == S_EEL
+    if (hides_under(youmonst.data) || pm_get(youmonst.data)->mlet == S_EEL
         || u.dx || u.dy)
         (void) hideunder(&youmonst);
 
@@ -2244,7 +2244,7 @@ boolean pick;
     }
     if ((mtmp = m_at(u.ux, u.uy)) && !u.uswallow) {
         mtmp->mundetected = mtmp->msleeping = 0;
-        switch (mtmp->data->mlet) {
+        switch (pm_get(mtmp->data)->mlet) {
         case S_PIERCER:
             pline("%s suddenly drops from the %s!", Amonnam(mtmp),
                   ceiling(u.ux, u.uy));
@@ -3039,14 +3039,14 @@ weight_cap()
     carrcap = 25 * (ACURRSTR + ACURR(A_CON)) + 50;
     if (Upolyd) {
         /* consistent with can_carry() in mon.c */
-        if (youmonst.data->mlet == S_NYMPH)
+        if (pm_get(youmonst.data)->mlet == S_NYMPH)
             carrcap = MAX_CARR_CAP;
-        else if (!youmonst.data->cwt)
-            carrcap = (carrcap * (long) youmonst.data->msize) / MZ_HUMAN;
+        else if (!pm_get(youmonst.data)->cwt)
+            carrcap = (carrcap * (long) pm_get(youmonst.data)->msize) / MZ_HUMAN;
         else if (!strongmonst(youmonst.data)
                  || (strongmonst(youmonst.data)
-                     && (youmonst.data->cwt > WT_HUMAN)))
-            carrcap = (carrcap * (long) youmonst.data->cwt / WT_HUMAN);
+                     && (pm_get(youmonst.data)->cwt > WT_HUMAN)))
+            carrcap = (carrcap * (long) pm_get(youmonst.data)->cwt / WT_HUMAN);
     }
 
     if (Levitation || Is_airlevel(&u.uz) /* pugh@cornell */

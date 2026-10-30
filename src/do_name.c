@@ -1201,12 +1201,12 @@ do_mname()
      * TODO: should have an alternate message when the attempt is to
      * remove existing name without assigning a new one.
      */
-    if ((mtmp->data->geno & G_UNIQ) && !mtmp->ispriest) {
+    if ((pm_get(mtmp->data)->geno & G_UNIQ) && !mtmp->ispriest) {
         if (!alreadynamed(mtmp, monnambuf, buf))
             pline("%s doesn't like being called names!", upstart(monnambuf));
     } else if (mtmp->isshk
                && !(Deaf || mtmp->msleeping || !mtmp->mcanmove
-                    || mtmp->data->msound <= MS_ANIMAL)) {
+                    || pm_get(mtmp->data)->msound <= MS_ANIMAL)) {
         if (!alreadynamed(mtmp, monnambuf, buf))
             verbalize("I'm %s, not %s.", shkname(mtmp), buf);
     } else if (mtmp->ispriest || mtmp->isminion || mtmp->isshk) {
@@ -1660,7 +1660,7 @@ boolean called;
 {
     char *buf = nextmbuf();
     struct permonst *mdat = mtmp->data;
-    const char *pm_name = mdat->mname;
+    const char *pm_name = pm_get(mdat)->mname;
     boolean do_hallu, do_invis, do_it, do_saddle, do_name;
     boolean name_at_start, has_adjectives;
     char *bp;
@@ -1796,7 +1796,7 @@ boolean called;
             article = ARTICLE_THE;
         else
             article = ARTICLE_NONE;
-    } else if ((mdat->geno & G_UNIQ) && article == ARTICLE_A) {
+    } else if ((pm_get(mdat)->geno & G_UNIQ) && article == ARTICLE_A) {
         article = ARTICLE_THE;
     }
 
@@ -2015,7 +2015,7 @@ boolean ckloc;
     } else {
         Sprintf(outbuf, "%s%s <%d,%d>",
                 mon->mtame ? "tame " : mon->mpeaceful ? "peaceful " : "",
-                mon->data->mname, mon->mx, mon->my);
+                pm_get(mon->data)->mname, mon->mx, mon->my);
         if (mon->cham != NON_PM)
             Sprintf(eos(outbuf), "{%s}", pm_get(&mons[mon->cham])->mname);
     }

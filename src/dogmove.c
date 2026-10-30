@@ -157,7 +157,7 @@ struct obj *obj;
             mtmp->meating = objects[obj->otyp].oc_delay;
             nutrit = objects[obj->otyp].oc_nutrition;
         }
-        switch (mtmp->data->msize) {
+        switch (pm_get(mtmp->data)->msize) {
         case MZ_TINY:
             nutrit *= 8;
             break;
@@ -339,7 +339,7 @@ boolean devour;
     }
 
     /* limit "instant" growth to prevent potential abuse */
-    if (grow && (int) mtmp->m_lev < (int) mtmp->data->mlevel + 15) {
+    if (grow && (int) mtmp->m_lev < (int) pm_get(mtmp->data)->mlevel + 15) {
         if (!grow_up(mtmp, (struct monst *) 0))
             return 2;
     }
@@ -696,8 +696,8 @@ int    maxdist;
                     return 1;
             } else {
                 /* Quest leaders and guardians are always seen */
-                if (pal->data->msound == MS_LEADER
-                    || pal->data->msound == MS_GUARDIAN)
+                if (pm_get(pal->data)->msound == MS_LEADER
+                    || pm_get(pal->data)->msound == MS_GUARDIAN)
                     return 1;
             }
         }
@@ -736,8 +736,8 @@ struct monst *mtmp, *mtarg;
             faith2 = FALSE;
 
         /* Never target quest friendlies */
-        if (mtarg->data->msound == MS_LEADER
-            || mtarg->data->msound == MS_GUARDIAN)
+        if (pm_get(mtarg->data)->msound == MS_LEADER
+            || pm_get(mtarg->data)->msound == MS_GUARDIAN)
             return -5000L;
         /* D: Fixed angelic beings using gaze attacks on coaligned priests */
         if (faith1 && faith2 && align1 == align2 && mtarg->mpeaceful) {
@@ -764,7 +764,7 @@ struct monst *mtmp, *mtarg;
         if (!mtarg->mpeaceful)
             score += 10;
         /* Is the monster passive? Don't waste energy on it, if so */
-        if (mtarg->data->mattk[0].aatyp == AT_NONE)
+        if (pm_get(mtarg->data)->mattk[0].aatyp == AT_NONE)
             score -= 1000;
         /* Even weak pets with breath attacks shouldn't take on very
            low-level monsters. Wasting breath on lichens is ridiculous. */
@@ -778,7 +778,7 @@ struct monst *mtmp, *mtarg;
            damage (from counterattacks) to switch back to vampire form;
            make it be more aggressive by behaving as if stronger */
         mtmp_lev = mtmp->m_lev;
-        if (is_vampshifter(mtmp) && mtmp->data->mlet != S_VAMPIRE) {
+        if (is_vampshifter(mtmp) && pm_get(mtmp->data)->mlet != S_VAMPIRE) {
             /* is_vampshifter() implies (mtmp->cham >= LOW_PM) */
             mtmp_lev = pm_get(&mons[mtmp->cham])->mlevel;
             /* actual vampire level would range from 1.0*mlvl to 1.5*mlvl */
@@ -1011,8 +1011,8 @@ int after; /* this is extra fast monster movement */
                 || (mtmp2->data == &mons[PM_GELATINOUS_CUBE] && rn2(10))
                 || (max_passive_dmg(mtmp2, mtmp) >= mtmp->mhp)
                 || ((mtmp->mhp * 4 < mtmp->mhpmax
-                     || mtmp2->data->msound == MS_GUARDIAN
-                     || mtmp2->data->msound == MS_LEADER) && mtmp2->mpeaceful
+                     || pm_get(mtmp2->data)->msound == MS_GUARDIAN
+                     || pm_get(mtmp2->data)->msound == MS_LEADER) && mtmp2->mpeaceful
                     && !Conflict)
                 || (touch_petrifies(mtmp2->data) && !resists_ston(mtmp)))
                 continue;
@@ -1390,7 +1390,7 @@ struct monst *mtmp;
         idx = rn2(SIZE(qm));
         if (qm[idx].mndx != 0 && monsndx(mtmp->data) == qm[idx].mndx)
             break;
-        if (qm[idx].mlet != 0 && mtmp->data->mlet == qm[idx].mlet)
+        if (qm[idx].mlet != 0 && pm_get(mtmp->data)->mlet == qm[idx].mlet)
             break;
         if (qm[idx].mndx == 0 && qm[idx].mlet == 0)
             break;

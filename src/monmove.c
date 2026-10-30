@@ -152,7 +152,7 @@ struct monst *mtmp;
 
     /* should this still be true for defiled/molochian altars? */
     if (IS_ALTAR(levl[x][y].typ)
-        && (mtmp->data->mlet == S_VAMPIRE || is_vampshifter(mtmp)))
+        && (pm_get(mtmp->data)->mlet == S_VAMPIRE || is_vampshifter(mtmp)))
         return TRUE;
 
     /* the scare monster scroll doesn't have any of the below
@@ -176,7 +176,7 @@ struct monst *mtmp;
             && ((u.ux == x && u.uy == y)
                 || (Displaced && mtmp->mux == x && mtmp->muy == y))
             && !(mtmp->isshk || mtmp->isgd || !mtmp->mcansee
-                 || mtmp->mpeaceful || mtmp->data->mlet == S_HUMAN
+                 || mtmp->mpeaceful || pm_get(mtmp->data)->mlet == S_HUMAN
                  || mtmp->data == &mons[PM_MINOTAUR]
                  || Inhell || In_endgame(&u.uz)));
 }
@@ -223,14 +223,14 @@ register struct monst *mtmp;
      */
     if (couldsee(mtmp->mx, mtmp->my) && distu(mtmp->mx, mtmp->my) <= 100
         && (!Stealth || (mtmp->data == &mons[PM_ETTIN] && rn2(10)))
-        && (!(mtmp->data->mlet == S_NYMPH
+        && (!(pm_get(mtmp->data)->mlet == S_NYMPH
               || mtmp->data == &mons[PM_JABBERWOCK]
 #if 0 /* DEFERRED */
               || mtmp->data == &mons[PM_VORPAL_JABBERWOCK]
 #endif
-              || mtmp->data->mlet == S_LEPRECHAUN) || !rn2(50))
+              || pm_get(mtmp->data)->mlet == S_LEPRECHAUN) || !rn2(50))
         && (Aggravate_monster
-            || (mtmp->data->mlet == S_DOG || mtmp->data->mlet == S_HUMAN)
+            || (pm_get(mtmp->data)->mlet == S_DOG || pm_get(mtmp->data)->mlet == S_HUMAN)
             || (!rn2(7) && M_AP_TYPE(mtmp) != M_AP_FURNITURE
                 && M_AP_TYPE(mtmp) != M_AP_OBJECT))) {
         mtmp->msleeping = 0;
@@ -294,7 +294,7 @@ boolean fleemsg;
             /* unfortunately we can't distinguish between temporary
                sleep and temporary paralysis, so both conditions
                receive the same alternate message */
-            if (!mtmp->mcanmove || !mtmp->data->mmove) {
+            if (!mtmp->mcanmove || !pm_get(mtmp->data)->mmove) {
                 pline("%s seems to flinch.", Adjmonnam(mtmp, "immobile"));
             } else if (flees_light(mtmp)) {
                 if (rn2(10) || Deaf)
@@ -425,7 +425,7 @@ register struct monst *mtmp;
         (void) rloc(mtmp, TRUE);
         return 0;
     }
-    if (mdat->msound == MS_SHRIEK && !um_dist(mtmp->mx, mtmp->my, 1))
+    if (pm_get(mdat)->msound == MS_SHRIEK && !um_dist(mtmp->mx, mtmp->my, 1))
         m_respond(mtmp);
     if (mdat == &mons[PM_MEDUSA] && couldsee(mtmp->mx, mtmp->my))
         m_respond(mtmp);
@@ -466,7 +466,7 @@ register struct monst *mtmp;
     }
 
     /* Demonic Blackmail! */
-    if (nearby && mdat->msound == MS_BRIBE && mtmp->mpeaceful && !mtmp->mtame
+    if (nearby && pm_get(mdat)->msound == MS_BRIBE && mtmp->mpeaceful && !mtmp->mtame
         && !u.uswallow) {
         if (mtmp->mux != u.ux || mtmp->muy != u.uy) {
             pline("%s whispers at thin air.",
@@ -573,7 +573,7 @@ register struct monst *mtmp;
 
     if (!nearby || mtmp->mflee || scared || mtmp->mconf || mtmp->mstun
         || (mtmp->minvis && !rn2(3))
-        || (mdat->mlet == S_LEPRECHAUN && !findgold(invent)
+        || (pm_get(mdat)->mlet == S_LEPRECHAUN && !findgold(invent)
             && (findgold(mtmp->minvent) || rn2(2)))
         || (is_wanderer(mdat) && !rn2(4)) || (Conflict && !mtmp->iswiz)
         || (!mtmp->mcansee && !rn2(4)) || mtmp->mpeaceful) {
@@ -585,9 +585,12 @@ register struct monst *mtmp;
            or similar spells by the time you reach it */
         if (dist2(mtmp->mx, mtmp->my, u.ux, u.uy) <= 49
             && !mtmp->mspec_used) {
-            struct attack *a;
+            struct attack *a, mattk_copy[NATTK];
+            int ai;
 
-            for (a = &mdat->mattk[0]; a < &mdat->mattk[NATTK]; a++) {
+            for (ai = 0; ai < NATTK; ai++)
+                mattk_copy[ai] = pm_get(mdat)->mattk[ai];
+            for (a = mattk_copy; a < &mattk_copy[NATTK]; a++) {
                 if (a->aatyp == AT_MAGC
                     && (a->adtyp == AD_SPEL || a->adtyp == AD_CLRC)) {
                     if (castmu(mtmp, a, FALSE, FALSE)) {
@@ -655,7 +658,7 @@ register struct monst *mtmp;
     if (!mtmp->msleeping && mtmp->mcanmove && nearby)
         quest_talk(mtmp);
     /* extra emotional attack for vile monsters */
-    if (inrange && mtmp->data->msound == MS_CUSS && !mtmp->mpeaceful
+    if (inrange && pm_get(mtmp->data)->msound == MS_CUSS && !mtmp->mpeaceful
         && couldsee(mtmp->mx, mtmp->my) && !mtmp->minvis && !rn2(5))
         cuss(mtmp);
 
@@ -917,8 +920,8 @@ register int after;
             || is_obj_mappear(&youmonst,STRANGE_OBJECT) || u.uundetected
             || (is_obj_mappear(&youmonst,GOLD_PIECE) && !likes_gold(ptr))
             || (mtmp->mpeaceful && !mtmp->isshk) /* allow shks to follow */
-            || ((monsndx(ptr) == PM_STALKER || ptr->mlet == S_BAT
-                 || ptr->mlet == S_LIGHT) && !rn2(3)))
+            || ((monsndx(ptr) == PM_STALKER || pm_get(ptr)->mlet == S_BAT
+                 || pm_get(ptr)->mlet == S_LIGHT) && !rn2(3)))
             appr = 0;
 
         if (monsndx(ptr) == PM_LEPRECHAUN && (appr == 1)
@@ -1007,7 +1010,7 @@ register int after;
                     if ((mtoo = m_at(xx, yy)) != 0
                         && (mtoo->msleeping || mtoo->mundetected
                             || (mtoo->mappearance && !mtoo->iswiz)
-                            || !mtoo->data->mmove))
+                            || !pm_get(mtoo->data)->mmove))
                         continue;
                     /* the mfndpos() test for whether to allow a move to a
                        water location accepts flyers, but they can't reach
@@ -1020,7 +1023,7 @@ register int after;
                     if (((likegold && otmp->oclass == COIN_CLASS)
                          || (likeobjs && index(practical, otmp->oclass)
                              && (otmp->otyp != CORPSE
-                                 || (ptr->mlet == S_NYMPH
+                                 || (pm_get(ptr)->mlet == S_NYMPH
                                      && !is_rider(&mons[otmp->corpsenm]))))
                          || (likemagic && index(magical, otmp->oclass))
                          || (uses_items && searches_for_item(mtmp, otmp))
@@ -1096,7 +1099,7 @@ register int after;
         flag |= ALLOW_DIG;
     if (is_human(ptr) || ptr == &mons[PM_MINOTAUR])
         flag |= ALLOW_SSM;
-    if ((is_undead(ptr) && ptr->mlet != S_GHOST) || is_vampshifter(mtmp))
+    if ((is_undead(ptr) && pm_get(ptr)->mlet != S_GHOST) || is_vampshifter(mtmp))
         flag |= NOGARLIC;
     if (throws_rocks(ptr))
         flag |= ALLOW_ROCK;
@@ -1324,7 +1327,7 @@ register int after;
                     if (flags.verbose && canseemon(mtmp))
                         pline("%s %s under the door.", Monnam(mtmp),
                               (ptr == &mons[PM_FOG_CLOUD]
-                               || ptr->mlet == S_LIGHT) ? "flows" : "oozes");
+                               || pm_get(ptr)->mlet == S_LIGHT) ? "flows" : "oozes");
                 } else if (here->doormask & D_LOCKED && can_unlock) {
                     if (btrapped) {
                         here->doormask = D_NODOOR;
@@ -1482,7 +1485,7 @@ register int after;
             }
         }
 
-        if (hides_under(ptr) || ptr->mlet == S_EEL) {
+        if (hides_under(ptr) || pm_get(ptr)->mlet == S_EEL) {
             /* Always set--or reset--mundetected if it's already hidden
                (just in case the object it was hiding under went away);
                usually set mundetected unless monster can't move.  */
