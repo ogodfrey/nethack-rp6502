@@ -56,3 +56,9 @@ Makefile.gcc-orig
 # Win32-specific ignores end
 .DS_Store
 
+
+# RP6502 SDK (see sys/rp6502)
+/.rp6502
+/CMakeUserPresets.json
+/tools/rp6502-*
+__pycache__/

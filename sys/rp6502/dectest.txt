@@ -1,0 +1,7 @@
+DECTEST - NetHack for the RP6502, milestone 1
+
+Draws a NetHack-style room with DEC Special Graphics and ANSI color,
+then lets you walk the @ around to test raw keyboard input.
+
+  h j k l y u b n   move
+  q                 quit
