@@ -13,6 +13,7 @@ import collections
 import ctypes
 import os
 import re
+import subprocess
 import sys
 
 import clang.cindex as ci
@@ -22,10 +23,14 @@ SRC = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..',
 ARGS = ['-DRP6502', '-DRP6502_HOST', '-I' + os.path.join(SRC, 'include'),
         '-I' + os.path.join(SRC, 'build', 'host', 'gen', 'include'),
         '-Wno-everything']
-for _d in ('/usr/lib/gcc/aarch64-linux-gnu/14/include',
-           '/usr/lib/gcc/x86_64-linux-gnu/14/include'):
-    if os.path.isdir(_d):
-        ARGS.append('-isystem' + _d)
+# The host compiler's own headers (stddef.h etc.), which clang does not find.
+try:
+    _d = subprocess.run(['cc', '-print-file-name=include'], check=True,
+                        capture_output=True, text=True).stdout.strip()
+except (OSError, subprocess.CalledProcessError):
+    _d = ''
+if os.path.isdir(_d):
+    ARGS.append('-isystem' + _d)
 K = ci.CursorKind
 _lib = ci.conf.lib
 for _f in ('clang_getCursorBinaryOperatorKind',

@@ -28,7 +28,8 @@ cannot execute code.
   slots, the heap, and the stack.
 - [FEASIBILITY.md](sys/rp6502/FEASIBILITY.md) has more measurements and
   history, including older NetHack 5.0 and cc65 experiments. Its XRAM table
-  design is a proposal, not an implemented or validated solution.
+  design is still a proposal; the `mons[]` storage and fetch mechanism is
+  validated only by the `xramtest` prototype (see priority 2).
 
 ## Set up the new machine
 
@@ -117,15 +118,26 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
 2. **Reduce RAM usage.** The `mons[]` and `objects[]` tables measured about
    20.6 KB and 11.8 KB respectively. Prototype moving their data to XRAM,
    using [farscan.py](sys/rp6502/tools/farscan.py) as an audit aid; it
-   currently needs Python `libclang`, generated host headers, and may need
-   include-path adjustments on a new machine. Treat its counts and findings
-   as incomplete until validated. The proposed fake-address/accessor design
+   needs Python `libclang` and the generated host headers, and finds the host
+   compiler's include directory itself. Treat its counts and findings as
+   incomplete until validated. The proposed fake-address/accessor design
    needs proof for pointer identity and arithmetic, array and bitfield
    accesses, mutations, attack/name pointers, and save/restore. Do not rely
    on inaccessible RAM pointers without testing the compiler and ABI.
    Reserve a non-overlapping XRAM layout: the overlay manager uses RIA
    portal 1 and its default descriptor/directory addresses are `$8000` and
    `$C000`.
+
+   Prototype status: `xramtest` ([xramtest.c](sys/rp6502/xramtest.c),
+   [rp6502xram.c](sys/rp6502/rp6502xram.c), [rp6502xram.h](include/rp6502xram.h))
+   copies `mons[]` to XRAM at `$1000`, reads every record back through
+   `pm_get()` (a 4-slot RAM fetch cache), and checksums all fields. The
+   rp6502-emu output matches the host (`mons 381 sum 91d5b81f`, span 380).
+   This validates the storage, portal reads, and `mons_at()` pointer
+   arithmetic. The game's own `mons` accesses (about 1,190 direct and 1,780
+   macro-expanded `permonst` accesses) are not converted yet, the `mons[]`
+   RAM copy still exists in the game, and the 9 `permonst` writes need
+   write-back.
 3. **Budget the rest of memory.** Moving both tables alone will not make the
    measured unlinked data fit. Investigate `level`, room and display buffers,
    vision data, heap, stack, resident code, and overlay slots; measure the

@@ -20,10 +20,25 @@ if(DEFINED LLVM_MOS_PLATFORM)
     # Headers that makedefs generates (pm.h, onames.h, date.h) come from
     # host-built utilities.
     set(NH_GEN ${CMAKE_BINARY_DIR}/gen)
+    # hostgen.sh is a POSIX script with no reliable execute bit on Windows, so
+    # run it through sh there (MSYS2 or Git for Windows), with its tools (mkdir,
+    # cc) on PATH.
+    if(CMAKE_HOST_WIN32)
+        find_program(NH_SH NAMES sh
+            PATHS C:/msys64/usr/bin "$ENV{ProgramFiles}/Git/usr/bin"
+            REQUIRED)
+        get_filename_component(NH_SH_BIN "${NH_SH}" DIRECTORY)
+        get_filename_component(NH_MSYS "${NH_SH_BIN}/../.." ABSOLUTE)
+        set(NH_HOSTGEN_PATH "${NH_SH_BIN};${NH_MSYS}/ucrt64/bin;$ENV{PATH}")
+    else()
+        set(NH_SH sh)
+        set(NH_HOSTGEN_PATH "$ENV{PATH}")
+    endif()
     add_custom_command(
         OUTPUT ${NH_GEN}/include/pm.h ${NH_GEN}/include/onames.h
                ${NH_GEN}/include/date.h
-        COMMAND ${CMAKE_SOURCE_DIR}/sys/rp6502/tools/hostgen.sh
+        COMMAND ${CMAKE_COMMAND} -E env "PATH=${NH_HOSTGEN_PATH}"
+                ${NH_SH} ${CMAKE_SOURCE_DIR}/sys/rp6502/tools/hostgen.sh
                 ${CMAKE_SOURCE_DIR} ${NH_GEN}
         DEPENDS sys/rp6502/tools/hostgen.sh util/makedefs.c src/monst.c
                 src/objects.c include/monst.h include/objclass.h
@@ -44,5 +59,27 @@ if(DEFINED LLVM_MOS_PLATFORM)
     # -Oz -fno-inline is ~4% smaller than -Os and keeps single-caller statics
     # out of line, so no function is too big for an overlay slot.
     target_compile_options(nethack_objs PRIVATE -Oz -fno-inline -fno-lto
+        -ffunction-sections -fdata-sections)
+
+    # Prototype: mons[] copied to XRAM and read back through the fetch cache.
+    # monst.c is built with mons renamed, so the test has a RAM copy to load.
+    add_library(xram_monst OBJECT src/monst.c)
+    add_dependencies(xram_monst nethack_gen)
+    target_include_directories(xram_monst PRIVATE ${NH_GEN}/include include)
+    target_compile_definitions(xram_monst PRIVATE RP6502 mons=rp6502_ram_mons)
+    target_compile_options(xram_monst PRIVATE -Oz -fno-inline -fno-lto
+        -ffunction-sections -fdata-sections)
+
+    add_executable(xramtest)
+    rp6502_executable(xramtest DATA default RESET default)
+    target_sources(xramtest PRIVATE
+        sys/rp6502/xramtest.c
+        sys/rp6502/rp6502xram.c
+        $<TARGET_OBJECTS:xram_monst>
+    )
+    add_dependencies(xramtest nethack_gen)
+    target_include_directories(xramtest PRIVATE ${NH_GEN}/include include)
+    target_compile_definitions(xramtest PRIVATE RP6502)
+    target_compile_options(xramtest PRIVATE -Oz -fno-inline -fno-lto
         -ffunction-sections -fdata-sections)
 endif()
