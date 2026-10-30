@@ -304,7 +304,7 @@ def load_modules(asmdir):
 def nm_sizes(objdir, mod):
     """Function sizes from the module's object file."""
     import subprocess
-    nm = os.environ.get('LLVM_NM', 'llvm-nm')
+    nm = os.environ.get('LLVM_NM', tool('llvm-nm'))
     if not os.path.exists(os.path.join(objdir, mod + '.o')):
         return {}
     out = subprocess.run([nm, '-S', '--defined-only',
@@ -677,8 +677,10 @@ def cmd_emit(argv):
 # Linking
 
 def tool(name):
-    d = os.environ.get('MOS_BIN')
-    return os.path.join(d, name) if d else name
+    d = os.environ.get('MOS_BIN',
+                       os.path.expanduser('~/.rp6502/llvm-mos/bin'))
+    p = os.path.join(d, name)
+    return p if os.path.exists(p) else name
 
 
 def run(cmd):

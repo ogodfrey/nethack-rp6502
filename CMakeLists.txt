@@ -26,8 +26,8 @@ if(DEFINED LLVM_MOS_PLATFORM)
         COMMAND ${CMAKE_SOURCE_DIR}/sys/rp6502/tools/hostgen.sh
                 ${CMAKE_SOURCE_DIR} ${NH_GEN}
         DEPENDS sys/rp6502/tools/hostgen.sh util/makedefs.c src/monst.c
-                src/objects.c include/monst.h include/objects.h
-                include/rp6502conf.h
+                src/objects.c include/monst.h include/objclass.h
+                include/permonst.h include/rp6502conf.h
         COMMENT "Generating NetHack headers with host makedefs"
         VERBATIM
     )
