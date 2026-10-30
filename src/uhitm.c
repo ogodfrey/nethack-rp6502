@@ -178,7 +178,7 @@ struct obj *wep; /* uwep for attack(), null for kick_monster() */
 
     if (mtmp->mundetected && !canseemon(mtmp)
         && !glyph_is_warning(glyph)
-        && (hides_under(mtmp->data) || mtmp->data->mlet == S_EEL)) {
+        && (hides_under(mtmp->data) || pm_get(mtmp->data)->mlet == S_EEL)) {
         mtmp->mundetected = mtmp->msleeping = 0;
         newsym(mtmp->mx, mtmp->my);
         if (glyph_is_invisible(glyph)) {
@@ -264,7 +264,7 @@ int *attk_count, *role_roll_penalty;
     *role_roll_penalty = 0; /* default is `none' */
 
     tmp = 1 + Luck + abon() + find_mac(mtmp) + u.uhitinc
-          + maybe_polyd(youmonst.data->mlevel, u.ulevel);
+          + maybe_polyd(pm_get(youmonst.data)->mlevel, u.ulevel);
 
     /* some actions should occur only once during multiple attacks */
     if (!(*attk_count)++) {
@@ -375,7 +375,7 @@ register struct monst *mtmp;
                     = 0;
                 return TRUE;
             } else if ((mtmp->mfrozen || (!mtmp->mcanmove)
-                        || (mtmp->data->mmove == 0)) && rn2(6)) {
+                        || (pm_get(mtmp->data)->mmove == 0)) && rn2(6)) {
                 pline("%s doesn't seem to move!", Monnam(mtmp));
                 context.travel = context.travel1 = context.mv = context.run
                     = 0;
@@ -428,7 +428,7 @@ register struct monst *mtmp;
     u_wipe_engr(3);
 
     /* Is the "it died" check actually correct? */
-    if (mdat->mlet == S_LEPRECHAUN && !mtmp->mfrozen && !mtmp->msleeping
+    if (pm_get(mdat)->mlet == S_LEPRECHAUN && !mtmp->mfrozen && !mtmp->msleeping
         && !mtmp->mconf && mtmp->mcansee && !rn2(7)
         && (m_move(mtmp, 0) == 2 /* it died */
             || mtmp->mx != u.ux + u.dx
@@ -439,8 +439,11 @@ register struct monst *mtmp;
 
     if (Upolyd)
         (void) hmonas(mtmp);
-    else
-        (void) hitum(mtmp, youmonst.data->mattk);
+    else {
+        struct permonst ymon = *pm_get(youmonst.data);
+
+        (void) hitum(mtmp, ymon.mattk);
+    }
     mtmp->mstrategy &= ~STRAT_WAITMASK;
 
  atk_done:
@@ -1553,7 +1556,7 @@ struct attack *mattk;
     gold = findgold(mdef->minvent);
 
     if (stealoid) { /* we will be taking everything */
-        if (gender(mdef) == (int) u.mfemale && youmonst.data->mlet == S_NYMPH)
+        if (gender(mdef) == (int) u.mfemale && pm_get(youmonst.data)->mlet == S_NYMPH)
             You("charm %s.  She gladly hands over %sher possessions.",
                 mon_nam(mdef), !gold ? "" : "most of ");
         else
@@ -2161,7 +2164,7 @@ register struct attack *mattk;
 
         if (fatal_gulp && !is_rider(pd)) { /* petrification */
             char kbuf[BUFSZ];
-            const char *mname = pd->mname;
+            const char *mname = pm_get(pd)->mname;
 
             if (!type_is_pname(pd))
                 mname = an(mname);
@@ -2177,7 +2180,7 @@ register struct attack *mattk;
                     pline("Unfortunately, digesting any of it is fatal.");
                     end_engulf();
                     Sprintf(killer.name, "unwisely tried to eat %s",
-                            pd->mname);
+                            pm_get(pd)->mname);
                     killer.format = NO_KILLER_PREFIX;
                     done(DIED);
                     return 0; /* lifesaved */
@@ -2204,11 +2207,11 @@ register struct attack *mattk;
                     You("hurriedly regurgitate the sizzling in your %s.",
                         body_part(STOMACH));
                 } else {
-                    tmp = 1 + (pd->cwt >> 8);
+                    tmp = 1 + (pm_get(pd)->cwt >> 8);
                     if (corpse_chance(mdef, &youmonst, TRUE)
                         && !(mvitals[monsndx(pd)].mvflags & G_NOCORPSE)) {
                         /* nutrition only if there can be a corpse */
-                        u.uhunger += (pd->cnutrit + 1) / 2;
+                        u.uhunger += (pm_get(pd)->cnutrit + 1) / 2;
                     } else
                         tmp = 0;
                     Sprintf(msgbuf, "You totally digest %s.", mon_nam(mdef));
@@ -2228,7 +2231,7 @@ register struct attack *mattk;
                         pline1(msgbuf);
                     if (pd == &mons[PM_GREEN_SLIME]) {
                         Sprintf(msgbuf, "%s isn't sitting well with you.",
-                                The(pd->mname));
+                                The(pm_get(pd)->mname));
                         if (!Unchanging) {
                             make_slimed(5L, (char *) 0);
                         }
@@ -2452,7 +2455,7 @@ register struct monst *mon;
                 goto use_weapon;
             /*FALLTHRU*/
         case AT_TUCH:
-            if (uwep && youmonst.data->mlet == S_LICH && !weapon_used)
+            if (uwep && pm_get(youmonst.data)->mlet == S_LICH && !weapon_used)
                 goto use_weapon;
             /*FALLTHRU*/
         case AT_KICK:
@@ -2659,8 +2662,8 @@ register struct monst *mon;
                     Your("attempt to surround %s is harmless.", mon_nam(mon));
                 else {
                     sum[i] = gulpum(mon, mattk);
-                    if (sum[i] == 2 && (mon->data->mlet == S_ZOMBIE
-                                        || mon->data->mlet == S_MUMMY)
+                    if (sum[i] == 2 && (pm_get(mon->data)->mlet == S_ZOMBIE
+                                        || pm_get(mon->data)->mlet == S_MUMMY)
                         && rn2(5) && !Sick_resistance) {
                         You_feel("%ssick.", (Sick) ? "very " : "");
                         mdamageu(mon, rnd(8));
@@ -2675,9 +2678,9 @@ register struct monst *mon;
             /* No check for uwep; if wielding nothing we want to
              * do the normal 1-2 points bare hand damage...
              */
-            if ((youmonst.data->mlet == S_KOBOLD
-                 || youmonst.data->mlet == S_ORC
-                 || youmonst.data->mlet == S_GNOME) && !weapon_used)
+            if ((pm_get(youmonst.data)->mlet == S_KOBOLD
+                 || pm_get(youmonst.data)->mlet == S_ORC
+                 || pm_get(youmonst.data)->mlet == S_GNOME) && !weapon_used)
                 goto use_weapon;
             /*FALLTHRU*/
 
@@ -2742,8 +2745,11 @@ int malive;
 uchar aatyp;
 boolean wep_was_destroyed;
 {
-    register struct permonst *ptr = mon->data;
+    struct permonst pm_copy;
+    register struct permonst *ptr = &pm_copy;
     register int i, tmp;
+
+    pm_copy = *pm_get(mon->data);
 
     for (i = 0;; i++) {
         if (i >= NATTK)
@@ -2976,8 +2982,11 @@ struct monst *mon;
 struct obj *obj;          /* null means pick uwep, uswapwep or uarmg */
 struct attack *mattk;     /* null means we find one internally */
 {
-    struct permonst *ptr = mon->data;
+    struct permonst pm_copy;
+    struct permonst *ptr = &pm_copy;
     int i;
+
+    pm_copy = *pm_get(mon->data);
 
     /* [this first bit is obsolete; we're not called with Null anymore] */
     /* if caller hasn't specified an object, use uwep, uswapwep or uarmg */
@@ -3116,7 +3125,7 @@ struct obj *otmp; /* source of flash */
             pline_The("flash awakens %s.", mon_nam(mtmp));
             res = 1;
         }
-    } else if (mtmp->data->mlet != S_LIGHT) {
+    } else if (pm_get(mtmp->data)->mlet != S_LIGHT) {
         if (!resists_blnd(mtmp)) {
             tmp = dist2(otmp->ox, otmp->oy, mtmp->mx, mtmp->my);
             if (useeit) {
