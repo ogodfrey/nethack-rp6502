@@ -1,5 +1,6 @@
 /* Fetch cache for the tables kept in XRAM (see include/rp6502xram.h). */
 #include "config.h"
+#include "permonst.h"
 #include "rp6502xram.h"
 #include <rp6502.h>
 #include <stdint.h>

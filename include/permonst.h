@@ -64,7 +64,7 @@ struct permonst {
 #endif
 };
 
-extern NEARDATA struct permonst mons[]; /* the master list of monster types */
+#include "rp6502xram.h" /* mons[]: RAM array, or the XRAM view (see there) */
 
 #define VERY_SLOW 3
 #define SLOW_SPEED 9

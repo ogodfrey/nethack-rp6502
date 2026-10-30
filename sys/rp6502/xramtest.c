@@ -4,7 +4,9 @@
  */
 #include "config.h"
 #include "pm.h"
-#include "rp6502xram.h"
+#include "monsym.h"
+#include "permonst.h"
+#include "mondata.h"
 #include <stdint.h>
 #include <stdio.h>
 
@@ -54,6 +56,46 @@ fold_pm(uint32_t sum, struct permonst *p)
     return sum;
 }
 
+static uint32_t
+fold_flags(uint32_t sum, struct permonst *p)
+{
+    uint32_t f = 0;
+    unsigned b = 0;
+
+#define BIT(x) (f |= (uint32_t) ((x) != 0) << (b++))
+    BIT(is_flyer(p));
+    BIT(is_undead(p));
+    BIT(is_were(p));
+    BIT(touch_petrifies(p));
+    BIT(is_rider(p));
+    BIT(nohands(p));
+    BIT(emits_light(p));
+    BIT(is_mind_flayer(p));
+    BIT(is_bat(p));
+    BIT(is_longworm(p));
+    BIT(is_placeholder(p));
+    BIT(is_mplayer(p));
+    BIT(is_watch(p));
+    BIT(webmaker(p));
+    BIT(flaming(p));
+    BIT(is_wooden(p));
+    BIT(vegan(p));
+    BIT(vegetarian(p));
+    BIT(nonliving(p));
+    BIT(unique_corpstat(p));
+    BIT(is_domestic(p));
+    BIT(is_demon(p));
+    BIT(is_lord(p));
+    BIT(is_unicorn(p));
+    BIT(likes_fire(p));
+    BIT(pm_invisible(p));
+    BIT(is_vampire(p));
+    BIT(is_bird(p));
+#undef BIT
+    sum = sum * 31u + f;
+    return sum * 31u + (uint32_t) eyecount(p);
+}
+
 int
 main(void)
 {
@@ -68,5 +110,9 @@ main(void)
         sum = fold_pm(sum, mons_at(i));
     printf("mons %d sum %08lx\n", NUMMONS, (unsigned long) sum);
     printf("span %d\n", (int) (mons_at(NUMMONS - 1) - mons_at(0)));
+    sum = 0;
+    for (i = 0; i < NUMMONS; i++)
+        sum = fold_flags(sum, mons_at(i));
+    printf("flags %08lx\n", (unsigned long) sum);
     return 0;
 }

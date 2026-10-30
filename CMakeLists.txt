@@ -66,7 +66,8 @@ if(DEFINED LLVM_MOS_PLATFORM)
     add_library(xram_monst OBJECT src/monst.c)
     add_dependencies(xram_monst nethack_gen)
     target_include_directories(xram_monst PRIVATE ${NH_GEN}/include include)
-    target_compile_definitions(xram_monst PRIVATE RP6502 mons=rp6502_ram_mons)
+    target_compile_definitions(xram_monst PRIVATE RP6502 RP6502_MONS_RAM
+        mons=rp6502_ram_mons)
     target_compile_options(xram_monst PRIVATE -Oz -fno-inline -fno-lto
         -ffunction-sections -fdata-sections)
 
@@ -79,7 +80,7 @@ if(DEFINED LLVM_MOS_PLATFORM)
     )
     add_dependencies(xramtest nethack_gen)
     target_include_directories(xramtest PRIVATE ${NH_GEN}/include include)
-    target_compile_definitions(xramtest PRIVATE RP6502)
+    target_compile_definitions(xramtest PRIVATE RP6502 RP6502_MONS_XRAM)
     target_compile_options(xramtest PRIVATE -Oz -fno-inline -fno-lto
         -ffunction-sections -fdata-sections)
 endif()

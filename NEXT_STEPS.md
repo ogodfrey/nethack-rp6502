@@ -134,10 +134,31 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
    `pm_get()` (a 4-slot RAM fetch cache), and checksums all fields. The
    rp6502-emu output matches the host (`mons 381 sum 91d5b81f`, span 380).
    This validates the storage, portal reads, and `mons_at()` pointer
-   arithmetic. The game's own `mons` accesses (about 1,190 direct and 1,780
-   macro-expanded `permonst` accesses) are not converted yet, the `mons[]`
-   RAM copy still exists in the game, and the 9 `permonst` writes need
-   write-back.
+   arithmetic.
+
+   Conversion status. With `RP6502_MONS_XRAM` defined, `mons` names the XRAM
+   image in [permonst.h](include/permonst.h) via
+   [rp6502xram.h](include/rp6502xram.h). Then `&mons[PM_X]` and `mons_at()`
+   work unchanged, and `pm_get()` fetches the record. The mondata macros in
+   [mondata.h](include/mondata.h) already call `pm_get()`. Without the flag
+   (host, and the game target today), `pm_get()` is the identity, so nothing
+   changes. `xramtest` also checks 29 of those macros over every monster, and
+   the host and emulator outputs match (`flags b187e3ec`). The host build and
+   the target `nethack_objs` build pass with the flag off.
+
+   Still to do before the flag can be turned on for the game:
+   - Direct permonst accesses: 719 `->` sites outside mondata macros (farscan
+     `struct permonst: 719 direct`). Most are in `src/mon.c`, `eat.c`,
+     `makemon.c`, `polyself.c`, `uhitm.c`, `mondata.c` (also `attacktype()`).
+     Each becomes `pm_get(p)->field`, and the `mname` string accesses need
+     the same treatment.
+   - Direct `mons[i].field` reads are included in that count; with the flag
+     on they would read CPU RAM at `$1000`, so they must be converted.
+   - The 9 permonst writes need write-back (`pm_put`) or a RAM-only design.
+   - The game's `mons` RAM array is still linked on target. Removing it needs
+     the XRAM image as a ROM asset, loaded at startup, which means the
+     two-pass link for the `mname` pointers chosen for this design.
+   - objclass (`objects[]`) follows the same plan later (471 direct sites).
 3. **Budget the rest of memory.** Moving both tables alone will not make the
    measured unlinked data fit. Investigate `level`, room and display buffers,
    vision data, heap, stack, resident code, and overlay slots; measure the
