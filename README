@@ -1,5 +1,10 @@
          NetHack 3.6.7 -- General information February 2023
 
+RP6502 port: This fork is an independent effort to port NetHack to the
+Picocomputer 6502 (RP6502), created by Rumbledethumps. Learn about the
+computer and its SDK at:
+    https://picocomputer.github.io/
+
 NetHack 3.6 is an enhancement to the dungeon exploration game NetHack,
 which is a distant descendent of Rogue and Hack, and a direct descendent of
 NetHack 3.4 as there was no NetHack 3.5 release.
