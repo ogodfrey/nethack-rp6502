@@ -180,13 +180,14 @@ color and moves an `@` with raw keys from `TTY:` (non-blocking raw console input
 
 Milestone 2 status: the port layer is written and the full game runs as a native host build
 of the RP6502 configuration (`sys/rp6502/tools/hostbuild.sh`, `RP6502_HOST`): character
-selection, DECgraphics map via SO/SI, ANSI color, arrow keys, special levels, and
-save/restore all work. The port pieces are:
+selection, DECgraphics map via SO/SI, ANSI color, arrow keys, special levels,
+save/restore, and recovery of a game cut off by a reset (`SELF_RECOVER`) all work. The port pieces are:
 
 * `include/rp6502conf.h` — port configuration (`MICRO`, `ANSI_DEFAULT`, no signals, mail,
   shell, compression, DLB or SYSCF), included from `global.h`.
 * `sys/rp6502/rp6502sys.c` — `main`, file prefixes (data from `ROM:`, writable files in
-  `nethack/` on USB), option parsing, lock and restore logic, `error`.
+  `nethack/` on USB), option parsing, name prompt, lock with recover/discard prompt,
+  restore logic, `error`.
 * `sys/rp6502/rp6502tty.c` — raw keyboard on `TTY:` (termios on the host), cursor keys,
   `kbhit`, screen size.
 * Small hooks in `config1.h`, `dlb.h` (data files go through `DATAPREFIX`), `tcap.h`
@@ -194,8 +195,8 @@ save/restore all work. The port pieces are:
   (DECgraphics and color by default).
 * `sys/rp6502/sources.txt` — the module list shared by the host script and CMake.
 
-Still to do for milestone 2: compile for the target with llvm-mos. Known gaps: a stale lock
-from a crashed game is not detected, and the screen size is fixed at 80x24.
+Still to do for milestone 2: compile for the target with llvm-mos. Known gap: the screen
+size is fixed at 80x24.
 
 ## 8. Reproducing the measurements
 

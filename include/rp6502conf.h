@@ -26,6 +26,7 @@
 #define RANDOM /* sys/share/random.c; ISAAC64 needs 64-bit integers */
 #endif
 #define NO_SIGNAL
+#define SELF_RECOVER /* recover a crashed game from its level files */
 
 #undef USE_ISAAC64
 #undef SYSCF

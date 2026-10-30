@@ -24,6 +24,7 @@
 static void FDECL(process_options, (int, char **));
 static void FDECL(set_prefixes, (char *));
 static boolean NDECL(rp_main);
+static void NDECL(getlock);
 
 int FDECL(main, (int, char **));
 
@@ -108,22 +109,12 @@ rp_main()
     init_nhwindows(&rp_argc, rp_argv);
     process_options(rp_argc, rp_argv);
 
-    plnamesuffix();
-    set_playmode();
+    set_playmode(); /* sets plname to "wizard" for -D */
     iflags.renameallowed = FALSE;
-
-    Strcpy(lock, plname);
-    Strcat(lock, ".99");
-    regularize(lock);
-
-    fd = create_levelfile(0, (char *) 0);
-    if (fd < 0) {
-        raw_print("Cannot create lock file");
-    } else {
-        hackpid = 1;
-        (void) write(fd, (genericptr_t) &hackpid, sizeof hackpid);
-        nhclose(fd);
-    }
+    if (!*plname)
+        askname();
+    plnamesuffix();
+    getlock();
 
     vision_init();
     display_gamewindows();
@@ -154,6 +145,52 @@ attempt_restore:
             You("are in non-scoring discovery mode.");
     }
     return resuming;
+}
+
+/*
+ * The level 0 file is the lock.  If one is left over from a game that was
+ * cut off (reset or power loss), offer to rebuild a save file from the
+ * level files (SELF_RECOVER) or to discard them.
+ */
+static void
+getlock()
+{
+    int fd, c, lev;
+
+    Strcpy(lock, plname);
+    Strcat(lock, ".99");
+    regularize(lock);
+
+    if ((fd = open_levelfile(0, (char *) 0)) >= 0) {
+        nhclose(fd);
+        raw_printf("There is already a game in progress under the name %s.",
+                   plname);
+        raw_print("Recover it (y), discard it (n), or quit (q)? ");
+        do {
+            c = lowc(tgetch());
+        } while (!index("ynq\033", c));
+        if (c == 'y') {
+            if (!recover_savefile())
+                error("Couldn't recover the old game.");
+        } else if (c == 'n') {
+            /* delete_levelfile() only removes files this run created */
+            for (lev = 255; lev >= 0; lev--) {
+                set_levelfile_name(lock, lev);
+                (void) unlink(fqname(lock, LEVELPREFIX, 0));
+            }
+        } else {
+            nethack_exit(EXIT_SUCCESS);
+        }
+    }
+
+    fd = create_levelfile(0, (char *) 0);
+    if (fd < 0) {
+        error("Cannot create lock file %s.", lock);
+    } else {
+        hackpid = 1;
+        (void) write(fd, (genericptr_t) &hackpid, sizeof hackpid);
+        nhclose(fd);
+    }
 }
 
 static void
