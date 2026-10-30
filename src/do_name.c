@@ -2011,13 +2011,13 @@ boolean ckloc;
     } else if (ckloc && ptr == &mons[PM_LONG_WORM]
                && level.monsters[mon->mx][mon->my] != mon) {
         Sprintf(outbuf, "%s <%d,%d>",
-                mons[PM_LONG_WORM_TAIL].mname, mon->mx, mon->my);
+                pm_get(&mons[PM_LONG_WORM_TAIL])->mname, mon->mx, mon->my);
     } else {
         Sprintf(outbuf, "%s%s <%d,%d>",
                 mon->mtame ? "tame " : mon->mpeaceful ? "peaceful " : "",
                 mon->data->mname, mon->mx, mon->my);
         if (mon->cham != NON_PM)
-            Sprintf(eos(outbuf), "{%s}", mons[mon->cham].mname);
+            Sprintf(eos(outbuf), "{%s}", pm_get(&mons[mon->cham])->mname);
     }
     return outbuf;
 }
@@ -2060,12 +2060,12 @@ char *code;
     do {
         name = rn2_on_display_rng(SPECIAL_PM + BOGUSMONSIZE - LOW_PM) + LOW_PM;
     } while (name < SPECIAL_PM
-             && (type_is_pname(&mons[name]) || (mons[name].geno & G_NOGEN)));
+             && (type_is_pname(&mons[name]) || (pm_get(&mons[name])->geno & G_NOGEN)));
 
     if (name >= SPECIAL_PM) {
         mname = bogusmon(buf, code);
     } else {
-        mname = strcpy(buf, mons[name].mname);
+        mname = strcpy(buf, pm_get(&mons[name])->mname);
     }
     return mname;
 #undef BOGUSMONSIZE

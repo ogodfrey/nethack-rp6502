@@ -74,7 +74,7 @@ set_uasmon()
     PROPSET(ANTIMAGIC, (dmgtype(mdat, AD_MAGM)
                         || mdat == &mons[PM_BABY_GRAY_DRAGON]
                         || dmgtype(mdat, AD_RBRE)));
-    PROPSET(SICK_RES, (mdat->mlet == S_FUNGUS || mdat == &mons[PM_GHOUL]));
+    PROPSET(SICK_RES, (pm_get(mdat)->mlet == S_FUNGUS || mdat == &mons[PM_GHOUL]));
 
     PROPSET(STUNNED, (mdat == &mons[PM_STALKER] || is_bat(mdat)));
     PROPSET(HALLUC_RES, dmgtype(mdat, AD_HALU));
@@ -471,7 +471,7 @@ int psflags;
                        0 and trigger thats_enough_tries message */
                     ++tryct;
                 }
-                pm_name = mons[mntmp].mname;
+                pm_name = pm_get(&mons[mntmp])->mname;
                 if (the_unique_pm(&mons[mntmp]))
                     pm_name = the(pm_name);
                 else if (!type_is_pname(&mons[mntmp]))
@@ -533,12 +533,12 @@ int psflags;
                 mntmp = u.ulycn;
         } else if (isvamp) {
         do_vampyr:
-            if (mntmp < LOW_PM || (mons[mntmp].geno & G_UNIQ))
+            if (mntmp < LOW_PM || (pm_get(&mons[mntmp])->geno & G_UNIQ))
                 mntmp = (youmonst.data != &mons[PM_VAMPIRE] && !rn2(10))
                             ? PM_WOLF
                             : !rn2(4) ? PM_FOG_CLOUD : PM_VAMPIRE_BAT;
             if (controllable_poly) {
-                Sprintf(buf, "Become %s?", an(mons[mntmp].mname));
+                Sprintf(buf, "Become %s?", an(pm_get(&mons[mntmp])->mname));
                 if (yn(buf) != 'y')
                     return;
             }
@@ -600,7 +600,7 @@ int mntmp;
     int mlvl;
 
     if (mvitals[mntmp].mvflags & G_GENOD) { /* allow G_EXTINCT */
-        You_feel("rather %s-ish.", mons[mntmp].mname);
+        You_feel("rather %s-ish.", pm_get(&mons[mntmp])->mname);
         exercise(A_WIS, TRUE);
         return 0;
     }
@@ -629,10 +629,10 @@ int mntmp;
 
     /* if stuck mimicking gold, stop immediately */
     if (multi < 0 && U_AP_TYPE == M_AP_OBJECT
-        && youmonst.data->mlet != S_MIMIC)
+        && pm_get(youmonst.data)->mlet != S_MIMIC)
         unmul("");
     /* if becoming a non-mimic, stop mimicking anything */
-    if (mons[mntmp].mlet != S_MIMIC) {
+    if (pm_get(&mons[mntmp])->mlet != S_MIMIC) {
         /* as in polyman() */
         youmonst.m_ap_type = M_AP_NOTHING;
         youmonst.mappearance = 0;
@@ -654,7 +654,7 @@ int mntmp;
         Strcat(buf, (is_male(&mons[mntmp]) || is_female(&mons[mntmp]))
                        ? "" : flags.female ? "female " : "male ");
     }
-    Strcat(buf, mons[mntmp].mname);
+    Strcat(buf, pm_get(&mons[mntmp])->mname);
     You("%s %s!", (u.umonnum != mntmp) ? "turn into" : "feel like", an(buf));
 
     if (Stoned && poly_when_stoned(&mons[mntmp])) {
@@ -698,8 +698,8 @@ int mntmp;
      * We can't do the above, since there's no such thing as an
      * "experience level of you as a monster" for a polymorphed character.
      */
-    mlvl = (int) mons[mntmp].mlevel;
-    if (youmonst.data->mlet == S_DRAGON && mntmp >= PM_GRAY_DRAGON) {
+    mlvl = (int) pm_get(&mons[mntmp])->mlevel;
+    if (pm_get(youmonst.data)->mlet == S_DRAGON && mntmp >= PM_GRAY_DRAGON) {
         u.mhmax = In_endgame(&u.uz) ? (8 * mlvl) : (4 * mlvl + d(mlvl, 4));
     } else if (is_golem(youmonst.data)) {
         u.mhmax = golemhp(mntmp);
@@ -752,7 +752,7 @@ int mntmp;
         if (touch_petrifies(u.usteed->data) && !Stone_resistance && rnl(3)) {
             pline("%s touch %s.", no_longer_petrify_resistant,
                   mon_nam(u.usteed));
-            Sprintf(buf, "riding %s", an(u.usteed->data->mname));
+            Sprintf(buf, "riding %s", an(pm_get(u.usteed->data)->mname));
             instapetrify(buf);
         }
         if (!can_ride(u.usteed))
@@ -767,7 +767,7 @@ int mntmp;
             pline(use_thec, monsterc, "use your breath weapon");
         if (attacktype(youmonst.data, AT_SPIT))
             pline(use_thec, monsterc, "spit venom");
-        if (youmonst.data->mlet == S_NYMPH)
+        if (pm_get(youmonst.data)->mlet == S_NYMPH)
             pline(use_thec, monsterc, "remove an iron ball");
         if (attacktype(youmonst.data, AT_GAZE))
             pline(use_thec, monsterc, "gaze at monsters");
@@ -783,7 +783,7 @@ int mntmp;
             pline(use_thec, monsterc, "use your horn");
         if (is_mind_flayer(youmonst.data))
             pline(use_thec, monsterc, "emit a mental blast");
-        if (youmonst.data->msound == MS_SHRIEK) /* worthless, actually */
+        if (pm_get(youmonst.data)->msound == MS_SHRIEK) /* worthless, actually */
             pline(use_thec, monsterc, "shriek");
         if (is_vampire(youmonst.data))
             pline(use_thec, monsterc, "change shape");
@@ -832,7 +832,7 @@ int mntmp;
     }
     if (u.utrap && (u.utraptype == TT_WEB || u.utraptype == TT_BEARTRAP)
         && (amorphous(youmonst.data) || is_whirly(youmonst.data)
-            || unsolid(youmonst.data) || (youmonst.data->msize <= MZ_SMALL
+            || unsolid(youmonst.data) || (pm_get(youmonst.data)->msize <= MZ_SMALL
                                           && u.utraptype == TT_BEARTRAP))) {
         You("are no longer stuck in the %s.",
             u.utraptype == TT_WEB ? "web" : "bear trap");
@@ -985,7 +985,7 @@ break_armor()
         }
     }
     if (nohands(youmonst.data) || verysmall(youmonst.data)
-        || slithy(youmonst.data) || youmonst.data->mlet == S_CENTAUR) {
+        || slithy(youmonst.data) || pm_get(youmonst.data)->mlet == S_CENTAUR) {
         if ((otmp = uarmf) != 0) {
             if (donning(otmp))
                 cancel_don();
@@ -1200,7 +1200,7 @@ dospinweb()
             int i;
 
             for (i = 0; i < NATTK; i++)
-                if (u.ustuck->data->mattk[i].aatyp == AT_ENGL)
+                if (pm_get(u.ustuck->data)->mattk[i].aatyp == AT_ENGL)
                     break;
             if (i == NATTK)
                 impossible("Swallower has no engulfing attack?");
@@ -1208,7 +1208,7 @@ dospinweb()
                 char sweep[30];
 
                 sweep[0] = '\0';
-                switch (u.ustuck->data->mattk[i].adtyp) {
+                switch (pm_get(u.ustuck->data)->mattk[i].adtyp) {
                 case AD_FIRE:
                     Strcpy(sweep, "ignites and ");
                     break;
@@ -1326,8 +1326,8 @@ dogaze()
     uchar adtyp = 0;
 
     for (i = 0; i < NATTK; i++) {
-        if (youmonst.data->mattk[i].aatyp == AT_GAZE) {
-            adtyp = youmonst.data->mattk[i].adtyp;
+        if (pm_get(youmonst.data)->mattk[i].aatyp == AT_GAZE) {
+            adtyp = pm_get(youmonst.data)->mattk[i].adtyp;
             break;
         }
     }
@@ -1420,7 +1420,7 @@ dogaze()
                             s_suffix(mon_nam(mtmp)));
                         nomul((u.ulevel > 6 || rn2(4))
                                   ? -d((int) mtmp->m_lev + 1,
-                                       (int) mtmp->data->mattk[0].damd)
+                                       (int) pm_get(mtmp->data)->mattk[0].damd)
                                   : -200);
                         multi_reason = "frozen by a monster's gaze";
                         nomovemsg = 0;
@@ -1454,7 +1454,7 @@ dogaze()
 int
 dohide()
 {
-    boolean ismimic = youmonst.data->mlet == S_MIMIC,
+    boolean ismimic = pm_get(youmonst.data)->mlet == S_MIMIC,
             on_ceiling = is_clinger(youmonst.data) || Flying;
 
     /* can't hide while being held (or holding) or while trapped
@@ -1477,7 +1477,7 @@ dohide()
     }
     /* note: the eel and hides_under cases are hypothetical;
        such critters aren't offered the option of hiding via #monster */
-    if (youmonst.data->mlet == S_EEL && !is_pool(u.ux, u.uy)) {
+    if (pm_get(youmonst.data)->mlet == S_EEL && !is_pool(u.ux, u.uy)) {
         if (IS_FOUNTAIN(levl[u.ux][u.uy].typ))
             The("fountain is not deep enough to hide in.");
         else
@@ -1530,7 +1530,7 @@ dopoly()
     if (is_vampire(youmonst.data)) {
         polyself(2);
         if (savedat != youmonst.data) {
-            You("transform into %s.", an(youmonst.data->mname));
+            You("transform into %s.", an(pm_get(youmonst.data)->mname));
             newsym(u.ux, u.uy);
         }
     }
@@ -1683,8 +1683,8 @@ int part;
     struct permonst *mptr = mon->data;
 
     /* some special cases */
-    if (mptr->mlet == S_DOG || mptr->mlet == S_FELINE
-        || mptr->mlet == S_RODENT || mptr == &mons[PM_OWLBEAR]) {
+    if (pm_get(mptr)->mlet == S_DOG || pm_get(mptr)->mlet == S_FELINE
+        || pm_get(mptr)->mlet == S_RODENT || mptr == &mons[PM_OWLBEAR]) {
         switch (part) {
         case HAND:
             return "paw";
@@ -1698,13 +1698,13 @@ int part;
         default:
             break; /* for other parts, use animal_parts[] below */
         }
-    } else if (mptr->mlet == S_YETI) { /* excl. owlbear due to 'if' above */
+    } else if (pm_get(mptr)->mlet == S_YETI) { /* excl. owlbear due to 'if' above */
         /* opposable thumbs, hence "hands", "arms", "legs", &c */
         return humanoid_parts[part]; /* yeti/sasquatch, monkey/ape */
     }
     if ((part == HAND || part == HANDED)
         && (humanoid(mptr) && attacktype(mptr, AT_CLAW)
-            && !index(not_claws, mptr->mlet) && mptr != &mons[PM_STONE_GOLEM]
+            && !index(not_claws, pm_get(mptr)->mlet) && mptr != &mons[PM_STONE_GOLEM]
             && mptr != &mons[PM_INCUBUS] && mptr != &mons[PM_SUCCUBUS]))
         return (part == HAND) ? "claw" : "clawed";
     if ((mptr == &mons[PM_MUMAK] || mptr == &mons[PM_MASTODON])
@@ -1723,10 +1723,10 @@ int part;
         return humanoid_parts[part];
     if (mptr == &mons[PM_RAVEN])
         return bird_parts[part];
-    if (mptr->mlet == S_CENTAUR || mptr->mlet == S_UNICORN
+    if (pm_get(mptr)->mlet == S_CENTAUR || pm_get(mptr)->mlet == S_UNICORN
         || (mptr == &mons[PM_ROTHE] && part != HAIR))
         return horse_parts[part];
-    if (mptr->mlet == S_LIGHT) {
+    if (pm_get(mptr)->mlet == S_LIGHT) {
         if (part == HANDED)
             return "rayed";
         else if (part == ARM || part == FINGER || part == FINGERTIP
@@ -1737,20 +1737,20 @@ int part;
     }
     if (mptr == &mons[PM_STALKER] && part == HEAD)
         return "head";
-    if (mptr->mlet == S_EEL && mptr != &mons[PM_JELLYFISH])
+    if (pm_get(mptr)->mlet == S_EEL && mptr != &mons[PM_JELLYFISH])
         return fish_parts[part];
-    if (mptr->mlet == S_WORM)
+    if (pm_get(mptr)->mlet == S_WORM)
         return worm_parts[part];
-    if (slithy(mptr) || (mptr->mlet == S_DRAGON && part == HAIR))
+    if (slithy(mptr) || (pm_get(mptr)->mlet == S_DRAGON && part == HAIR))
         return snake_parts[part];
-    if (mptr->mlet == S_EYE)
+    if (pm_get(mptr)->mlet == S_EYE)
         return sphere_parts[part];
-    if (mptr->mlet == S_JELLY || mptr->mlet == S_PUDDING
-        || mptr->mlet == S_BLOB || mptr == &mons[PM_JELLYFISH])
+    if (pm_get(mptr)->mlet == S_JELLY || pm_get(mptr)->mlet == S_PUDDING
+        || pm_get(mptr)->mlet == S_BLOB || mptr == &mons[PM_JELLYFISH])
         return jelly_parts[part];
-    if (mptr->mlet == S_VORTEX || mptr->mlet == S_ELEMENTAL)
+    if (pm_get(mptr)->mlet == S_VORTEX || pm_get(mptr)->mlet == S_ELEMENTAL)
         return vortex_parts[part];
-    if (mptr->mlet == S_FUNGUS)
+    if (pm_get(mptr)->mlet == S_FUNGUS)
         return fungus_parts[part];
     if (humanoid(mptr))
         return humanoid_parts[part];

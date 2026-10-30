@@ -2104,7 +2104,7 @@ int final;
     you_have(buf, "");
 
     if (Upolyd) {
-        switch (mons[u.umonnum].mlevel) {
+        switch (pm_get(&mons[u.umonnum])->mlevel) {
         case 0:
             /* status line currently being explained shows "HD:0" */
             Strcpy(buf, "0 hit dice (actually 1/2)");
@@ -2113,7 +2113,7 @@ int final;
             Strcpy(buf, "1 hit die");
             break;
         default:
-            Sprintf(buf, "%d hit dice", mons[u.umonnum].mlevel);
+            Sprintf(buf, "%d hit dice", pm_get(&mons[u.umonnum])->mlevel);
             break;
         }
         you_have(buf, "");
@@ -2711,7 +2711,7 @@ int final;
     }
     if (Warn_of_mon && context.warntype.speciesidx >= LOW_PM) {
         Sprintf(buf, "aware of the presence of %s",
-                makeplural(mons[context.warntype.speciesidx].mname));
+                makeplural(pm_get(&mons[context.warntype.speciesidx])->mname));
         you_are(buf, from_what(WARN_OF_MON));
     }
     if (Undead_warning)
@@ -2913,7 +2913,7 @@ int final;
         you_can("lay eggs", "");
     if (u.ulycn >= LOW_PM) {
         /* "you are a werecreature [in beast form]" */
-        Strcpy(buf, an(mons[u.ulycn].mname));
+        Strcpy(buf, an(pm_get(&mons[u.ulycn])->mname));
         if (u.umonnum == u.ulycn) {
             Strcat(buf, " in beast form");
             if (wizard)
@@ -5514,7 +5514,7 @@ boolean doit;
 #if 0
     if (Upolyd) { /* before objects */
         Sprintf(buf, "Use %s special ability",
-                s_suffix(mons[u.umonnum].mname));
+                s_suffix(pm_get(&mons[u.umonnum])->mname));
         add_herecmd_menuitem(win, domonability, buf);
     }
 #endif

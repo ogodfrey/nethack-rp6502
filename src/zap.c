@@ -5201,7 +5201,7 @@ int damage, tell;
     else if (dlev < 1)
         dlev = is_mplayer(mtmp->data) ? u.ulevel : 1;
 
-    resisted = rn2(100 + alev - dlev) < mtmp->data->mr;
+    resisted = rn2(100 + alev - dlev) < pm_get(mtmp->data)->mr;
     if (resisted) {
         if (tell) {
             shieldeff(mtmp->mx, mtmp->my);

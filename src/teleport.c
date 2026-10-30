@@ -74,7 +74,7 @@ unsigned gpflags;
                         || (!Is_waterlevel(&u.uz)
                             && (is_floater(mdat) || is_flyer(mdat)
                                 || is_clinger(mdat))));
-        } else if (mdat->mlet == S_EEL && rn2(13) && !ignorewater) {
+        } else if (pm_get(mdat)->mlet == S_EEL && rn2(13) && !ignorewater) {
             return FALSE;
         } else if (is_lava(x, y)) {
             /* 3.6.3: floating eye can levitate over lava but it avoids
@@ -205,7 +205,7 @@ unsigned entflags;
         if (allow_xx_yy && goodpos(xx, yy, &fakemon, entflags)) {
             return TRUE; /* 'cc' is set */
         } else {
-            debugpline3("enexto(\"%s\",%d,%d) failed", mdat->mname, xx, yy);
+            debugpline3("enexto(\"%s\",%d,%d) failed", pm_get(mdat)->mname, xx, yy);
             return FALSE;
         }
     }
@@ -328,7 +328,7 @@ boolean allow_drag;
     u.ux0 = u.ux;
     u.uy0 = u.uy;
 
-    if (!hideunder(&youmonst) && youmonst.data->mlet == S_MIMIC) {
+    if (!hideunder(&youmonst) && pm_get(youmonst.data)->mlet == S_MIMIC) {
         /* mimics stop being unnoticed */
         youmonst.m_ap_type = M_AP_NOTHING;
     }
@@ -1366,7 +1366,7 @@ int in_sight;
             if (In_endgame(&u.uz) && (mon_has_amulet(mtmp)
                                       || is_home_elemental(mtmp->data)
                                       || rn2(7))) {
-                if (in_sight && mtmp->data->mlet != S_ELEMENTAL) {
+                if (in_sight && pm_get(mtmp->data)->mlet != S_ELEMENTAL) {
                     pline("%s seems to shimmer for a moment.", Monnam(mtmp));
                     seetrap(trap);
                 }

@@ -819,7 +819,7 @@ struct monst *mtmp;
             return !(yours ? Shock_resistance : resists_elec(mtmp));
         case AD_MAGM:
         case AD_STUN:
-            return !(yours ? Antimagic : (rn2(100) < ptr->mr));
+            return !(yours ? Antimagic : (rn2(100) < pm_get(ptr)->mr));
         case AD_DRST:
             return !(yours ? Poison_resistance : resists_poison(mtmp));
         case AD_DRLI:
