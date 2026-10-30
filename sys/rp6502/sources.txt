@@ -114,3 +114,4 @@ win/tty/wintty.c
 sys/share/pmatchregex.c
 sys/rp6502/rp6502sys.c
 sys/rp6502/rp6502tty.c
+sys/rp6502/rp6502mac.c

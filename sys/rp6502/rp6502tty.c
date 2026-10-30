@@ -178,7 +178,10 @@ void
 settty(s)
 const char *s;
 {
-    end_screen();
+    /* tty_exit_nhwindows calls this before freeing the display; a later
+       call from nethack_exit only has the terminal mode left to restore. */
+    if (ttyDisplay)
+        end_screen();
     if (s)
         raw_print(s);
 #ifdef RP6502_HOST

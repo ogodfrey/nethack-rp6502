@@ -1,0 +1,2 @@
+{"nslots": 2, "file": "ot.ovl",
+ "overlays": [["ot_a/*"], ["ot_b/*"], ["ot_c/*"]]}

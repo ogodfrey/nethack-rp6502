@@ -538,4 +538,8 @@ enum bodypart_types {
 #define DEVTEAM_EMAIL "devteam@nethack.org"
 #define DEVTEAM_URL "https://www.nethack.org/"
 
+#ifdef RP6502
+#include "rp6502mac.h"
+#endif
+
 #endif /* HACK_H */
