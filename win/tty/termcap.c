@@ -148,11 +148,15 @@ int *wid, *hgt;
         /* strictly, SE should be 2, and nh_UE should be 24,
            but we can't trust all ANSI emulators to be
            that complete.  -3. */
-#ifndef MICRO
+#if !defined(MICRO) || defined(RP6502)
         AS = "\016";
         AE = "\017";
 #endif
         TE = VS = VE = nullstr;
+#ifdef RP6502
+        /* reset attributes and load DEC Special Graphics into G1 */
+        TI = "\033[0m\033)0";
+#endif
 #ifdef TEXTCOLOR
         for (i = 0; i < CLR_MAX / 2; i++)
             if (i != CLR_BLACK) {
@@ -169,6 +173,11 @@ int *wid, *hgt;
                         Sprintf(hilites[i], "\033[0;3%dm", i);
                     }
             }
+#ifdef RP6502
+        hilites[CLR_BLACK] = "\033[1;30m"; /* dark gray */
+        hilites[CLR_GRAY] = "\033[0;37m";
+        hilites[NO_COLOR] = "\033[0;37m";
+#endif
 #endif /* TEXTCOLOR */
         *wid = CO;
         *hgt = LI;

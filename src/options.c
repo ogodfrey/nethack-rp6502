@@ -822,6 +822,15 @@ initoptions_init()
     if (!symset[ROGUESET].explicitly)
         load_symset("RogueEpyx", ROGUESET);
 #endif
+#ifdef RP6502
+    /* the RP6502 console has DEC Special Graphics and ANSI color */
+    if (!symset[PRIMARY].explicitly)
+        load_symset("DECGraphics", PRIMARY);
+    switch_symbols(TRUE);
+#ifdef TEXTCOLOR
+    iflags.use_color = TRUE;
+#endif
+#endif
 #ifdef MAC_GRAPHICS_ENV
     if (!symset[PRIMARY].explicitly)
         load_symset("MACGraphics", PRIMARY);

@@ -144,6 +144,10 @@ typedef uchar nhsym;
 #include "pcconf.h"
 #endif
 
+#ifdef RP6502
+#include "rp6502conf.h"
+#endif
+
 #ifdef TOS
 #include "tosconf.h"
 #endif
@@ -216,7 +220,8 @@ typedef uchar nhsym;
 #endif
 
 #if defined(MICRO)
-#if !defined(AMIGA) && !defined(TOS) && !defined(OS2_HPFS)
+#if !defined(AMIGA) && !defined(TOS) && !defined(OS2_HPFS) \
+    && !defined(RP6502)
 #define SHORT_FILENAMES /* filenames are 8.3 */
 #endif
 #endif

@@ -106,7 +106,12 @@ long rsrc_dlb_ftell(dlb *dp);
 #define dlb_init()
 #define dlb_cleanup()
 
+#ifdef RP6502
+/* no chdir(); data files live under DATAPREFIX ("ROM:" on the target) */
+#define dlb_fopen(name, mode) fopen_datafile(name, mode, DATAPREFIX)
+#else
 #define dlb_fopen fopen
+#endif
 #define dlb_fclose fclose
 #define dlb_fread fread
 #define dlb_fseek fseek

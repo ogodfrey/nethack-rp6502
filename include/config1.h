@@ -31,6 +31,17 @@
 #endif
 
 /*
+ * Picocomputer RP6502 (cc65 auto-defines __RP6502__; host test builds
+ * define RP6502 and RP6502_HOST on the command line).
+ */
+#if defined(__RP6502__) && !defined(RP6502)
+#define RP6502
+#endif
+#ifdef RP6502
+#undef UNIX
+#endif
+
+/*
  * Mac Stuff.
  */
 #if defined(__APPLE__) && defined(__MACH__)

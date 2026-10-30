@@ -8,12 +8,15 @@ cc65 V2.19 (`-t rp6502 -Os -Cl`) using [tools/measure-cc65.sh](tools/measure-cc6
 
 * **Base: NetHack 3.6** (no Lua). The `rp6502` branch starts from upstream `NetHack-3.6`
   (3.6.7). Sections 1–6 below are the original analysis of 5.0; §9 has the 3.6 numbers.
-* **Compiler: cc65 for now.** llvm-mos has no prebuilt Linux arm64 build (the picocomputer
-  installer is x86-64 only, and [llvm-mos#273](https://github.com/llvm-mos/llvm-mos/issues/273)
-  "Port to Linux Arm64" is open). It can be built from source on the development Pi 5
-  (LLVM build, several hours). llvm-mos does support floating point (single precision in
-  hand-written 6502 assembly, double via compiler-rt), but with 3.6 there is no Lua, so floats
-  are no longer a blocker for cc65.
+* **Compiler: llvm-mos** (changed from cc65 the same day). cc65 cannot compile 76 of the
+  111 3.6 modules: its code generator (`CheckLocalOffs` in `codegen.c`, still present in
+  upstream master) rejects any parameter or scalar local more than 255 bytes into the stack
+  frame, which is every function with a `BUFSZ` (256) buffer declared before its scalars.
+  Arrays at large offsets are fine; only scalar access fails. `-Cl` (static locals) avoids it
+  but breaks recursion and bloats BSS. llvm-mos has no prebuilt Linux arm64 build
+  ([llvm-mos#273](https://github.com/llvm-mos/llvm-mos/issues/273)), so it is built from
+  source on the development Pi 5 together with the picocomputer `llvm-mos-sdk` fork, which is
+  what the picocomputer CI uses for its SDK releases.
 * **Display: tty window port with DECgraphics** on the RP6502 console. Verified by
   milestone 1 (`sys/rp6502/dectest.c`).
 
@@ -174,6 +177,25 @@ means seconds per turn and minutes per level creation. Keep it as a fallback onl
 Status: milestone 1 is done — the SDK project is at the repository root (`CMakeLists.txt`,
 `CMakePresets.json`, `tools/`, `.vscode/`) and `dectest.rp6502` draws a DECgraphics map with
 color and moves an `@` with raw keys from `TTY:` (non-blocking raw console input, fd 4).
+
+Milestone 2 status: the port layer is written and the full game runs as a native host build
+of the RP6502 configuration (`sys/rp6502/tools/hostbuild.sh`, `RP6502_HOST`): character
+selection, DECgraphics map via SO/SI, ANSI color, arrow keys, special levels, and
+save/restore all work. The port pieces are:
+
+* `include/rp6502conf.h` — port configuration (`MICRO`, `ANSI_DEFAULT`, no signals, mail,
+  shell, compression, DLB or SYSCF), included from `global.h`.
+* `sys/rp6502/rp6502sys.c` — `main`, file prefixes (data from `ROM:`, writable files in
+  `nethack/` on USB), option parsing, lock and restore logic, `error`.
+* `sys/rp6502/rp6502tty.c` — raw keyboard on `TTY:` (termios on the host), cursor keys,
+  `kbhit`, screen size.
+* Small hooks in `config1.h`, `dlb.h` (data files go through `DATAPREFIX`), `tcap.h`
+  (`ASCIIGRAPH`), `termcap.c` (DEC G1 set, full color table) and `options.c`
+  (DECgraphics and color by default).
+* `sys/rp6502/sources.txt` — the module list shared by the host script and CMake.
+
+Still to do for milestone 2: compile for the target with llvm-mos. Known gaps: a stale lock
+from a crashed game is not detected, and the screen size is fixed at 80x24.
 
 ## 8. Reproducing the measurements
 
