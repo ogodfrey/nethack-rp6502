@@ -151,8 +151,8 @@ struct obj *obj;
      */
     if (obj->oclass == FOOD_CLASS) {
         if (obj->otyp == CORPSE) {
-            mtmp->meating = 3 + (mons[obj->corpsenm].cwt >> 6);
-            nutrit = mons[obj->corpsenm].cnutrit;
+            mtmp->meating = 3 + (pm_get(&mons[obj->corpsenm])->cwt >> 6);
+            nutrit = pm_get(&mons[obj->corpsenm])->cnutrit;
         } else {
             mtmp->meating = objects[obj->otyp].oc_delay;
             nutrit = objects[obj->otyp].oc_nutrition;
@@ -780,7 +780,7 @@ struct monst *mtmp, *mtarg;
         mtmp_lev = mtmp->m_lev;
         if (is_vampshifter(mtmp) && mtmp->data->mlet != S_VAMPIRE) {
             /* is_vampshifter() implies (mtmp->cham >= LOW_PM) */
-            mtmp_lev = mons[mtmp->cham].mlevel;
+            mtmp_lev = pm_get(&mons[mtmp->cham])->mlevel;
             /* actual vampire level would range from 1.0*mlvl to 1.5*mlvl */
             mtmp_lev += rn2(mtmp_lev / 2 + 1);
             /* we don't expect actual level in weak form to exceed
@@ -1422,7 +1422,7 @@ struct monst *mtmp;
                          && OBJ_NAME(objects[mtmp->mappearance]))
                             ? an(OBJ_NAME(objects[mtmp->mappearance]))
                             : (M_AP_TYPE(mtmp) == M_AP_MONSTER)
-                                  ? an(mons[mtmp->mappearance].mname)
+                                  ? an(pm_get(&mons[mtmp->mappearance])->mname)
                                   : something,
             cansee(mtmp->mx, mtmp->my) ? "" : "has ",
             cansee(mtmp->mx, mtmp->my) ? "" : "ed",

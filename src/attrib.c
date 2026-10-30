@@ -298,7 +298,7 @@ boolean thrown_weapon; /* thrown weapons are less deadly */
 
     /* suppress killer prefix if it already has one */
     i = name_to_mon(pkiller);
-    if (i >= LOW_PM && (mons[i].geno & G_UNIQ)) {
+    if (i >= LOW_PM && (pm_get(&mons[i])->geno & G_UNIQ)) {
         kprefix = KILLED_BY;
         if (!type_is_pname(&mons[i]))
             pkiller = the(pkiller);

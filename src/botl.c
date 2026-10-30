@@ -62,7 +62,7 @@ do_statusline1()
         char mbot[BUFSZ];
         int k = 0;
 
-        Strcpy(mbot, mons[u.umonnum].mname);
+        Strcpy(mbot, pm_get(&mons[u.umonnum])->mname);
         while (mbot[k] != 0) {
             if ((k == 0 || (k > 0 && mbot[k - 1] == ' ')) && 'a' <= mbot[k]
                 && mbot[k] <= 'z')
@@ -140,7 +140,7 @@ do_statusline2()
 
     /* experience */
     if (Upolyd)
-        Sprintf(expr, "HD:%d", mons[u.umonnum].mlevel);
+        Sprintf(expr, "HD:%d", pm_get(&mons[u.umonnum])->mlevel);
     else if (flags.showexp)
         Sprintf(expr, "Xp:%d/%-1ld", u.ulevel, u.uexp);
     else
@@ -591,7 +591,7 @@ bot_via_windowport()
      */
     Strcpy(nb = buf, plname);
     nb[0] = highc(nb[0]);
-    titl = !Upolyd ? rank() : mons[u.umonnum].mname;
+    titl = !Upolyd ? rank() : pm_get(&mons[u.umonnum])->mname;
     i = (int) (strlen(buf) + sizeof " the " + strlen(titl) - sizeof "");
     /* if "Name the Rank/monster" is too long, we truncate the name
        but always keep at least 10 characters of it; when hitpintbar is
@@ -681,7 +681,7 @@ bot_via_windowport()
     blstats[idx][BL_AC].a.a_int = u.uac;
 
     /* Monster level (if Upolyd) */
-    blstats[idx][BL_HD].a.a_int = Upolyd ? (int) mons[u.umonnum].mlevel : 0;
+    blstats[idx][BL_HD].a.a_int = Upolyd ? (int) pm_get(&mons[u.umonnum])->mlevel : 0;
 
     /* Experience */
     blstats[idx][BL_XP].a.a_int = u.ulevel;

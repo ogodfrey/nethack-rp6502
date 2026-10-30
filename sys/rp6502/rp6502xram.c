@@ -19,3 +19,9 @@ rpm_pm_get(const struct permonst *p)
     xram0_read(s, (unsigned) (uintptr_t) p, sizeof *s);
     return s;
 }
+
+void
+rpm_pm_put(struct permonst *p, const struct permonst *rec)
+{
+    xram0_write((unsigned) (uintptr_t) p, rec, sizeof *rec);
+}

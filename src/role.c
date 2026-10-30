@@ -2058,10 +2058,15 @@ role_init()
     /* Fix up the quest leader */
     if (urole.ldrnum != NON_PM) {
         pm = &mons[urole.ldrnum];
-        pm->msound = MS_LEADER;
-        pm->mflags2 |= (M2_PEACEFUL);
-        pm->mflags3 |= M3_CLOSE;
-        pm->maligntyp = alignmnt * 3;
+        {
+            struct permonst rec = *pm_get(pm);
+
+            rec.msound = MS_LEADER;
+            rec.mflags2 |= (M2_PEACEFUL);
+            rec.mflags3 |= M3_CLOSE;
+            rec.maligntyp = alignmnt * 3;
+            pm_put(pm, &rec);
+        }
         /* if gender is random, we choose it now instead of waiting
            until the leader monster is created */
         quest_status.ldrgend =
@@ -2073,18 +2078,28 @@ role_init()
     /* Fix up the quest guardians */
     if (urole.guardnum != NON_PM) {
         pm = &mons[urole.guardnum];
-        pm->mflags2 |= (M2_PEACEFUL);
-        pm->maligntyp = alignmnt * 3;
+        {
+            struct permonst rec = *pm_get(pm);
+
+            rec.mflags2 |= (M2_PEACEFUL);
+            rec.maligntyp = alignmnt * 3;
+            pm_put(pm, &rec);
+        }
     }
 
     /* Fix up the quest nemesis */
     if (urole.neminum != NON_PM) {
         pm = &mons[urole.neminum];
-        pm->msound = MS_NEMESIS;
-        pm->mflags2 &= ~(M2_PEACEFUL);
-        pm->mflags2 |= (M2_NASTY | M2_STALK | M2_HOSTILE);
-        pm->mflags3 &= ~(M3_CLOSE);
-        pm->mflags3 |= M3_WANTSARTI | M3_WAITFORU;
+        {
+            struct permonst rec = *pm_get(pm);
+
+            rec.msound = MS_NEMESIS;
+            rec.mflags2 &= ~(M2_PEACEFUL);
+            rec.mflags2 |= (M2_NASTY | M2_STALK | M2_HOSTILE);
+            rec.mflags3 &= ~(M3_CLOSE);
+            rec.mflags3 |= M3_WANTSARTI | M3_WAITFORU;
+            pm_put(pm, &rec);
+        }
         /* if gender is random, we choose it now instead of waiting
            until the nemesis monster is created */
         quest_status.nemgend = is_neuter(pm) ? 2 : is_female(pm) ? 1
