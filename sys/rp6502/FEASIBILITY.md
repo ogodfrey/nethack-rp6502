@@ -201,12 +201,12 @@ size is fixed at 80x24.
 
 Milestone 3 status (overlay toolchain):
 
-* Code size, llvm-mos, no LTO: 2.72 MB of text at `-Os`. `-Oz -fno-inline` is ~9%
-  smaller and keeps single-caller statics out of line (`sp_level_coder` 80 KB → 13 KB),
-  so it is now the target setting. ~2,950 functions, average ~0.9 KB; about 35 are
-  still over 8 KB and a handful over 12 KB (`hmon_hitmon`, `sp_level_coder`, ...) and
-  will need splitting to fit a slot. Much of the size is register spills to the soft
-  stack.
+* Code size, llvm-mos, no LTO: 2.72 MB of text at `-Os`, 2.61 MB at `-Oz -fno-inline`
+  (now the target setting), which also keeps single-caller statics out of line
+  (`sp_level_coder` 80 KB → 13 KB). 3,448 functions, average ~0.76 KB; 16 are over 8 KB
+  and 7 over 12 KB (`readobjnam` 21 KB, `parseoptions`, `m_move`, `hmon_hitmon`, ...)
+  and will need splitting to fit a slot. Much of the size is register spills to the
+  soft stack. Data 41 KB, bss 69 KB.
 * `include/rp6502mac.h` turns the property and vision macros (`Blind`, `canseemon`,
   `Levitation`, ...) into out-of-line `rpm_*` functions (`sys/rp6502/rp6502mac.c`);
   this cut 30–70% of the code of the combat and movement modules.
