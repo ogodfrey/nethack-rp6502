@@ -171,6 +171,15 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
      the link. A RAM copy linked into the game would use RAM, so the game
      needs either a separate dump link with the same string addresses or the
      names-in-XRAM design. Decide before the game's table moves.
+   - Name strings (decided): `mname` becomes a 16-bit index into a RAM name
+     table of string pointers (about 762 bytes of RAM). The XRAM image then
+     has no link addresses, so a small dump program that links only monst.c
+     can produce `mons.bin` for the game, and the game no longer needs a
+     second link. About 126 `mname` reads change to `pm_name(p)`. Not started.
+   - Harness status: the XRAM host harness passes role_init and stops at
+     polyself.c:77 (set_uasmon). `polyself.c` has about 74 sites, several
+     through local `mdat`/`mptr` pointers, so convert the whole file in one
+     pass, then rerun the harness.
    - objclass (`objects[]`) follows the same plan later (about 470 direct
      sites).
 3. **Budget the rest of memory.** Moving both tables alone will not make the
