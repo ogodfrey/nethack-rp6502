@@ -14,13 +14,13 @@ set_mon_data(mon, ptr)
 struct monst *mon;
 struct permonst *ptr;
 {
-    int new_speed, old_speed = mon->data ? mon->data->mmove : 0;
+    int new_speed, old_speed = mon->data ? pm_get(mon->data)->mmove : 0;
 
     mon->data = ptr;
     mon->mnum = (short) monsndx(ptr);
 
     if (mon->movement) { /* used to adjust poly'd hero as well as monsters */
-        new_speed = ptr->mmove;
+        new_speed = pm_get(ptr)->mmove;
         /* prorate unused movement if new form is slower so that
            it doesn't get extra moves leftover from previous form;
            if new form is faster, leave unused movement as is */
@@ -39,16 +39,22 @@ struct permonst *ptr;
 }
 
 /* does monster-type have any attack for a specific type of damage? */
+/* the result points to a static copy, valid until the next call */
 struct attack *
 attacktype_fordmg(ptr, atyp, dtyp)
 struct permonst *ptr;
 int atyp, dtyp;
 {
-    struct attack *a;
+    static struct attack found;
+    const struct permonst *q = pm_get(ptr);
+    int i;
 
-    for (a = &ptr->mattk[0]; a < &ptr->mattk[NATTK]; a++)
-        if (a->aatyp == atyp && (dtyp == AD_ANY || a->adtyp == dtyp))
-            return a;
+    for (i = 0; i < NATTK; i++)
+        if (q->mattk[i].aatyp == atyp
+            && (dtyp == AD_ANY || q->mattk[i].adtyp == dtyp)) {
+            found = q->mattk[i];
+            return &found;
+        }
     return (struct attack *) 0;
 }
 
@@ -67,7 +73,7 @@ noattacks(ptr)
 struct permonst *ptr;
 {
     int i;
-    struct attack *mattk = ptr->mattk;
+    struct attack *mattk = pm_get(ptr)->mattk;
 
     for (i = 0; i < NATTK; i++) {
         /* AT_BOOM "passive attack" (gas spore's explosion upon death)
@@ -284,7 +290,7 @@ struct permonst *ptr;
      * but that's too slow -dlc
      */
     for (i = 0; i < NATTK; i++) {
-        atyp = ptr->mattk[i].aatyp;
+        atyp = pm_get(ptr)->mattk[i].aatyp;
         if (atyp >= AT_WEAP)
             return TRUE;
         /* assert(atyp < 32); */
@@ -307,9 +313,9 @@ boolean
 hates_silver(ptr)
 register struct permonst *ptr;
 {
-    return (boolean) (is_were(ptr) || ptr->mlet == S_VAMPIRE || is_demon(ptr)
+    return (boolean) (is_were(ptr) || pm_get(ptr)->mlet == S_VAMPIRE || is_demon(ptr)
                       || ptr == &mons[PM_SHADE]
-                      || (ptr->mlet == S_IMP && ptr != &mons[PM_TENGU]));
+                      || (pm_get(ptr)->mlet == S_IMP && ptr != &mons[PM_TENGU]));
 }
 
 /* True if specific monster is especially affected by light-emitting weapons */
@@ -336,9 +342,9 @@ boolean
 can_blow(mtmp)
 struct monst *mtmp;
 {
-    if ((is_silent(mtmp->data) || mtmp->data->msound == MS_BUZZ)
+    if ((is_silent(mtmp->data) || pm_get(mtmp->data)->msound == MS_BUZZ)
         && (breathless(mtmp->data) || verysmall(mtmp->data)
-            || !has_head(mtmp->data) || mtmp->data->mlet == S_EEL))
+            || !has_head(mtmp->data) || pm_get(mtmp->data)->mlet == S_EEL))
         return FALSE;
     if ((mtmp == &youmonst) && Strangled)
         return FALSE;
@@ -352,7 +358,7 @@ struct monst *mtmp;
 {
     if ((mtmp == &youmonst && Strangled)
         || is_silent(mtmp->data) || !has_head(mtmp->data)
-        || mtmp->data->msound == MS_BUZZ || mtmp->data->msound == MS_BURBLE)
+        || pm_get(mtmp->data)->msound == MS_BUZZ || pm_get(mtmp->data)->msound == MS_BURBLE)
         return FALSE;
     return TRUE;
 }
@@ -406,7 +412,7 @@ boolean
 sliparm(ptr)
 register struct permonst *ptr;
 {
-    return (boolean) (is_whirly(ptr) || ptr->msize <= MZ_SMALL
+    return (boolean) (is_whirly(ptr) || pm_get(ptr)->msize <= MZ_SMALL
                       || noncorporeal(ptr));
 }
 
@@ -419,7 +425,7 @@ register struct permonst *ptr;
         return FALSE;
 
     return (boolean) (bigmonst(ptr)
-                      || (ptr->msize > MZ_SMALL && !humanoid(ptr))
+                      || (pm_get(ptr)->msize > MZ_SMALL && !humanoid(ptr))
                       /* special cases of humanoids that cannot wear suits */
                       || ptr == &mons[PM_MARILITH]
                       || ptr == &mons[PM_WINGED_GARGOYLE]);
@@ -441,7 +447,7 @@ struct permonst *ptr;
 {
     /* rats and mice are incapable of vomiting;
        which other creatures have the same limitation? */
-    if (ptr->mlet == S_RODENT && ptr != &mons[PM_ROCK_MOLE]
+    if (pm_get(ptr)->mlet == S_RODENT && ptr != &mons[PM_ROCK_MOLE]
         && ptr != &mons[PM_WOODCHUCK])
         return TRUE;
     return FALSE;
@@ -471,16 +477,22 @@ struct permonst *ptr;
 
 /* does monster-type deal out a particular type of damage from a particular
    type of attack? */
+/* the result points to a static copy, valid until the next call */
 struct attack *
 dmgtype_fromattack(ptr, dtyp, atyp)
 struct permonst *ptr;
 int dtyp, atyp;
 {
-    struct attack *a;
+    static struct attack found;
+    const struct permonst *q = pm_get(ptr);
+    int i;
 
-    for (a = &ptr->mattk[0]; a < &ptr->mattk[NATTK]; a++)
-        if (a->adtyp == dtyp && (atyp == AT_ANY || a->aatyp == atyp))
-            return a;
+    for (i = 0; i < NATTK; i++)
+        if (q->mattk[i].adtyp == dtyp
+            && (atyp == AT_ANY || q->mattk[i].aatyp == atyp)) {
+            found = q->mattk[i];
+            return &found;
+        }
     return (struct attack *) 0;
 }
 
@@ -504,7 +516,7 @@ register struct monst *mdef, *magr;
 
     /* each attack by magr can result in passive damage */
     for (i = 0; i < NATTK; i++)
-        switch (magr->data->mattk[i].aatyp) {
+        switch (pm_get(magr->data)->mattk[i].aatyp) {
         case AT_CLAW:
         case AT_BITE:
         case AT_KICK:
@@ -522,18 +534,18 @@ register struct monst *mdef, *magr;
         }
 
     for (i = 0; i < NATTK; i++)
-        if (mdef->data->mattk[i].aatyp == AT_NONE
-            || mdef->data->mattk[i].aatyp == AT_BOOM) {
-            adtyp = mdef->data->mattk[i].adtyp;
+        if (pm_get(mdef->data)->mattk[i].aatyp == AT_NONE
+            || pm_get(mdef->data)->mattk[i].aatyp == AT_BOOM) {
+            adtyp = pm_get(mdef->data)->mattk[i].adtyp;
             if ((adtyp == AD_ACID && !resists_acid(magr))
                 || (adtyp == AD_COLD && !resists_cold(magr))
                 || (adtyp == AD_FIRE && !resists_fire(magr))
                 || (adtyp == AD_ELEC && !resists_elec(magr))
                 || adtyp == AD_PHYS) {
-                dmg = mdef->data->mattk[i].damn;
+                dmg = pm_get(mdef->data)->mattk[i].damn;
                 if (!dmg)
-                    dmg = mdef->data->mlevel + 1;
-                dmg *= mdef->data->mattk[i].damd;
+                    dmg = pm_get(mdef->data)->mlevel + 1;
+                dmg *= pm_get(mdef->data)->mattk[i].damd;
             } else
                 dmg = 0;
 
@@ -547,7 +559,7 @@ boolean
 same_race(pm1, pm2)
 struct permonst *pm1, *pm2;
 {
-    char let1 = pm1->mlet, let2 = pm2->mlet;
+    char let1 = pm_get(pm1)->mlet, let2 = pm_get(pm2)->mlet;
 
     if (pm1 == pm2)
         return TRUE; /* exact match */
@@ -781,9 +793,9 @@ const char *in_str;
     }
 
     for (len = 0, i = LOW_PM; i < NUMMONS; i++) {
-        register int m_i_len = (int) strlen(mons[i].mname);
+        register int m_i_len = (int) strlen(pm_get(&mons[i])->mname);
 
-        if (m_i_len > len && !strncmpi(mons[i].mname, str, m_i_len)) {
+        if (m_i_len > len && !strncmpi(pm_get(&mons[i])->mname, str, m_i_len)) {
             if (m_i_len == slen) {
                 mntmp = i;
                 break; /* exact match */
@@ -878,7 +890,7 @@ int *mndx_p;
                     return -i; /* class */
                 if (mndx_p)
                     *mndx_p = i; /* monster */
-                return mons[i].mlet;
+                    return pm_get(&mons[i])->mlet;
             }
         /* check monster class descriptions */
         len = (int) strlen(in_str);
@@ -894,7 +906,7 @@ int *mndx_p;
         if (i != NON_PM) {
             if (mndx_p)
                 *mndx_p = i;
-            return mons[i].mlet;
+                return pm_get(&mons[i])->mlet;
         }
     }
     return 0;
@@ -921,7 +933,7 @@ boolean override_vis; /* if True then 'no it' unless neuter */
         return 2;
     if (is_neuter(mtmp->data))
         return 2;
-    return (humanoid(mtmp->data) || (mtmp->data->geno & G_UNIQ)
+    return (humanoid(mtmp->data) || (pm_get(mtmp->data)->geno & G_UNIQ)
             || type_is_pname(mtmp->data)) ? (int) mtmp->female : 2;
 }
 
@@ -941,7 +953,7 @@ struct monst *mtmp;
         return TRUE;
     /* stalking types follow, but won't when fleeing unless you hold
        the Amulet */
-    return (boolean) ((mtmp->data->mflags2 & M2_STALK)
+    return (boolean) ((pm_get(mtmp->data)->mflags2 & M2_STALK)
                       && (!mtmp->mflee || u.uhave.amulet));
 }
 
@@ -1058,7 +1070,7 @@ int montyp1, montyp2;
     if (montyp1 == montyp2)
         return TRUE;
     /* assume it isn't possible to grow from one class letter to another */
-    if (mons[montyp1].mlet != mons[montyp2].mlet)
+    if (pm_get(&mons[montyp1])->mlet != pm_get(&mons[montyp2])->mlet)
         return FALSE;
     /* check whether montyp1 can grow up into montyp2 */
     for (l = montyp1; (b = little_to_big(l)) != l; l = b)
@@ -1101,13 +1113,14 @@ const struct permonst *ptr;
 const char *def;
 {
     int capitalize = (*def == highc(*def));
+    const struct permonst *q = pm_get(ptr);
 
     return (is_floater(ptr) ? levitate[capitalize]
-            : (is_flyer(ptr) && ptr->msize <= MZ_SMALL) ? flys[capitalize]
-              : (is_flyer(ptr) && ptr->msize > MZ_SMALL) ? flyl[capitalize]
+            : (is_flyer(ptr) && q->msize <= MZ_SMALL) ? flys[capitalize]
+              : (is_flyer(ptr) && q->msize > MZ_SMALL) ? flyl[capitalize]
                 : slithy(ptr) ? slither[capitalize]
                   : amorphous(ptr) ? ooze[capitalize]
-                    : !ptr->mmove ? immobile[capitalize]
+                    : !q->mmove ? immobile[capitalize]
                       : nolimbs(ptr) ? crawl[capitalize]
                         : def);
 }
@@ -1118,13 +1131,14 @@ const struct permonst *ptr;
 const char *def;
 {
     int capitalize = 2 + (*def == highc(*def));
+    const struct permonst *q = pm_get(ptr);
 
     return (is_floater(ptr) ? levitate[capitalize]
-            : (is_flyer(ptr) && ptr->msize <= MZ_SMALL) ? flys[capitalize]
-              : (is_flyer(ptr) && ptr->msize > MZ_SMALL) ? flyl[capitalize]
+            : (is_flyer(ptr) && q->msize <= MZ_SMALL) ? flys[capitalize]
+              : (is_flyer(ptr) && q->msize > MZ_SMALL) ? flyl[capitalize]
                 : slithy(ptr) ? slither[capitalize]
                   : amorphous(ptr) ? ooze[capitalize]
-                    : !ptr->mmove ? immobile[capitalize]
+                    : !q->mmove ? immobile[capitalize]
                       : nolimbs(ptr) ? crawl[capitalize]
                         : def);
 }
@@ -1183,12 +1197,12 @@ olfaction(mdat)
 struct permonst *mdat;
 {
     if (is_golem(mdat)
-        || mdat->mlet == S_EYE /* spheres  */
-        || mdat->mlet == S_JELLY || mdat->mlet == S_PUDDING
-        || mdat->mlet == S_BLOB || mdat->mlet == S_VORTEX
-        || mdat->mlet == S_ELEMENTAL
-        || mdat->mlet == S_FUNGUS /* mushrooms and fungi */
-        || mdat->mlet == S_LIGHT)
+        || pm_get(mdat)->mlet == S_EYE /* spheres  */
+        || pm_get(mdat)->mlet == S_JELLY || pm_get(mdat)->mlet == S_PUDDING
+        || pm_get(mdat)->mlet == S_BLOB || pm_get(mdat)->mlet == S_VORTEX
+        || pm_get(mdat)->mlet == S_ELEMENTAL
+        || pm_get(mdat)->mlet == S_FUNGUS /* mushrooms and fungi */
+        || pm_get(mdat)->mlet == S_LIGHT)
         return FALSE;
     return TRUE;
 }

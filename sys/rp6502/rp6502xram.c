@@ -11,7 +11,7 @@ static struct permonst pm_slot[PM_SLOTS];
 static unsigned char pm_next;
 
 struct permonst *
-rpm_pm_get(struct permonst *p)
+rpm_pm_get(const struct permonst *p)
 {
     struct permonst *s = &pm_slot[pm_next];
 

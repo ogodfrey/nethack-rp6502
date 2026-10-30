@@ -26,10 +26,10 @@
    (use pm_get()). */
 #define mons ((struct permonst *) (uintptr_t) MONS_XRAM_ADDR)
 #define pm_get(p) rpm_pm_get(p)
-struct permonst *rpm_pm_get(struct permonst *p);
+struct permonst *rpm_pm_get(const struct permonst *p);
 #else
 extern NEARDATA struct permonst mons[]; /* the master list of monster types */
-#define pm_get(p) (p)
+#define pm_get(p) ((struct permonst *) (p))
 #endif
 
 #define mons_at(i) (&mons[i])
