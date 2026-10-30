@@ -15,10 +15,7 @@
 #define RP6502XRAM_H
 
 #include <stdint.h>
-
-/* Address of mons[0] in XRAM. It is used only as a number and is never
-   dereferenced by the CPU. */
-#define MONS_XRAM_ADDR 0x1000
+#include "xram.h"
 
 #if defined(RP6502_MONS_XRAM) && !defined(RP6502_MONS_RAM)
 /* With the table in XRAM, mons names the XRAM image: &mons[i] is an XRAM

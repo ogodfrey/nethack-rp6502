@@ -11,10 +11,13 @@
 #include <stdio.h>
 
 #ifndef RP6502_HOST
-#include <rp6502.h>
-/* monst.c is built with mons renamed to this RAM copy, the XRAM image source. */
+/* monst.c is built with mons renamed to this RAM copy, the XRAM image source.
+   This volatile pointer keeps the copy in the link, so elfsym.py can write
+   the XRAM image from it. The program itself reads only XRAM. */
 extern struct permonst rp6502_ram_mons[];
+const struct permonst *volatile rp6502_keep_mons = rp6502_ram_mons;
 #endif
+
 
 static uint32_t
 fold_pm(uint32_t sum, struct permonst *p)
@@ -103,8 +106,8 @@ main(void)
     unsigned i;
 
 #ifndef RP6502_HOST
-    xram0_write(MONS_XRAM_ADDR, rp6502_ram_mons,
-                (unsigned) (NUMMONS * sizeof(struct permonst)));
+    if (rp6502_keep_mons == 0)
+        return 1;
 #endif
     for (i = 0; i < NUMMONS; i++)
         sum = fold_pm(sum, mons_at(i));

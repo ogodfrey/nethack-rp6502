@@ -72,6 +72,22 @@ if(DEFINED LLVM_MOS_PLATFORM)
         -ffunction-sections -fdata-sections)
 
     add_executable(xramtest)
+    # The XRAM image of the monster table is a byproduct of the link: after
+    # the link, elfsym.py copies the table's initial data from the output, so
+    # the pointers in the image match this program. The address comes from
+    # include/xram.h.
+    file(STRINGS include/xram.h MONS_XRAM_LINE REGEX "^#define MONS_XRAM_ADDR")
+    string(REGEX MATCH "0x[0-9a-fA-F]+" MONS_XRAM_ADDR "${MONS_XRAM_LINE}")
+    find_package(Python3 REQUIRED COMPONENTS Interpreter)
+    add_custom_command(TARGET xramtest POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:xramtest>
+        COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/sys/rp6502/tools/elfsym.py
+                $<TARGET_FILE:xramtest>.elf rp6502_ram_mons
+                $<TARGET_FILE_DIR:xramtest>/mons.bin
+        VERBATIM)
+    set_property(TARGET xramtest APPEND PROPERTY LINK_DEPENDS
+        ${CMAKE_CURRENT_SOURCE_DIR}/sys/rp6502/tools/elfsym.py)
+    rp6502_byproduct(xramtest XRAM(${MONS_XRAM_ADDR}) mons.bin)
     rp6502_executable(xramtest DATA default RESET default)
     target_sources(xramtest PRIVATE
         sys/rp6502/xramtest.c

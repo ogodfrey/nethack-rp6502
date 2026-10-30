@@ -161,9 +161,16 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
      lives at an unmapped fake base and pm_get() asserts its argument is in
      the fake range. Then autoplay will catch any missed direct access.
    - The 9 permonst writes need write-back (`pm_put`) or a RAM-side design.
-   - The game's `mons` RAM array is still linked on target. Removing it needs
-     the XRAM image as a ROM asset, loaded at startup, which means the
-     two-pass link for the `mname` pointers chosen for this design.
+   - The XRAM image rule exists and is proven by `xramtest`. The map is
+     [xram.h](include/xram.h), CMake reads `MONS_XRAM_ADDR` from it, and the
+     link writes `mons.bin` (a byproduct, `rp6502_byproduct`) with
+     [elfsym.py](sys/rp6502/tools/elfsym.py), which copies the table's initial
+     data from the ELF. The image is an XRAM asset, so no startup copy is
+     needed. `xramtest` reads only XRAM and matches the host output.
+   - For the game this still has an open cost: elfsym.py needs the table in
+     the link. A RAM copy linked into the game would use RAM, so the game
+     needs either a separate dump link with the same string addresses or the
+     names-in-XRAM design. Decide before the game's table moves.
    - objclass (`objects[]`) follows the same plan later (about 470 direct
      sites).
 3. **Budget the rest of memory.** Moving both tables alone will not make the
