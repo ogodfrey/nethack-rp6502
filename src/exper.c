@@ -88,12 +88,12 @@ register int nk;
         tmp += (7 - i) * ((i < 0) ? 2 : 1);
 
     /*  For very fast monsters, give extra experience */
-    if (ptr->mmove > NORMAL_SPEED)
-        tmp += (ptr->mmove > (3 * NORMAL_SPEED / 2)) ? 5 : 3;
+    if (pm_get(ptr)->mmove > NORMAL_SPEED)
+        tmp += (pm_get(ptr)->mmove > (3 * NORMAL_SPEED / 2)) ? 5 : 3;
 
     /*  For each "special" attack type give extra experience */
     for (i = 0; i < NATTK; i++) {
-        tmp2 = ptr->mattk[i].aatyp;
+        tmp2 = pm_get(ptr)->mattk[i].aatyp;
         if (tmp2 > AT_BUTT) {
             if (tmp2 == AT_WEAP)
                 tmp += 5;
@@ -106,7 +106,7 @@ register int nk;
 
     /*  For each "special" damage type give extra experience */
     for (i = 0; i < NATTK; i++) {
-        tmp2 = ptr->mattk[i].adtyp;
+        tmp2 = pm_get(ptr)->mattk[i].adtyp;
         if (tmp2 > AD_PHYS && tmp2 < AD_BLND)
             tmp += 2 * mtmp->m_lev;
         else if ((tmp2 == AD_DRLI) || (tmp2 == AD_STON) || (tmp2 == AD_SLIM))
@@ -114,9 +114,9 @@ register int nk;
         else if (tmp2 != AD_PHYS)
             tmp += mtmp->m_lev;
         /* extra heavy damage bonus */
-        if ((int) (ptr->mattk[i].damd * ptr->mattk[i].damn) > 23)
+        if ((int) (pm_get(ptr)->mattk[i].damd * pm_get(ptr)->mattk[i].damn) > 23)
             tmp += mtmp->m_lev;
-        if (tmp2 == AD_WRAP && ptr->mlet == S_EEL && !Amphibious)
+        if (tmp2 == AD_WRAP && pm_get(ptr)->mlet == S_EEL && !Amphibious)
             tmp += 1000;
     }
 

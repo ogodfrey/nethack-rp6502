@@ -93,7 +93,7 @@ char *outbuf;
     Sprintf(outbuf, "%s%s%s called %s",
             /* being blinded may hide invisibility from self */
             (Invis && (senseself() || !Blind)) ? "invisible " : "", race,
-            mons[u.umonnum].mname, plname);
+            pm_get(&mons[u.umonnum])->mname, plname);
     if (u.usteed)
         Sprintf(eos(outbuf), ", mounted on %s", y_monnam(u.usteed));
     if (u.uundetected || (Upolyd && U_AP_TYPE))
@@ -140,7 +140,7 @@ char *outbuf;
     } else if (M_AP_TYPE(mon) == M_AP_MONSTER) {
         if (altmon)
             Sprintf(outbuf, ", masquerading as %s",
-                    an(mons[mon->mappearance].mname));
+                    an(pm_get(&mons[mon->mappearance])->mname));
     } else if (isyou ? u.uundetected : mon->mundetected) {
         Strcpy(outbuf, ", hiding");
         if (hides_under(mon->data)) {
@@ -151,11 +151,11 @@ char *outbuf;
             Strcat(outbuf, something);
         } else if (is_hider(mon->data)) {
             Sprintf(eos(outbuf), " on the %s",
-                    (is_flyer(mon->data) || mon->data->mlet == S_PIERCER)
+                    (is_flyer(mon->data) || pm_get(mon->data)->mlet == S_PIERCER)
                        ? "ceiling"
                        : surface(x, y)); /* trapper */
         } else {
-            if (mon->data->mlet == S_EEL && is_pool(x, y))
+            if (pm_get(mon->data)->mlet == S_EEL && is_pool(x, y))
                 Strcat(outbuf, " in murky water");
         }
     }
@@ -372,12 +372,12 @@ int x, y;
                 } else {
                     unsigned long mW = (context.warntype.obj
                                         | context.warntype.polyd),
-                                  m2 = mtmp->data->mflags2;
+                                  m2 = pm_get(mtmp->data)->mflags2;
                     const char *whom = ((mW & M2_HUMAN & m2) ? "human"
                                         : (mW & M2_ELF & m2) ? "elf"
                                           : (mW & M2_ORC & m2) ? "orc"
                                             : (mW & M2_DEMON & m2) ? "demon"
-                                              : mtmp->data->mname);
+                                              : pm_get(mtmp->data)->mname);
 
                     Sprintf(eos(monbuf), "warned of %s", makeplural(whom));
                 }
@@ -580,7 +580,7 @@ char *supplemental_name;
      * user_typed_name and picked name.
      */
     if (pm != (struct permonst *) 0 && !user_typed_name)
-        dbase_str = strcpy(newstr, pm->mname);
+        dbase_str = strcpy(newstr, pm_get(pm)->mname);
     else
         dbase_str = strcpy(newstr, inp);
     (void) lcase(dbase_str);

@@ -526,8 +526,8 @@ unsigned cxn_flags; /* bitmask of CXN_xxx values */
             char anbuf[10]; /* [4] would be enough: 'a','n',' ','\0' */
 
             Sprintf(eos(buf), " of %s%s",
-                    just_an(anbuf, mons[omndx].mname),
-                    mons[omndx].mname);
+                    just_an(anbuf, pm_get(&mons[omndx])->mname),
+                    pm_get(&mons[omndx])->mname);
         } else if (is_wet_towel(obj)) {
             if (wizard)
                 Sprintf(eos(buf), " (%d)", obj->spe);
@@ -625,8 +625,8 @@ unsigned cxn_flags; /* bitmask of CXN_xxx values */
                        ? ""
                        : the_unique_pm(&mons[omndx])
                           ? "the "
-                          : just_an(anbuf, mons[omndx].mname),
-                    mons[omndx].mname);
+                          : just_an(anbuf, pm_get(&mons[omndx])->mname),
+                    pm_get(&mons[omndx])->mname);
         } else
             Strcpy(buf, actualn);
         break;
@@ -862,7 +862,7 @@ struct permonst *ptr;
     if (type_is_pname(ptr))
         return FALSE;
 
-    uniq = (ptr->geno & G_UNIQ) ? TRUE : FALSE;
+    uniq = (pm_get(ptr)->geno & G_UNIQ) ? TRUE : FALSE;
     /* high priest is unique if it includes "of <deity>", otherwise not
        (caller needs to handle the 1st possibility; we assume the 2nd);
        worm tail should be irrelevant but is included for completeness */
@@ -1193,7 +1193,7 @@ unsigned doname_flags;
 #endif
             if (omndx >= LOW_PM
                 && (known || (mvitals[omndx].mvflags & MV_KNOWS_EGG))) {
-                Strcat(prefix, mons[omndx].mname);
+                Strcat(prefix, pm_get(&mons[omndx])->mname);
                 Strcat(prefix, " ");
                 if (obj->spe)
                     Strcat(bp, " (laid by you)");
@@ -1421,7 +1421,7 @@ unsigned cxn_flags; /* bitmask of CXN_xxx values */
         /* avoid "aligned priest"; it just exposes internal details */
         mname = "priest";
     } else {
-        mname = mons[omndx].mname;
+        mname = pm_get(&mons[omndx])->mname;
         if (the_unique_pm(&mons[omndx]) || type_is_pname(&mons[omndx])) {
             mname = s_suffix(mname);
             possessive = TRUE;
@@ -3265,7 +3265,7 @@ struct obj *no_wish;
            variant (grey ooze) or player used inverted syntax (<foo> glob);
            if player has given a valid monster type but not valid glob type,
            object name lookup won't find it and wish attempt will fail */
-        Sprintf(globbuf, "glob of %s", mons[mntmp].mname);
+        Sprintf(globbuf, "glob of %s", pm_get(&mons[mntmp])->mname);
         bp = globbuf;
         mntmp = NON_PM; /* not useful for "glob of <foo>" object lookup */
         cnt = 0; /* globs don't stack */
@@ -3308,7 +3308,7 @@ struct obj *no_wish;
             char *obp = bp;
 
             mntmptoo = title_to_mon(bp, (int *) 0, &mntmplen);
-            bp += (mntmp != mntmptoo) ? (int) strlen(mons[mntmp].mname)
+            bp += (mntmp != mntmptoo) ? (int) strlen(pm_get(&mons[mntmp])->mname)
                                       : mntmplen;
             if (*bp == ' ') {
                 bp++;
@@ -3960,16 +3960,16 @@ struct obj *no_wish;
             otmp->spe = 0; /* No spinach */
             if (dead_species(mntmp, FALSE)) {
                 otmp->corpsenm = NON_PM; /* it's empty */
-            } else if ((!(mons[mntmp].geno & G_UNIQ) || wizard)
+            } else if ((!(pm_get(&mons[mntmp])->geno & G_UNIQ) || wizard)
                        && !(mvitals[mntmp].mvflags & G_NOCORPSE)
-                       && mons[mntmp].cnutrit != 0) {
+                       && pm_get(&mons[mntmp])->cnutrit != 0) {
                 otmp->corpsenm = mntmp;
             }
             break;
         case CORPSE:
-            if ((!(mons[mntmp].geno & G_UNIQ) || wizard)
+            if ((!(pm_get(&mons[mntmp])->geno & G_UNIQ) || wizard)
                 && !(mvitals[mntmp].mvflags & G_NOCORPSE)) {
-                if (mons[mntmp].msound == MS_GUARDIAN)
+                if (pm_get(&mons[mntmp])->msound == MS_GUARDIAN)
                     mntmp = genus(mntmp, 1);
                 set_corpsenm(otmp, mntmp);
             }
@@ -3980,7 +3980,7 @@ struct obj *no_wish;
             set_corpsenm(otmp, mntmp);
             break;
         case FIGURINE:
-            if (!(mons[mntmp].geno & G_UNIQ) && !is_human(&mons[mntmp])
+            if (!(pm_get(&mons[mntmp])->geno & G_UNIQ) && !is_human(&mons[mntmp])
 #ifdef MAIL
                 && mntmp != PM_MAIL_DAEMON
 #endif
@@ -4126,7 +4126,7 @@ struct obj *no_wish;
 
     if (halfeaten && otmp->oclass == FOOD_CLASS) {
         if (otmp->otyp == CORPSE)
-            otmp->oeaten = mons[otmp->corpsenm].cnutrit;
+            otmp->oeaten = pm_get(&mons[otmp->corpsenm])->cnutrit;
         else
             otmp->oeaten = objects[otmp->otyp].oc_nutrition;
         /* (do this adjustment before setting up object's weight) */
