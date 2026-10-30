@@ -1113,14 +1113,13 @@ const struct permonst *ptr;
 const char *def;
 {
     int capitalize = (*def == highc(*def));
-    const struct permonst *q = pm_get(ptr);
 
     return (is_floater(ptr) ? levitate[capitalize]
-            : (is_flyer(ptr) && q->msize <= MZ_SMALL) ? flys[capitalize]
-              : (is_flyer(ptr) && q->msize > MZ_SMALL) ? flyl[capitalize]
+            : (is_flyer(ptr) && pm_get(ptr)->msize <= MZ_SMALL) ? flys[capitalize]
+              : (is_flyer(ptr) && pm_get(ptr)->msize > MZ_SMALL) ? flyl[capitalize]
                 : slithy(ptr) ? slither[capitalize]
                   : amorphous(ptr) ? ooze[capitalize]
-                    : !q->mmove ? immobile[capitalize]
+                    : !pm_get(ptr)->mmove ? immobile[capitalize]
                       : nolimbs(ptr) ? crawl[capitalize]
                         : def);
 }
@@ -1131,14 +1130,13 @@ const struct permonst *ptr;
 const char *def;
 {
     int capitalize = 2 + (*def == highc(*def));
-    const struct permonst *q = pm_get(ptr);
 
     return (is_floater(ptr) ? levitate[capitalize]
-            : (is_flyer(ptr) && q->msize <= MZ_SMALL) ? flys[capitalize]
-              : (is_flyer(ptr) && q->msize > MZ_SMALL) ? flyl[capitalize]
+            : (is_flyer(ptr) && pm_get(ptr)->msize <= MZ_SMALL) ? flys[capitalize]
+              : (is_flyer(ptr) && pm_get(ptr)->msize > MZ_SMALL) ? flyl[capitalize]
                 : slithy(ptr) ? slither[capitalize]
                   : amorphous(ptr) ? ooze[capitalize]
-                    : !q->mmove ? immobile[capitalize]
+                    : !pm_get(ptr)->mmove ? immobile[capitalize]
                       : nolimbs(ptr) ? crawl[capitalize]
                         : def);
 }

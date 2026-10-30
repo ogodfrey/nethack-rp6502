@@ -10,9 +10,9 @@
 /* this assumes that a human quest leader or nemesis is an archetype
    of the corresponding role; that isn't so for some roles (tourist
    for instance) but is for the priests and monks we use it for... */
-#define quest_mon_represents_role(mptr, role_pm) \
-    (mptr->mlet == S_HUMAN && Role_if(role_pm)   \
-     && (mptr->msound == MS_LEADER || mptr->msound == MS_NEMESIS))
+#define quest_mon_represents_role(mptr, role_pm)     \
+    (pm_get(mptr)->mlet == S_HUMAN && Role_if(role_pm) \
+     && (pm_get(mptr)->msound == MS_LEADER || pm_get(mptr)->msound == MS_NEMESIS))
 
 STATIC_DCL boolean FDECL(uncommon, (int));
 STATIC_DCL int FDECL(align_shift, (struct permonst *));
@@ -27,14 +27,14 @@ STATIC_DCL boolean FDECL(makemon_rnd_goodpos, (struct monst *,
 
 #define m_initsgrp(mtmp, x, y, mmf) m_initgrp(mtmp, x, y, 3, mmf)
 #define m_initlgrp(mtmp, x, y, mmf) m_initgrp(mtmp, x, y, 10, mmf)
-#define toostrong(monindx, lev) (mons[monindx].difficulty > lev)
-#define tooweak(monindx, lev) (mons[monindx].difficulty < lev)
+#define toostrong(monindx, lev) (pm_get(&mons[monindx])->difficulty > lev)
+#define tooweak(monindx, lev) (pm_get(&mons[monindx])->difficulty < lev)
 
 boolean
 is_home_elemental(ptr)
 struct permonst *ptr;
 {
-    if (ptr->mlet == S_ELEMENTAL)
+    if (pm_get(ptr)->mlet == S_ELEMENTAL)
         switch (monsndx(ptr)) {
         case PM_AIR_ELEMENTAL:
             return Is_airlevel(&u.uz);
@@ -55,7 +55,7 @@ STATIC_OVL boolean
 wrong_elem_type(ptr)
 struct permonst *ptr;
 {
-    if (ptr->mlet == S_ELEMENTAL) {
+    if (pm_get(ptr)->mlet == S_ELEMENTAL) {
         return (boolean) !is_home_elemental(ptr);
     } else if (Is_earthlevel(&u.uz)) {
         /* no restrictions? */
@@ -67,7 +67,7 @@ struct permonst *ptr;
         if (!pm_resistance(ptr, MR_FIRE))
             return TRUE;
     } else if (Is_airlevel(&u.uz)) {
-        if (!(is_flyer(ptr) && ptr->mlet != S_TRAPPER) && !is_floater(ptr)
+        if (!(is_flyer(ptr) && pm_get(ptr)->mlet != S_TRAPPER) && !is_floater(ptr)
             && !amorphous(ptr) && !noncorporeal(ptr) && !is_whirly(ptr))
             return TRUE;
     }
@@ -179,7 +179,7 @@ register struct monst *mtmp;
      *          soldiers get all sorts of things
      *          kops get clubs & cream pies.
      */
-    switch (ptr->mlet) {
+    switch (pm_get(ptr)->mlet) {
     case S_GIANT:
         if (rn2(2))
             (void) mongets(mtmp, (mm != PM_ETTIN) ? BOULDER : CLUB);
@@ -256,7 +256,7 @@ register struct monst *mtmp;
                 if (!rn2(50))
                     (void) mongets(mtmp, CRYSTAL_BALL);
             }
-        } else if (ptr->msound == MS_PRIEST
+        } else if (pm_get(ptr)->msound == MS_PRIEST
                    || quest_mon_represents_role(ptr, PM_PRIEST)) {
             otmp = mksobj(MACE, FALSE, FALSE);
             otmp->spe = rnd(3);
@@ -266,7 +266,7 @@ register struct monst *mtmp;
         } else if (mm == PM_NINJA) { /* extra quest villains */
             (void) mongets(mtmp, rn2(4) ? SHURIKEN : DART);
             (void) mongets(mtmp, rn2(4) ? SHORT_SWORD : AXE);
-        } else if (ptr->msound == MS_GUARDIAN) {
+        } else if (pm_get(ptr)->msound == MS_GUARDIAN) {
             /* quest "guardians" */
             switch (mm) {
             case PM_STUDENT:
@@ -586,7 +586,7 @@ register struct monst *mtmp;
      *  Soldiers get armour & rations - armour approximates their ac.
      *  Nymphs may get mirror or potion of object detection.
      */
-    switch (ptr->mlet) {
+    switch (pm_get(ptr)->mlet) {
     case S_HUMAN:
         if (is_mercenary(ptr)) {
             register int mac;
@@ -686,7 +686,7 @@ register struct monst *mtmp;
             case 3:
                 (void) mongets(mtmp, WAN_STRIKING);
             }
-        } else if (ptr->msound == MS_PRIEST
+        } else if (pm_get(ptr)->msound == MS_PRIEST
                    || quest_mon_represents_role(ptr, PM_PRIEST)) {
             (void) mongets(mtmp, rn2(7) ? ROBE
                                         : rn2(3) ? CLOAK_OF_PROTECTION
@@ -933,17 +933,17 @@ boolean ghostly;
     result = (((int) mvitals[mndx].born < lim) && !gone) ? TRUE : FALSE;
 
     /* if it's unique, don't ever make it again */
-    if ((mons[mndx].geno & G_UNIQ) && mndx != PM_HIGH_PRIEST)
+    if ((pm_get(&mons[mndx])->geno & G_UNIQ) && mndx != PM_HIGH_PRIEST)
         mvitals[mndx].mvflags |= G_EXTINCT;
 
     if (mvitals[mndx].born < 255 && tally
         && (!ghostly || (ghostly && result)))
         mvitals[mndx].born++;
-    if ((int) mvitals[mndx].born >= lim && !(mons[mndx].geno & G_NOGEN)
+    if ((int) mvitals[mndx].born >= lim && !(pm_get(&mons[mndx])->geno & G_NOGEN)
         && !(mvitals[mndx].mvflags & G_EXTINCT)) {
         if (wizard) {
             debugpline1("Automatically extinguished %s.",
-                        makeplural(mons[mndx].mname));
+                        makeplural(pm_get(&mons[mndx])->mname));
         }
         mvitals[mndx].mvflags |= G_EXTINCT;
         reset_rndmonst(mndx);
@@ -962,11 +962,11 @@ struct monst *mon;
     /* like newmonhp, but home elementals are ignored, riders use normal d8 */
     if (is_golem(ptr)) {
         /* draining usually won't be applicable for these critters */
-        hp = golemhp(monsndx(ptr)) / (int) ptr->mlevel;
-    } else if (ptr->mlevel > 49) {
+        hp = golemhp(monsndx(ptr)) / (int) pm_get(ptr)->mlevel;
+    } else if (pm_get(ptr)->mlevel > 49) {
         /* arbitrary; such monsters won't be involved in draining anyway */
         hp = 4 + rnd(4); /* 5..8 */
-    } else if (ptr->mlet == S_DRAGON && monsndx(ptr) >= PM_GRAY_DRAGON) {
+    } else if (pm_get(ptr)->mlet == S_DRAGON && monsndx(ptr) >= PM_GRAY_DRAGON) {
         /* adult dragons; newmonhp() uses In_endgame(&u.uz) ? 8 : 4 + rnd(4)
          */
         hp = 4 + rn2(5); /* 4..8 */
@@ -992,14 +992,14 @@ int mndx;
     } else if (is_rider(ptr)) {
         /* we want low HP, but a high mlevel so they can attack well */
         mon->mhpmax = mon->mhp = d(10, 8);
-    } else if (ptr->mlevel > 49) {
+    } else if (pm_get(ptr)->mlevel > 49) {
         /* "special" fixed hp monster
          * the hit points are encoded in the mlevel in a somewhat strange
          * way to fit in the 50..127 positive range of a signed character
          * above the 1..49 that indicate "normal" monster levels */
-        mon->mhpmax = mon->mhp = 2 * (ptr->mlevel - 6);
+        mon->mhpmax = mon->mhp = 2 * (pm_get(ptr)->mlevel - 6);
         mon->m_lev = mon->mhp / 4; /* approximation */
-    } else if (ptr->mlet == S_DRAGON && mndx >= PM_GRAY_DRAGON) {
+    } else if (pm_get(ptr)->mlet == S_DRAGON && mndx >= PM_GRAY_DRAGON) {
         /* adult dragons */
         mon->mhpmax = mon->mhp =
             (int) (In_endgame(&u.uz)
@@ -1066,7 +1066,7 @@ coord *cc;
                     if (goodpos(nx, ny, mon, gpflags))
                         goto gotgood;
                 }
-            if (bl == 0 && (!mon || mon->data->mmove)) {
+            if (bl == 0 && (!mon || pm_get(mon->data)->mmove)) {
                 /* all map positions are visible (or not good),
                    try to pick something logical */
                 if (dnstair.sx && !rn2(2)) {
@@ -1159,7 +1159,7 @@ int mmflags;
             return (struct monst *) 0;
         if (wizard && (mvitals[mndx].mvflags & G_EXTINCT)) {
             debugpline1("Explicitly creating extinct monster %s.",
-                        mons[mndx].mname);
+                        pm_get(&mons[mndx])->mname);
         }
     } else {
         /* make a random (common) monster that can survive here.
@@ -1204,7 +1204,7 @@ int mmflags;
     if (!mtmp->m_id)
         mtmp->m_id = context.ident++; /* ident overflowed */
     set_mon_data(mtmp, ptr); /* mtmp->data = ptr; */
-    if (ptr->msound == MS_LEADER && quest_info(MS_LEADER) == mndx)
+    if (pm_get(ptr)->msound == MS_LEADER && quest_info(MS_LEADER) == mndx)
         quest_status.leader_m_id = mtmp->m_id;
     mtmp->mnum = mndx;
 
@@ -1218,9 +1218,9 @@ int mmflags;
     /* leader and nemesis gender is usually hardcoded in mons[],
        but for ones which can be random, it has already been chosen
        (in role_init(), for possible use by the quest pager code) */
-    else if (ptr->msound == MS_LEADER && quest_info(MS_LEADER) == mndx)
+    else if (pm_get(ptr)->msound == MS_LEADER && quest_info(MS_LEADER) == mndx)
         mtmp->female = quest_status.ldrgend;
-    else if (ptr->msound == MS_NEMESIS && quest_info(MS_NEMESIS) == mndx)
+    else if (pm_get(ptr)->msound == MS_NEMESIS && quest_info(MS_NEMESIS) == mndx)
         mtmp->female = quest_status.nemgend;
     else
         mtmp->female = rn2(2); /* ignored for neuters */
@@ -1228,14 +1228,14 @@ int mmflags;
     if (In_sokoban(&u.uz) && !mindless(ptr)) /* know about traps here */
         mtmp->mtrapseen = (1L << (PIT - 1)) | (1L << (HOLE - 1));
     /* quest leader and nemesis both know about all trap types */
-    if (ptr->msound == MS_LEADER || ptr->msound == MS_NEMESIS)
+    if (pm_get(ptr)->msound == MS_LEADER || pm_get(ptr)->msound == MS_NEMESIS)
         mtmp->mtrapseen = ~0;
 
     place_monster(mtmp, x, y);
     mtmp->mcansee = mtmp->mcanmove = TRUE;
     mtmp->mpeaceful = (mmflags & MM_ANGRY) ? FALSE : peace_minded(ptr);
 
-    switch (ptr->mlet) {
+    switch (pm_get(ptr)->mlet) {
     case S_MIMIC:
         set_mimic_sym(mtmp);
         break;
@@ -1269,7 +1269,7 @@ int mmflags;
             mtmp->mpeaceful = FALSE;
         break;
     case S_UNICORN:
-        if (is_unicorn(ptr) && sgn(u.ualign.type) == sgn(ptr->maligntyp))
+        if (is_unicorn(ptr) && sgn(u.ualign.type) == sgn(pm_get(ptr)->maligntyp))
             mtmp->mpeaceful = TRUE;
         break;
     case S_BAT:
@@ -1307,7 +1307,7 @@ int mmflags;
         mtmp = christen_monst(mtmp, rndghostname());
     } else if (mndx == PM_CROESUS) {
         mitem = TWO_HANDED_SWORD;
-    } else if (ptr->msound == MS_NEMESIS) {
+    } else if (pm_get(ptr)->msound == MS_NEMESIS) {
         mitem = BELL_OF_OPENING;
     } else if (mndx == PM_PESTILENCE) {
         mitem = POT_SICKNESS;
@@ -1326,7 +1326,7 @@ int mmflags;
             set_apparxy(mtmp);
         }
     }
-    if (is_dprince(ptr) && ptr->msound == MS_BRIBE) {
+    if (is_dprince(ptr) && pm_get(ptr)->msound == MS_BRIBE) {
         mtmp->mpeaceful = mtmp->minvis = mtmp->perminvis = 1;
         mtmp->mavenge = 0;
         if (uwep && uwep->oartifact == ART_EXCALIBUR)
@@ -1367,9 +1367,9 @@ int mmflags;
     }
     set_malign(mtmp); /* having finished peaceful changes */
     if (anymon && !(mmflags & MM_NOGRP)) {
-        if ((ptr->geno & G_SGROUP) && rn2(2)) {
+        if ((pm_get(ptr)->geno & G_SGROUP) && rn2(2)) {
             m_initsgrp(mtmp, mtmp->mx, mtmp->my, mmflags);
-        } else if (ptr->geno & G_LGROUP) {
+        } else if (pm_get(ptr)->geno & G_LGROUP) {
             if (rn2(3))
                 m_initlgrp(mtmp, mtmp->mx, mtmp->my, mmflags);
             else
@@ -1396,12 +1396,12 @@ int mmflags;
             discard_minvent(mtmp);
         mtmp->minvent = (struct obj *) 0; /* caller expects this */
     }
-    if (ptr->mflags3 && !(mmflags & MM_NOWAIT)) {
-        if (ptr->mflags3 & M3_WAITFORU)
+    if (pm_get(ptr)->mflags3 && !(mmflags & MM_NOWAIT)) {
+        if (pm_get(ptr)->mflags3 & M3_WAITFORU)
             mtmp->mstrategy |= STRAT_WAITFORU;
-        if (ptr->mflags3 & M3_CLOSE)
+        if (pm_get(ptr)->mflags3 & M3_CLOSE)
             mtmp->mstrategy |= STRAT_CLOSE;
-        if (ptr->mflags3 & (M3_WAITMASK | M3_COVETOUS))
+        if (pm_get(ptr)->mflags3 & (M3_WAITMASK | M3_COVETOUS))
             mtmp->mstrategy |= STRAT_APPEARMSG;
     }
 
@@ -1466,14 +1466,14 @@ STATIC_OVL boolean
 uncommon(mndx)
 int mndx;
 {
-    if (mons[mndx].geno & (G_NOGEN | G_UNIQ))
+    if (pm_get(&mons[mndx])->geno & (G_NOGEN | G_UNIQ))
         return TRUE;
     if (mvitals[mndx].mvflags & G_GONE)
         return TRUE;
     if (Inhell)
-        return (boolean) (mons[mndx].maligntyp > A_NEUTRAL);
+        return (boolean) (pm_get(&mons[mndx])->maligntyp > A_NEUTRAL);
     else
-        return (boolean) ((mons[mndx].geno & G_HELL) != 0);
+        return (boolean) ((pm_get(&mons[mndx])->geno & G_HELL) != 0);
 }
 
 /*
@@ -1499,13 +1499,13 @@ register struct permonst *ptr;
         alshift = 0;
         break;
     case AM_LAWFUL:
-        alshift = (ptr->maligntyp + 20) / (2 * ALIGNWEIGHT);
+        alshift = (pm_get(ptr)->maligntyp + 20) / (2 * ALIGNWEIGHT);
         break;
     case AM_NEUTRAL:
-        alshift = (20 - abs(ptr->maligntyp)) / ALIGNWEIGHT;
+        alshift = (20 - abs(pm_get(ptr)->maligntyp)) / ALIGNWEIGHT;
         break;
     case AM_CHAOTIC:
-        alshift = (-(ptr->maligntyp - 20)) / (2 * ALIGNWEIGHT);
+        alshift = (-(pm_get(ptr)->maligntyp - 20)) / (2 * ALIGNWEIGHT);
         break;
     }
     return alshift;
@@ -1559,15 +1559,15 @@ rndmonst()
             rndmonst_state.mchoices[mndx] = 0;
             if (tooweak(mndx, minmlev) || toostrong(mndx, maxmlev))
                 continue;
-            if (upper && !isupper((uchar) def_monsyms[(int) ptr->mlet].sym))
+            if (upper && !isupper((uchar) def_monsyms[(int) pm_get(ptr)->mlet].sym))
                 continue;
             if (elemlevel && wrong_elem_type(ptr))
                 continue;
             if (uncommon(mndx))
                 continue;
-            if (Inhell && (ptr->geno & G_NOHELL))
+            if (Inhell && (pm_get(ptr)->geno & G_NOHELL))
                 continue;
-            ct = (int) (ptr->geno & G_FREQ) + align_shift(ptr);
+            ct = (int) (pm_get(ptr)->geno & G_FREQ) + align_shift(ptr);
             if (ct < 0 || ct > 127)
                 panic("rndmonst: bad count [#%d: %d]", mndx, ct);
             rndmonst_state.choice_count += ct;
@@ -1624,7 +1624,7 @@ int mndx, mvflagsmask, genomask;
 
     if (mvitals[mndx].mvflags & mvflagsmask)
         return FALSE;
-    if (ptr->geno & genomask)
+    if (pm_get(ptr)->geno & genomask)
         return FALSE;
     if (is_placeholder(ptr))
         return FALSE;
@@ -1672,7 +1672,7 @@ aligntyp atyp;
      *                  regular monsters from the exceptions.
      */
     for (first = LOW_PM; first < SPECIAL_PM; first++)
-        if (mons[first].mlet == class)
+        if (pm_get(&mons[first])->mlet == class)
             break;
     if (first == SPECIAL_PM) {
         impossible("mkclass found no class %d monsters", class);
@@ -1682,8 +1682,8 @@ aligntyp atyp;
     /*  Assumption #2:  monsters of a given class are presented in ascending
      *                  order of strength.
      */
-    for (last = first; last < SPECIAL_PM && mons[last].mlet == class; last++) {
-        if (atyp != A_NONE && sgn(mons[last].maligntyp) != sgn(atyp))
+    for (last = first; last < SPECIAL_PM && pm_get(&mons[last])->mlet == class; last++) {
+        if (atyp != A_NONE && sgn(pm_get(&mons[last])->maligntyp) != sgn(atyp))
             continue;
         if (mk_gen_ok(last, G_GONE, mask)) {
             /* consider it; don't reject a toostrong() monster if we
@@ -1692,10 +1692,10 @@ aligntyp atyp;
                'num' implies last > first so mons[last-1] is safe);
                sometimes accept it even if high difficulty */
             if (num && toostrong(last, maxmlev)
-                && mons[last].difficulty > mons[last - 1].difficulty
+                && pm_get(&mons[last])->difficulty > pm_get(&mons[last - 1])->difficulty
                 && rn2(2))
                 break;
-            if ((k = (mons[last].geno & G_FREQ)) > 0) {
+            if ((k = (pm_get(&mons[last])->geno & G_FREQ)) > 0) {
                 /* skew towards lower value monsters at lower exp. levels
                    (this used to be done in the next loop, but that didn't
                    work well when multiple species had the same level and
@@ -1733,20 +1733,20 @@ int class;
     register int first, last, num = 0;
 
     for (first = LOW_PM; first < SPECIAL_PM; first++)
-        if (mons[first].mlet == class)
+        if (pm_get(&mons[first])->mlet == class)
             break;
     if (first == SPECIAL_PM)
         return NON_PM;
 
-    for (last = first; last < SPECIAL_PM && mons[last].mlet == class; last++)
+    for (last = first; last < SPECIAL_PM && pm_get(&mons[last])->mlet == class; last++)
         if (mk_gen_ok(last, G_GENOD, (G_NOGEN | G_UNIQ)))
-            num += mons[last].geno & G_FREQ;
+            num += pm_get(&mons[last])->geno & G_FREQ;
     if (!num)
         return NON_PM;
 
     for (num = rnd(num); num > 0; first++)
         if (mk_gen_ok(first, G_GENOD, (G_NOGEN | G_UNIQ)))
-            num -= mons[first].geno & G_FREQ;
+            num -= pm_get(&mons[first])->geno & G_FREQ;
     first--; /* correct an off-by-one error */
 
     return first;
@@ -1763,13 +1763,13 @@ register struct permonst *ptr;
         /* does not depend on other strengths, but does get stronger
          * every time he is killed
          */
-        tmp = ptr->mlevel + mvitals[PM_WIZARD_OF_YENDOR].died;
+        tmp = pm_get(ptr)->mlevel + mvitals[PM_WIZARD_OF_YENDOR].died;
         if (tmp > 49)
             tmp = 49;
         return tmp;
     }
 
-    if ((tmp = ptr->mlevel) > 49)
+    if ((tmp = pm_get(ptr)->mlevel) > 49)
         return 50; /* "special" demons/devils */
     tmp2 = (level_difficulty() - tmp);
     if (tmp2 < 0)
@@ -1777,11 +1777,11 @@ register struct permonst *ptr;
     else
         tmp += (tmp2 / 5); /* else increment 1 per five diff */
 
-    tmp2 = (u.ulevel - ptr->mlevel); /* adjust vs. the player */
+    tmp2 = (u.ulevel - pm_get(ptr)->mlevel); /* adjust vs. the player */
     if (tmp2 > 0)
         tmp += (tmp2 / 4); /* level as well */
 
-    tmp2 = (3 * ((int) ptr->mlevel)) / 2; /* crude upper limit */
+    tmp2 = (3 * ((int) pm_get(ptr)->mlevel)) / 2; /* crude upper limit */
     if (tmp2 > 49)
         tmp2 = 49;                                      /* hard upper limit */
     return ((tmp > tmp2) ? tmp2 : (tmp > 0 ? tmp : 0)); /* 0 lower limit */
@@ -1824,10 +1824,10 @@ struct monst *mtmp, *victim;
             hp_threshold = ((mtmp->mhpmax / 10) + 1) * 10 - 1;
         else if (is_home_elemental(ptr))
             hp_threshold *= 3;
-        lev_limit = 3 * (int) ptr->mlevel / 2; /* same as adj_lev() */
+        lev_limit = 3 * (int) pm_get(ptr)->mlevel / 2; /* same as adj_lev() */
         /* If they can grow up, be sure the level is high enough for that */
-        if (oldtype != newtype && mons[newtype].mlevel > lev_limit)
-            lev_limit = (int) mons[newtype].mlevel;
+        if (oldtype != newtype && pm_get(&mons[newtype])->mlevel > lev_limit)
+            lev_limit = (int) pm_get(&mons[newtype])->mlevel;
         /* number of hit points to gain; unlike for the player, we put
            the limit at the bottom of the next level rather than the top */
         max_increase = rnd((int) victim->m_lev + 1);
@@ -1853,9 +1853,9 @@ struct monst *mtmp, *victim;
     else if (lev_limit < 5)
         lev_limit = 5; /* arbitrary */
     else if (lev_limit > 49)
-        lev_limit = (ptr->mlevel > 49 ? 50 : 49);
+        lev_limit = (pm_get(ptr)->mlevel > 49 ? 50 : 49);
 
-    if ((int) ++mtmp->m_lev >= mons[newtype].mlevel && newtype != oldtype) {
+    if ((int) ++mtmp->m_lev >= pm_get(&mons[newtype])->mlevel && newtype != oldtype) {
         ptr = &mons[newtype];
         /* new form might force gender change */
         fem = is_male(ptr) ? 0 : is_female(ptr) ? 1 : mtmp->female;
@@ -1863,7 +1863,7 @@ struct monst *mtmp, *victim;
         if (mvitals[newtype].mvflags & G_GENOD) { /* allow G_EXTINCT */
             if (canspotmon(mtmp))
                 pline("As %s grows up into %s, %s %s!", mon_nam(mtmp),
-                      an(ptr->mname), mhe(mtmp),
+                      an(pm_get(ptr)->mname), mhe(mtmp),
                       nonliving(ptr) ? "expires" : "dies");
             set_mon_data(mtmp, ptr); /* keep mvitals[] accurate */
             mondied(mtmp);
@@ -1881,7 +1881,7 @@ struct monst *mtmp, *victim;
                            (can't happen with 3.6.0 mons[], but perhaps
                            slightly less sexist if prepared for it...) */
                       : (fem && !mtmp->female) ? "female " : "",
-                    ptr->mname);
+                    pm_get(ptr)->mname);
             pline("%s %s %s.", upstart(y_monnam(mtmp)),
                   (fem != mtmp->female) ? "changes into"
                                         : humanoid(ptr) ? "becomes"
@@ -1922,7 +1922,7 @@ int otyp;
         return 0;
     otmp = mksobj(otyp, TRUE, FALSE);
     if (otmp) {
-        if (mtmp->data->mlet == S_DEMON) {
+        if (pm_get(mtmp->data)->mlet == S_DEMON) {
             /* demons never get blessed objects */
             if (otmp->blessed)
                 curse(otmp);
@@ -2003,15 +2003,15 @@ boolean
 peace_minded(ptr)
 register struct permonst *ptr;
 {
-    aligntyp mal = ptr->maligntyp, ual = u.ualign.type;
+    aligntyp mal = pm_get(ptr)->maligntyp, ual = u.ualign.type;
 
     if (always_peaceful(ptr))
         return TRUE;
     if (always_hostile(ptr))
         return FALSE;
-    if (ptr->msound == MS_LEADER || ptr->msound == MS_GUARDIAN)
+    if (pm_get(ptr)->msound == MS_LEADER || pm_get(ptr)->msound == MS_GUARDIAN)
         return TRUE;
-    if (ptr->msound == MS_NEMESIS)
+    if (pm_get(ptr)->msound == MS_NEMESIS)
         return FALSE;
 
     if (race_peaceful(ptr))
@@ -2055,7 +2055,7 @@ void
 set_malign(mtmp)
 struct monst *mtmp;
 {
-    schar mal = mtmp->data->maligntyp;
+    schar mal = pm_get(mtmp->data)->maligntyp;
     boolean coaligned;
 
     if (mtmp->ispriest || mtmp->isminion) {
@@ -2071,7 +2071,7 @@ struct monst *mtmp;
     }
 
     coaligned = (sgn(mal) == sgn(u.ualign.type));
-    if (mtmp->data->msound == MS_LEADER) {
+    if (pm_get(mtmp->data)->msound == MS_LEADER) {
         mtmp->malign = -20;
     } else if (mal == A_NONE) {
         if (mtmp->mpeaceful)
