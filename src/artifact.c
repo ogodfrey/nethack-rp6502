@@ -792,18 +792,18 @@ struct monst *mtmp;
     if (weap->spfx & SPFX_DMONS) {
         return (ptr == &mons[(int) weap->mtype]);
     } else if (weap->spfx & SPFX_DCLAS) {
-        return (weap->mtype == (unsigned long) ptr->mlet);
+        return (weap->mtype == (unsigned long) pm_get(ptr)->mlet);
     } else if (weap->spfx & SPFX_DFLAG1) {
-        return ((ptr->mflags1 & weap->mtype) != 0L);
+        return ((pm_get(ptr)->mflags1 & weap->mtype) != 0L);
     } else if (weap->spfx & SPFX_DFLAG2) {
-        return ((ptr->mflags2 & weap->mtype)
+        return ((pm_get(ptr)->mflags2 & weap->mtype)
                 || (yours
                     && ((!Upolyd && (urace.selfmask & weap->mtype))
                         || ((weap->mtype & M2_WERE) && u.ulycn >= LOW_PM))));
     } else if (weap->spfx & SPFX_DALIGN) {
         return yours ? (u.ualign.type != weap->alignment)
-                     : (ptr->maligntyp == A_NONE
-                        || sgn(ptr->maligntyp) != weap->alignment);
+                     : (pm_get(ptr)->maligntyp == A_NONE
+                        || sgn(pm_get(ptr)->maligntyp) != weap->alignment);
     } else if (weap->spfx & SPFX_ATTK) {
         struct obj *defending_weapon = (yours ? uwep : MON_WEP(mtmp));
 

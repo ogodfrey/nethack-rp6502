@@ -21,7 +21,7 @@ STATIC_DCL void FDECL(kops_gone, (BOOLEAN_P));
 
 #define muteshk(shkp)                       \
     ((shkp)->msleeping || !(shkp)->mcanmove \
-     || (shkp)->data->msound <= MS_ANIMAL)
+     || pm_get(shkp->data)->msound <= MS_ANIMAL)
 
 extern const struct shclass shtypes[]; /* defined in shknam.c */
 
@@ -3968,9 +3968,9 @@ register int fall;
     lang = 0;
     if (shkp->msleeping || !shkp->mcanmove || is_silent(shkp->data))
         ; /* lang stays 0 */
-    else if (shkp->data->msound <= MS_ANIMAL)
+    else if (pm_get(shkp->data)->msound <= MS_ANIMAL)
         lang = 1;
-    else if (shkp->data->msound >= MS_HUMANOID)
+    else if (pm_get(shkp->data)->msound >= MS_HUMANOID)
         lang = 2;
 
     if (!inhishop(shkp)) {
@@ -4137,7 +4137,7 @@ boolean cant_mollify;
     if (!cost_of_damage || !shkp)
         return;
 
-    animal = (shkp->data->msound <= MS_ANIMAL);
+    animal = (pm_get(shkp->data)->msound <= MS_ANIMAL);
     pursue = FALSE;
     x = appear_here->place.x;
     y = appear_here->place.y;
@@ -4489,7 +4489,7 @@ boolean silent;
 
     for (mtmp = fmon; mtmp; mtmp = mtmp2) {
         mtmp2 = mtmp->nmon;
-        if (mtmp->data->mlet == S_KOP) {
+        if (pm_get(mtmp->data)->mlet == S_KOP) {
             if (canspotmon(mtmp))
                 cnt++;
             mongone(mtmp);

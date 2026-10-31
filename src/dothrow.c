@@ -659,7 +659,7 @@ int x, y;
          * for that, we need to know that the range is not exhausted
          * and also that the next spot doesn't contain an obstacle */
         && !(mon->mundetected && hides_under(mon) && (Flying || Levitation))
-        && !(mon->mundetected && mon->data->mlet == S_EEL
+        && !(mon->mundetected && pm_get(mon->data)->mlet == S_EEL
              && (Flying || Levitation || Wwalking))
 #endif
         ) {
@@ -869,7 +869,7 @@ int dx, dy, range;
     /* Is the monster stuck or too heavy to push?
      * (very large monsters have too much inertia, even floaters and flyers)
      */
-    if (mon->data->msize >= MZ_HUGE || mon == u.ustuck || mon->mtrapped)
+    if (pm_get(mon->data)->msize >= MZ_HUGE || mon == u.ustuck || mon->mtrapped)
         return;
 
     /* Make sure dx and dy are [-1,0,1] */
@@ -1453,7 +1453,7 @@ boolean mon_notices;
     int tmp = 0;
 
     /* size of target affects the chance of hitting */
-    tmp += (mon->data->msize - MZ_MEDIUM); /* -2..+5 */
+    tmp += (pm_get(mon->data)->msize - MZ_MEDIUM); /* -2..+5 */
     /* sleeping target is more likely to be hit */
     if (mon->msleeping) {
         tmp += 2;
@@ -1461,9 +1461,9 @@ boolean mon_notices;
             mon->msleeping = 0;
     }
     /* ditto for immobilized target */
-    if (!mon->mcanmove || !mon->data->mmove) {
+    if (!mon->mcanmove || !pm_get(mon->data)->mmove) {
         tmp += 4;
-        if (mon_notices && mon->data->mmove && !rn2(10)) {
+        if (mon_notices && pm_get(mon->data)->mmove && !rn2(10)) {
             mon->mcanmove = 1;
             mon->mfrozen = 0;
         }
@@ -1546,7 +1546,7 @@ register struct obj *obj; /* thrownobj or kickedobj or uwep */
      * Distance and monster size affect chance to hit.
      */
     tmp = -1 + Luck + find_mac(mon) + u.uhitinc
-          + maybe_polyd(youmonst.data->mlevel, u.ulevel);
+          + maybe_polyd(pm_get(youmonst.data)->mlevel, u.ulevel);
     if (ACURR(A_DEX) < 4)
         tmp -= 3;
     else if (ACURR(A_DEX) < 6)
@@ -1804,7 +1804,7 @@ register struct monst *mon;
 register struct obj *obj;
 {
     char buf[BUFSZ];
-    boolean is_buddy = sgn(mon->data->maligntyp) == sgn(u.ualign.type);
+    boolean is_buddy = sgn(pm_get(mon->data)->maligntyp) == sgn(u.ualign.type);
     boolean is_gem = objects[obj->otyp].oc_material == GEMSTONE;
     int ret = 0;
     static NEARDATA const char nogood[] = " is not interested in your junk.";

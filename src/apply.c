@@ -189,7 +189,7 @@ int rx, ry, *resp;
         corpse = 0;               /* can't reach corpse on floor */
         /* you can't reach tiny statues (even though you can fight
            tiny monsters while levitating--consistency, what's that?) */
-        while (statue && mons[statue->corpsenm].msize == MZ_TINY)
+        while (statue && pm_get(&mons[statue->corpsenm])->msize == MZ_TINY)
             statue = nxtobj(statue, STATUE, TRUE);
     }
     /* when both corpse and statue are present, pick the uppermost one */
@@ -271,7 +271,7 @@ int rx, ry, *resp;
                     humanoid(mptr) ? "person" : "creature");
             what = buf;
         } else {
-            what = mptr->mname;
+            what = pm_get(mptr)->mname;
             if (!type_is_pname(mptr))
                 what = The(what);
         }
@@ -407,7 +407,7 @@ register struct obj *obj;
                               || odummy->otyp == LENSES);
                 break;
             case M_AP_MONSTER: /* ignore Hallucination here */
-                what = mons[mtmp->mappearance].mname;
+                what = pm_get(&mons[mtmp->mappearance])->mname;
                 break;
             case M_AP_FURNITURE:
                 what = defsyms[mtmp->mappearance].explanation;
@@ -804,7 +804,7 @@ register xchar x, y;
                     m_unleash(mtmp, FALSE);
                 } else {
                     You("pull on the leash.");
-                    if (mtmp->data->msound != MS_SILENT)
+                    if (pm_get(mtmp->data)->msound != MS_SILENT)
                         switch (rn2(3)) {
                         case 0:
                             growl(mtmp);
@@ -873,7 +873,7 @@ struct obj *obj;
                     }
                     nomovemsg = 0; /* default, "you can move again" */
                 }
-            } else if (youmonst.data->mlet == S_VAMPIRE)
+            } else if (pm_get(youmonst.data)->mlet == S_VAMPIRE)
                 You("don't have a reflection.");
             else if (u.umonnum == PM_UMBER_HULK) {
                 pline("Huh?  That doesn't look like you!");
@@ -922,7 +922,7 @@ struct obj *obj;
     how_seen = vis ? howmonseen(mtmp) : 0;
     /* whether monster is able to use its vision-based capabilities */
     monable = !mtmp->mcan && (!mtmp->minvis || perceives(mtmp->data));
-    mlet = mtmp->data->mlet;
+    mlet = pm_get(mtmp->data)->mlet;
     if (mtmp->msleeping) {
         if (vis)
             pline("%s is too tired to look at your %s.", Monnam(mtmp),
@@ -950,7 +950,7 @@ struct obj *obj;
         stoned = TRUE;
         killed(mtmp);
     } else if (monable && mtmp->data == &mons[PM_FLOATING_EYE]) {
-        int tmp = d((int) mtmp->m_lev, (int) mtmp->data->mattk[0].damd);
+        int tmp = d((int) mtmp->m_lev, (int) pm_get(mtmp->data)->mattk[0].damd);
         if (!rn2(4))
             tmp = 120;
         if (vis)
@@ -1829,7 +1829,7 @@ struct obj *corpse;
 {
     if (corpse->oeaten)
         return 0;
-    if (!mons[corpse->corpsenm].cnutrit)
+    if (!pm_get(&mons[corpse->corpsenm])->cnutrit)
         return 0;
     return 1;
 }
@@ -1859,12 +1859,12 @@ struct obj *obj;
 
         if (poly_when_stoned(youmonst.data))
             You("tin %s without wearing gloves.",
-                an(mons[corpse->corpsenm].mname));
+                an(pm_get(&mons[corpse->corpsenm])->mname));
         else {
             pline("Tinning %s without wearing gloves is a fatal mistake...",
-                  an(mons[corpse->corpsenm].mname));
+                  an(pm_get(&mons[corpse->corpsenm])->mname));
             Sprintf(kbuf, "trying to tin %s without gloves",
-                    an(mons[corpse->corpsenm].mname));
+                    an(pm_get(&mons[corpse->corpsenm])->mname));
         }
         instapetrify(kbuf);
     }
@@ -1875,7 +1875,7 @@ struct obj *obj;
             pline_The("corpse evades your grasp.");
         return;
     }
-    if (mons[corpse->corpsenm].cnutrit == 0) {
+    if (pm_get(&mons[corpse->corpsenm])->cnutrit == 0) {
         pline("That's too insubstantial to tin.");
         return;
     }
@@ -2134,7 +2134,7 @@ long timeout;
         Sprintf(monnambuf, "%s", an(m_monnam(mtmp)));
         and_vanish[0] = '\0';
         if ((mtmp->minvis && !See_invisible)
-            || (mtmp->data->mlet == S_MIMIC
+            || (pm_get(mtmp->data)->mlet == S_MIMIC
                 && M_AP_TYPE(mtmp) != M_AP_NOTHING))
             suppress_see = TRUE;
 
@@ -2142,8 +2142,8 @@ long timeout;
             if (hides_under(mtmp->data) && mshelter) {
                 Sprintf(and_vanish, " and %s under %s",
                         locomotion(mtmp->data, "crawl"), doname(mshelter));
-            } else if (mtmp->data->mlet == S_MIMIC
-                       || mtmp->data->mlet == S_EEL) {
+            } else if (pm_get(mtmp->data)->mlet == S_MIMIC
+                       || pm_get(mtmp->data)->mlet == S_EEL) {
                 suppress_see = TRUE;
             } else
                 Strcpy(and_vanish, " and vanish");
@@ -2856,7 +2856,7 @@ struct obj *obj;
                         char kbuf[BUFSZ];
 
                         Sprintf(kbuf, "%s corpse",
-                                an(mons[otmp->corpsenm].mname));
+                                an(pm_get(&mons[otmp->corpsenm])->mname));
                         pline("Snatching %s is a fatal mistake.", kbuf);
                         instapetrify(kbuf);
                     }

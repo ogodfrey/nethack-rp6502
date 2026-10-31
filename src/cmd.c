@@ -692,7 +692,7 @@ domonability(VOID_ARGS)
         return dobreathe();
     else if (attacktype(youmonst.data, AT_SPIT))
         return dospit();
-    else if (youmonst.data->mlet == S_NYMPH)
+    else if (pm_get(youmonst.data)->mlet == S_NYMPH)
         return doremove();
     else if (attacktype(youmonst.data, AT_GAZE))
         return dogaze();
@@ -713,13 +713,13 @@ domonability(VOID_ARGS)
     } else if (is_unicorn(youmonst.data)) {
         use_unicorn_horn((struct obj *) 0);
         return 1;
-    } else if (youmonst.data->msound == MS_SHRIEK) {
+    } else if (pm_get(youmonst.data)->msound == MS_SHRIEK) {
         You("shriek.");
         if (u.uburied)
             pline("Unfortunately sound does not carry well through rock.");
         else
             aggravate();
-    } else if (youmonst.data->mlet == S_VAMPIRE)
+    } else if (pm_get(youmonst.data)->mlet == S_VAMPIRE)
         return dopoly();
     else if (Upolyd)
         pline("Any special ability you may have is purely reflexive.");
@@ -1859,7 +1859,7 @@ int final;
         if (!is_male(uasmon) && !is_female(uasmon) && !is_neuter(uasmon))
             Sprintf(tmpbuf, "%s ", genders[flags.female ? 1 : 0].adj);
         Sprintf(buf, "%sin %s%s form", !final ? "currently " : "", tmpbuf,
-                uasmon->mname);
+                pm_get(uasmon)->mname);
         you_are(buf, "");
     }
 
@@ -2904,7 +2904,7 @@ int final;
         && !(final == ENL_GAMEOVERDEAD
              && u.umonnum == PM_GREEN_SLIME && !Unchanging)) {
         /* foreign shape (except were-form which is handled below) */
-        Sprintf(buf, "polymorphed into %s", an(youmonst.data->mname));
+        Sprintf(buf, "polymorphed into %s", an(pm_get(youmonst.data)->mname));
         if (wizard)
             Sprintf(eos(buf), " (%d)", u.mtimedone);
         you_are(buf, "");
@@ -3099,7 +3099,7 @@ minimal_enlightenment()
     add_menu(tmpwin, NO_GLYPH, &any, 0, 0, ATR_NONE, "", FALSE);
     add_menu(tmpwin, NO_GLYPH, &any, 0, 0, iflags.menu_headings,
              "Current", FALSE);
-    Sprintf(buf, fmtstr, "race", Upolyd ? youmonst.data->mname : urace.noun);
+    Sprintf(buf, fmtstr, "race", Upolyd ? pm_get(youmonst.data)->mname : urace.noun);
     add_menu(tmpwin, NO_GLYPH, &any, 0, 0, ATR_NONE, buf, FALSE);
     if (Upolyd) {
         Sprintf(buf, fmtstr, "role (base)",
@@ -3198,7 +3198,7 @@ int msgflag;          /* for variant message phrasing */
         }
     } else if (u.uundetected) {
         bp = eos(buf); /* points past "hiding" */
-        if (youmonst.data->mlet == S_EEL) {
+        if (pm_get(youmonst.data)->mlet == S_EEL) {
             if (is_pool(u.ux, u.uy))
                 Sprintf(bp, " in the %s", waterbody_name(u.ux, u.uy));
         } else if (hides_under(youmonst.data)) {

@@ -1292,7 +1292,7 @@ see_monsters()
         newsym(mon->mx, mon->my);
         if (mon->wormno)
             see_wsegs(mon);
-        if (Warn_of_mon && (context.warntype.obj & mon->data->mflags2) != 0L)
+        if (Warn_of_mon && (context.warntype.obj & pm_get(mon->data)->mflags2) != 0L)
             new_warn_obj_cnt++;
     }
     /*

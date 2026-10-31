@@ -185,7 +185,7 @@ xchar x, y;
      * If you have >1 kick attack, you get all of them.
      */
     if (Upolyd && attacktype(youmonst.data, AT_KICK)) {
-        struct attack *uattk;
+        struct attack *uattk, kick_attk;
         int sum, kickdieroll, armorpenalty, specialdmg,
             attknum = 0,
             tmp = find_roll_to_hit(mon, AT_KICK, (struct obj *) 0, &attknum,
@@ -197,7 +197,8 @@ xchar x, y;
             if (multi < 0)
                 break;
 
-            uattk = &youmonst.data->mattk[i];
+            kick_attk = pm_get(youmonst.data)->mattk[i];
+            uattk = &kick_attk;
             /* we only care about kicking attacks here */
             if (uattk->aatyp != AT_KICK)
                 continue;
@@ -250,9 +251,9 @@ xchar x, y;
     You("kick %s.", mon_nam(mon));
     if (!rn2(clumsy ? 3 : 4) && (clumsy || !bigmonst(mon->data))
         && mon->mcansee && !mon->mtrapped && !thick_skinned(mon->data)
-        && mon->data->mlet != S_EEL && haseyes(mon->data) && mon->mcanmove
+        && pm_get(mon->data)->mlet != S_EEL && haseyes(mon->data) && mon->mcanmove
         && !mon->mstun && !mon->mconf && !mon->msleeping
-        && mon->data->mmove >= 12) {
+        && pm_get(mon->data)->mmove >= 12) {
         if (!nohands(mon->data) && !rn2(martial() ? 5 : 3)) {
             pline("%s blocks your %skick.", Monnam(mon),
                   clumsy ? "clumsy " : "");
@@ -806,7 +807,7 @@ dokick()
     } else if (near_capacity() > SLT_ENCUMBER) {
         Your("load is too heavy to balance yourself for a kick.");
         no_kick = TRUE;
-    } else if (youmonst.data->mlet == S_LIZARD) {
+    } else if (pm_get(youmonst.data)->mlet == S_LIZARD) {
         Your("legs cannot kick effectively.");
         no_kick = TRUE;
     } else if (u.uinwater && !rn2(2)) {
@@ -947,10 +948,10 @@ dokick()
             int range;
 
             range =
-                ((int) youmonst.data->cwt + (weight_cap() + inv_weight()));
+                ((int) pm_get(youmonst.data)->cwt + (weight_cap() + inv_weight()));
             if (range < 1)
                 range = 1; /* divide by zero avoidance */
-            range = (3 * (int) mdat->cwt) / range;
+            range = (3 * (int) pm_get(mdat)->cwt) / range;
 
             if (range < 1)
                 range = 1;
@@ -1718,7 +1719,7 @@ unsigned long deliverflags;
         if ((where & MIGR_TO_SPECIES) == 0)
             continue;
 
-        if ((mtmp->data->mflags2 & otmp->corpsenm) != 0) {
+        if ((pm_get(mtmp->data)->mflags2 & otmp->corpsenm) != 0) {
             obj_extract_self(otmp);
             otmp->owornmask = 0L;
             otmp->ox = otmp->oy = 0;

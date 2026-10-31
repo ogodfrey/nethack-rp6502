@@ -1059,7 +1059,7 @@ dodown()
         const char *down_or_thru = trap->ttyp == HOLE ? "down" : "through";
         const char *actn = Flying ? "fly" : locomotion(youmonst.data, "jump");
 
-        if (youmonst.data->msize >= MZ_HUGE) {
+        if (pm_get(youmonst.data)->msize >= MZ_HUGE) {
             char qbuf[QBUFSZ];
 
             You("don't fit %s easily.", down_or_thru);
@@ -1877,7 +1877,7 @@ long timeout UNUSED;
 
     /* corpse will revive somewhere else if there is a monster in the way;
        Riders get a chance to try to bump the obstacle out of their way */
-    if ((mptr->mflags3 & M3_DISPLACES) != 0 && body->where == OBJ_FLOOR
+    if ((pm_get(mptr)->mflags3 & M3_DISPLACES) != 0 && body->where == OBJ_FLOOR
         && get_obj_location(body, &x, &y, 0) && (mtmp = m_at(x, y)) != 0) {
         boolean notice_it = canseemon(mtmp); /* before rloc() */
         char *monname = Monnam(mtmp);

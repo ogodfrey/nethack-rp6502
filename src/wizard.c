@@ -138,7 +138,7 @@ register struct monst *mtmp;
     ((unsigned long) (w) | ((unsigned long) (x) << 16) \
      | ((unsigned long) (y) << 8) | (unsigned long) (typ))
 
-#define M_Wants(mask) (mtmp->data->mflags3 & (mask))
+#define M_Wants(mask) (pm_get(mtmp->data)->mflags3 & (mask))
 
 STATIC_OVL short
 which_arti(mask)
@@ -524,7 +524,7 @@ pick_nasty()
      * but we don't try very hard.
      */
     if (Is_rogue_level(&u.uz)
-        && !('A' <= mons[res].mlet && mons[res].mlet <= 'Z'))
+        && !('A' <= pm_get(&mons[res])->mlet && pm_get(&mons[res])->mlet <= 'Z'))
         res = nasties[rn2(SIZE(nasties))];
 
     return res;
@@ -543,7 +543,7 @@ struct monst *summoner;
 {
     register struct monst *mtmp;
     register int i, j;
-    int castalign = (summoner ? sgn(summoner->data->maligntyp) : 0);
+    int castalign = (summoner ? sgn(pm_get(summoner->data)->maligntyp) : 0);
     coord bypos;
     int count, census, tmp, makeindex, s_cls, m_cls;
 
@@ -558,7 +558,7 @@ struct monst *summoner;
         count = msummon((struct monst *) 0); /* summons like WoY */
     } else {
         count = 0;
-        s_cls = summoner ? summoner->data->mlet : 0;
+        s_cls = summoner ? pm_get(summoner->data)->mlet : 0;
         tmp = (u.ulevel > 3) ? u.ulevel / 3 : 1;
         /* if we don't have a casting monster, nasties appear around hero,
            otherwise they'll appear around spot summoner thinks she's at */
@@ -588,11 +588,11 @@ struct monst *summoner;
                  */
                 do {
                     makeindex = pick_nasty();
-                    m_cls = mons[makeindex].mlet;
+                    m_cls = pm_get(&mons[makeindex])->mlet;
                 } while (summoner
                          && ((attacktype(&mons[makeindex], AT_MAGC)
-                              && mons[makeindex].difficulty
-                                 >= mons[summoner->mnum].difficulty)
+                              && pm_get(&mons[makeindex])->difficulty
+                                 >= pm_get(&mons[summoner->mnum])->difficulty)
                              || (s_cls == S_DEMON && m_cls == S_ANGEL)
                              || (s_cls == S_ANGEL && m_cls == S_DEMON)));
                 /* do this after picking the monster to place */
@@ -612,8 +612,8 @@ struct monst *summoner;
                     /* delay first use of spell or breath attack */
                     mtmp->mspec_used = rnd(4);
                     if (++count >= MAXNASTIES
-                        || mtmp->data->maligntyp == 0
-                        || sgn(mtmp->data->maligntyp) == castalign)
+                        || pm_get(mtmp->data)->maligntyp == 0
+                        || sgn(pm_get(mtmp->data)->maligntyp) == castalign)
                         break;
                 }
             }

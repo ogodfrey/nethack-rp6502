@@ -77,7 +77,7 @@ map_monst(mtmp, showtail)
 struct monst *mtmp;
 boolean showtail;
 {
-    if (def_monsyms[(int) mtmp->data->mlet].sym == ' ')
+    if (def_monsyms[(int) pm_get(mtmp->data)->mlet].sym == ' ')
         show_glyph(mtmp->mx, mtmp->my,
                    detected_mon_to_glyph(mtmp, newsym_rn2));
     else
@@ -813,7 +813,7 @@ int mclass;                /* monster class, 0 for all */
         for (mtmp = fmon; mtmp; mtmp = mtmp->nmon) {
             if (DEADMONSTER(mtmp))
                 continue;
-            if (!mclass || mtmp->data->mlet == mclass
+            if (!mclass || pm_get(mtmp->data)->mlet == mclass
                 || (mtmp->data == &mons[PM_LONG_WORM]
                     && mclass == S_WORM_TAIL))
                 map_monst(mtmp, TRUE);
@@ -1495,7 +1495,7 @@ genericptr_t num;
             (*(int *) num)++;
         } else if (mtmp->mundetected && (is_hider(mtmp->data)
                                          || hides_under(mtmp->data)
-                                         || mtmp->data->mlet == S_EEL)) {
+                                         || pm_get(mtmp->data)->mlet == S_EEL)) {
             mtmp->mundetected = 0;
             newsym(zx, zy);
             (*(int *) num)++;
@@ -1662,7 +1662,7 @@ boolean via_warning;
         found_something = !canspotmon(mtmp);
         if (mtmp->mundetected && (is_hider(mtmp->data)
                                   || hides_under(mtmp->data)
-                                  || mtmp->data->mlet == S_EEL)) {
+                                  || pm_get(mtmp->data)->mlet == S_EEL)) {
             if (via_warning) {
                 Your("warning senses cause you to take a second %s.",
                      Blind ? "to check nearby" : "look close by");

@@ -395,7 +395,7 @@ struct obj *corpse;
             continue;
         mptr = mtmp->data;
         if (mtmp->iswiz || mptr == &mons[PM_MEDUSA]
-            || mptr->msound == MS_NEMESIS || mptr->msound == MS_LEADER
+            || pm_get(mptr)->msound == MS_NEMESIS || pm_get(mptr)->msound == MS_LEADER
             || mptr == &mons[PM_VLAD_THE_IMPALER]
             || (mptr == &mons[PM_ORACLE] && !fixuporacle(mtmp)))
             mongone(mtmp);
@@ -457,7 +457,7 @@ struct obj *corpse;
         drop_upon_death(mtmp, (struct obj *) 0, u.ux, u.uy);
         /* 'mtmp' now has hero's inventory; if 'mtmp' is a mummy, give it
            a wrapping unless already carrying one */
-        if (mtmp->data->mlet == S_MUMMY && !m_carrying(mtmp, MUMMY_WRAPPING))
+        if (pm_get(mtmp->data)->mlet == S_MUMMY && !m_carrying(mtmp, MUMMY_WRAPPING))
             (void) mongets(mtmp, MUMMY_WRAPPING);
         m_dowear(mtmp, TRUE);
     }
@@ -647,7 +647,7 @@ getbones()
                 if (mtmp->mhpmax == DEFUNCT_MONSTER) {
                     if (wizard) {
                         debugpline1("Removing defunct monster %s from bones.",
-                                    mtmp->data->mname);
+                                    pm_get(mtmp->data)->mname);
                     }
                     mongone(mtmp);
                 } else

@@ -488,11 +488,11 @@ register struct obj *otmp;
 
     if (!otmp) {
         impossible("monster (%s) taking or picking up nothing?",
-                   mtmp->data->mname);
+                                      pm_get(mtmp->data)->mname);
         return 1;
     } else if (otmp == uball || otmp == uchain) {
         impossible("monster (%s) taking or picking up attached %s (%s)?",
-                   mtmp->data->mname,
+                   pm_get(mtmp->data)->mname,
                    (otmp == uchain) ? "chain" : "ball", simpleonames(otmp));
         return 0;
     }

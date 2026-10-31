@@ -519,7 +519,7 @@ nh_timeout()
         phaze_dialogue();
     if (u.mtimedone && !--u.mtimedone) {
         if (Unchanging)
-            u.mtimedone = rnd(100 * youmonst.data->mlevel + 1);
+            u.mtimedone = rnd(100 * pm_get(youmonst.data)->mlevel + 1);
         else if (is_were(youmonst.data))
             you_unwere(FALSE); /* if polycontrl, asks whether to rehumanize */
         else
@@ -582,7 +582,7 @@ nh_timeout()
                 if ((m_idx = name_to_mon(killer.name)) >= LOW_PM) {
                     if (type_is_pname(&mons[m_idx])) {
                         killer.format = KILLED_BY;
-                    } else if (mons[m_idx].geno & G_UNIQ) {
+                    } else if (pm_get(&mons[m_idx])->geno & G_UNIQ) {
                         Strcpy(killer.name, the(killer.name));
                         killer.format = KILLED_BY;
                     }
@@ -673,7 +673,7 @@ nh_timeout()
                     context.warntype.speciesidx = NON_PM;
                     if (context.warntype.species) {
                         You("are no longer warned about %s.",
-                            makeplural(context.warntype.species->mname));
+                            makeplural(pm_get(context.warntype.species)->mname));
                         context.warntype.species = (struct permonst *) 0;
                     }
                 }
@@ -826,7 +826,7 @@ long timeout;
     if (get_obj_location(egg, &x, &y, 0)) {
         hatchcount = rnd((int) egg->quan);
         cansee_hatchspot = cansee(x, y) && !silent;
-        if (!(mons[mnum].geno & G_UNIQ)
+        if (!(pm_get(&mons[mnum])->geno & G_UNIQ)
             && !(mvitals[mnum].mvflags & (G_GENOD | G_EXTINCT))) {
             for (i = hatchcount; i > 0; i--) {
                 if (!enexto(&cc, x, y, &mons[mnum])
@@ -836,9 +836,9 @@ long timeout;
                    same dungeon level, or any dragon egg which hatches
                    while it's in your inventory */
                 if ((yours && !silent)
-                    || (carried(egg) && mon->data->mlet == S_DRAGON)) {
+                    || (carried(egg) && pm_get(mon->data)->mlet == S_DRAGON)) {
                     if (tamedog(mon, (struct obj *) 0)) {
-                        if (carried(egg) && mon->data->mlet != S_DRAGON)
+                        if (carried(egg) && pm_get(mon->data)->mlet != S_DRAGON)
                             mon->mtame = 20;
                     }
                 }
@@ -903,7 +903,7 @@ long timeout;
                 pline("%s cries sound like \"%s%s\"",
                       siblings ? "Their" : "Its",
                       flags.female ? "mommy" : "daddy", egg->spe ? "." : "?");
-            } else if (mon->data->mlet == S_DRAGON && !Deaf) {
+            } else if (pm_get(mon->data)->mlet == S_DRAGON && !Deaf) {
                 verbalize("Gleep!"); /* Mything eggs :-) */
             }
             break;
@@ -1034,7 +1034,7 @@ slip_or_trip()
         if (!uarmf && otmp->otyp == CORPSE
             && touch_petrifies(&mons[otmp->corpsenm]) && !Stone_resistance) {
             Sprintf(killer.name, "tripping over %s corpse",
-                    an(mons[otmp->corpsenm].mname));
+                    an(pm_get(&mons[otmp->corpsenm])->mname));
             instapetrify(killer.name);
         }
     } else if (rn2(3) && is_ice(u.ux, u.uy)) {

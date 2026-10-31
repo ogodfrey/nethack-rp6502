@@ -996,7 +996,7 @@ genericptr_t p2;
             /* not is_swimmer(); assume that non-fish are swimming on
                the surface and breathing the air above it periodically
                unless located at water spot on plane of water */
-            && !((mtmp->data->mlet == S_EEL || Is_waterlevel(&u.uz))
+            && !((pm_get(mtmp->data)->mlet == S_EEL || Is_waterlevel(&u.uz))
                  && is_pool(mtmp->mx, mtmp->my))
             /* exclude monsters with poison gas breath attack:
                adult green dragon and Chromatic Dragon (and iron golem,

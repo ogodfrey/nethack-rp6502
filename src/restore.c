@@ -1129,7 +1129,7 @@ boolean ghostly;
             if (!mtmp->isshk)
                 mtmp->mpeaceful =
                     (is_unicorn(mtmp->data)
-                     && sgn(u.ualign.type) == sgn(mtmp->data->maligntyp))
+                     && sgn(u.ualign.type) == sgn(pm_get(mtmp->data)->maligntyp))
                         ? TRUE
                         : peace_minded(mtmp->data);
             set_malign(mtmp);

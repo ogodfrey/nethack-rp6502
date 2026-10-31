@@ -918,7 +918,7 @@ int dieroll;
                         ; /* maybe turn the corpse into a statue? */
 #endif
                     }
-                    tmp = (obj->corpsenm >= LOW_PM ? mons[obj->corpsenm].msize
+                    tmp = (obj->corpsenm >= LOW_PM ? pm_get(&mons[obj->corpsenm])->msize
                                                    : 0) + 1;
                     break;
 
@@ -952,7 +952,7 @@ int dieroll;
                         pline("Splat!  You hit %s with %s %s egg%s!",
                               mon_nam(mon),
                               obj->known ? "the" : cnt > 1L ? "some" : "a",
-                              obj->known ? mons[obj->corpsenm].mname
+                              obj->known ? pm_get(&mons[obj->corpsenm])->mname
                                          : "petrifying",
                               plur(cnt));
                         obj->known = 1; /* (not much point...) */
@@ -965,7 +965,7 @@ int dieroll;
                     } else { /* ordinary egg(s) */
                         const char *eggp = (obj->corpsenm != NON_PM
                                             && obj->known)
-                                           ? the(mons[obj->corpsenm].mname)
+                                           ? the(pm_get(&mons[obj->corpsenm])->mname)
                                            : (cnt > 1L) ? "some" : "an";
 
                         You("hit %s with %s egg%s.", mon_nam(mon), eggp,

@@ -379,7 +379,7 @@ int x, y, typ;
         do { /* avoid ultimately hostile co-aligned unicorn */
             mptr = &mons[rndmonnum()];
         } while (--trycount > 0 && is_unicorn(mptr)
-                 && sgn(u.ualign.type) == sgn(mptr->maligntyp));
+                 && sgn(u.ualign.type) == sgn(pm_get(mptr)->maligntyp));
         statue = mkcorpstat(STATUE, (struct monst *) 0, mptr, x, y,
                             CORPSTAT_NONE);
         mtmp = makemon(&mons[statue->corpsenm], 0, 0, MM_NOCOUNTBIRTH);
@@ -494,7 +494,7 @@ unsigned ftflags;
                  && !(ftflags & TOOKPLUNGE))
              || (Inhell && !u.uevent.invoked && newlevel == bottom)) {
         dont_fall = "don't fall in.";
-    } else if (youmonst.data->msize >= MZ_HUGE) {
+    } else if (pm_get(youmonst.data)->msize >= MZ_HUGE) {
         dont_fall = "don't fit through.";
     } else if (!next_to_u()) {
         dont_fall = "are jerked back by your pet!";
@@ -611,7 +611,7 @@ int *fail_reason;
            mptr reflects the original form for use by newcham()) */
         if ((mnum == PM_DOPPELGANGER && mptr != &mons[PM_DOPPELGANGER])
             /* block quest guards from other roles */
-            || (mptr->msound == MS_GUARDIAN
+            || (pm_get(mptr)->msound == MS_GUARDIAN
                 && quest_info(MS_GUARDIAN) != mnum)) {
             mon = makemon(&mons[PM_DOPPELGANGER], x, y,
                           NO_MINVENT | MM_NOCOUNTBIRTH | MM_ADJACENTOK);
@@ -1081,7 +1081,7 @@ unsigned trflags;
                   A_Your[trap->madeby_u]);
             break;
         }
-        if (!u.usteed && youmonst.data->msize <= MZ_SMALL) {
+        if (!u.usteed && pm_get(youmonst.data)->msize <= MZ_SMALL) {
             pline("%s bear trap closes harmlessly over you.",
                   A_Your[trap->madeby_u]);
             break;
@@ -2286,7 +2286,7 @@ register struct monst *mtmp;
             wake_nearto(mtmp->mx, mtmp->my, 40);
             break;
         case BEAR_TRAP:
-            if (mptr->msize > MZ_SMALL && !amorphous(mptr) && !is_flyer(mptr)
+            if (pm_get(mptr)->msize > MZ_SMALL && !amorphous(mptr) && !is_flyer(mptr)
                 && !is_whirly(mptr) && !unsolid(mptr)) {
                 mtmp->mtrapped = 1;
                 if (in_sight) {
@@ -2483,7 +2483,7 @@ register struct monst *mtmp;
             }
             if (is_flyer(mptr) || is_floater(mptr) || mptr == &mons[PM_WUMPUS]
                 || (mtmp->wormno && count_wsegs(mtmp) > 5)
-                || mptr->msize >= MZ_HUGE) {
+                || pm_get(mptr)->msize >= MZ_HUGE) {
                 if (force_mintrap && !Sokoban) {
                     /* openfallingtrap; not inescapable here */
                     if (in_sight) {
@@ -2538,9 +2538,9 @@ register struct monst *mtmp;
                 }
                 /*FALLTHRU*/
             default:
-                if (mptr->mlet == S_GIANT
+                if (pm_get(mptr)->mlet == S_GIANT
                     /* exclude baby dragons and relatively short worms */
-                    || (mptr->mlet == S_DRAGON && extra_nasty(mptr))
+                    || (pm_get(mptr)->mlet == S_DRAGON && extra_nasty(mptr))
                     || (mtmp->wormno && count_wsegs(mtmp) > 5)) {
                     tear_web = TRUE;
                 } else if (in_sight) {
@@ -2795,8 +2795,8 @@ const char *arg;
 
     if (uwep && uwep->otyp == CORPSE && touch_petrifies(&mons[uwep->corpsenm])
         && !Stone_resistance) {
-        pline("%s touch the %s corpse.", arg, mons[uwep->corpsenm].mname);
-        Sprintf(kbuf, "%s corpse", an(mons[uwep->corpsenm].mname));
+        pline("%s touch the %s corpse.", arg, pm_get(&mons[uwep->corpsenm])->mname);
+        Sprintf(kbuf, "%s corpse", an(pm_get(&mons[uwep->corpsenm])->mname));
         instapetrify(kbuf);
         /* life-saved; unwield the corpse if we can't handle it */
         if (!uarmg && !Stone_resistance)
@@ -2806,8 +2806,8 @@ const char *arg;
        allow two-weapon combat when either weapon is a corpse] */
     if (u.twoweap && uswapwep && uswapwep->otyp == CORPSE
         && touch_petrifies(&mons[uswapwep->corpsenm]) && !Stone_resistance) {
-        pline("%s touch the %s corpse.", arg, mons[uswapwep->corpsenm].mname);
-        Sprintf(kbuf, "%s corpse", an(mons[uswapwep->corpsenm].mname));
+        pline("%s touch the %s corpse.", arg, pm_get(&mons[uswapwep->corpsenm])->mname);
+        Sprintf(kbuf, "%s corpse", an(pm_get(&mons[uswapwep->corpsenm])->mname));
         instapetrify(kbuf);
         /* life-saved; unwield the corpse */
         if (!uarmg && !Stone_resistance)
@@ -3167,7 +3167,7 @@ struct obj *box; /* null for floor trap */
         }
         if (alt > num)
             num = alt;
-        if (u.mhmax > mons[u.umonnum].mlevel)
+        if (u.mhmax > pm_get(&mons[u.umonnum])->mlevel)
             u.mhmax -= rn2(min(u.mhmax, num + 1)), context.botl = 1;
     } else {
         num = d(2, 4);
@@ -3833,7 +3833,7 @@ drown()
     if (is_fainted())
         reset_faint();
     /* can't crawl if unable to move (crawl_ok flag stays false) */
-    if (multi < 0 || (Upolyd && !youmonst.data->mmove))
+    if (multi < 0 || (Upolyd && !pm_get(youmonst.data)->mmove))
         goto crawl;
     /* look around for a place to crawl to */
     for (i = 0; i < 100; i++) {
@@ -3927,7 +3927,7 @@ dountrap()
         return 0;
     }
     if ((nohands(youmonst.data) && !webmaker(youmonst.data))
-        || !youmonst.data->mmove) {
+        || !pm_get(youmonst.data)->mmove) {
         pline("And just how do you expect to do that?");
         return 0;
     } else if (u.ustuck && sticks(youmonst.data)) {
@@ -4139,7 +4139,7 @@ struct monst *mtmp;
     if (!ttmp->madeby_u) {
         if (rnl(10) < 8 && !mtmp->mpeaceful && !mtmp->msleeping
             && !mtmp->mfrozen && !mindless(mtmp->data)
-            && mtmp->data->mlet != S_HUMAN) {
+            && pm_get(mtmp->data)->mlet != S_HUMAN) {
             mtmp->mpeaceful = 1;
             set_malign(mtmp); /* reset alignment */
             pline("%s is grateful.", Monnam(mtmp));
@@ -4268,7 +4268,7 @@ boolean stuff;
         pline("%s is %s for you to lift.", Monnam(mtmp),
               stuff ? "carrying too much" : "too heavy");
         if (!ttmp->madeby_u && !mtmp->mpeaceful && mtmp->mcanmove
-            && !mindless(mtmp->data) && mtmp->data->mlet != S_HUMAN
+            && !mindless(mtmp->data) && pm_get(mtmp->data)->mlet != S_HUMAN
             && rnl(10) < 3) {
             mtmp->mpeaceful = 1;
             set_malign(mtmp); /* reset alignment */
@@ -4315,7 +4315,7 @@ struct trap *ttmp;
 
     /* is it a cockatrice?... */
     if (touch_petrifies(mtmp->data) && !uarmg && !Stone_resistance) {
-        You("grab the trapped %s using your bare %s.", mtmp->data->mname,
+        You("grab the trapped %s using your bare %s.", pm_get(mtmp->data)->mname,
             makeplural(body_part(HAND)));
 
         if (poly_when_stoned(youmonst.data) && polymon(PM_STONE_GOLEM)) {
@@ -4324,7 +4324,7 @@ struct trap *ttmp;
             char kbuf[BUFSZ];
 
             Sprintf(kbuf, "trying to help %s out of a pit",
-                    an(mtmp->data->mname));
+                    an(pm_get(mtmp->data)->mname));
             instapetrify(kbuf);
             return 1;
         }
@@ -4353,7 +4353,7 @@ struct trap *ttmp;
     }
 
     /* is the monster too heavy? */
-    wt = inv_weight() + mtmp->data->cwt;
+    wt = inv_weight() + pm_get(mtmp->data)->cwt;
     if (!try_lift(mtmp, ttmp, wt, FALSE))
         return 1;
 

@@ -1705,7 +1705,7 @@ boolean noisy;
                         : 0;
     if (which && cantweararm(youmonst.data)
         /* same exception for cloaks as used in m_dowear() */
-        && (which != c_cloak || youmonst.data->msize != MZ_SMALL)
+        && (which != c_cloak || pm_get(youmonst.data)->msize != MZ_SMALL)
         && (racial_exception(&youmonst, otmp) < 1)) {
         if (noisy)
             pline_The("%s will not fit on your body.", which);
@@ -1764,7 +1764,7 @@ boolean noisy;
             if (noisy)
                 You("have no feet..."); /* not body_part(FOOT) */
             err++;
-        } else if (Upolyd && youmonst.data->mlet == S_CENTAUR) {
+        } else if (Upolyd && pm_get(youmonst.data)->mlet == S_CENTAUR) {
             /* break_armor() pushes boots off for centaurs,
                so don't let dowear() put them back on... */
             if (noisy)

@@ -119,7 +119,7 @@ int distance;
     for (mtmp = fmon; mtmp; mtmp = mtmp->nmon) {
         if (DEADMONSTER(mtmp))
             continue;
-        if (mtmp->data->mlet == S_SNAKE && mtmp->mcanmove
+        if (pm_get(mtmp->data)->mlet == S_SNAKE && mtmp->mcanmove
             && distu(mtmp->mx, mtmp->my) < distance) {
             was_peaceful = mtmp->mpeaceful;
             mtmp->mpeaceful = 1;
@@ -153,7 +153,7 @@ int distance;
     for (mtmp = fmon; mtmp; mtmp = mtmp->nmon) {
         if (DEADMONSTER(mtmp))
             continue;
-        if (mtmp->data->mlet == S_NYMPH && mtmp->mcanmove
+        if (pm_get(mtmp->data)->mlet == S_NYMPH && mtmp->mcanmove
             && distu(mtmp->mx, mtmp->my) < distance) {
             mtmp->msleeping = 0;
             mtmp->mpeaceful = 1;
@@ -176,7 +176,7 @@ struct monst *bugler; /* monster that played instrument */
     int distance, distm;
 
     /* distance of affected non-soldier monsters to bugler */
-    distance = ((bugler == &youmonst) ? u.ulevel : bugler->data->mlevel) * 30;
+    distance = ((bugler == &youmonst) ? u.ulevel : pm_get(bugler->data)->mlevel) * 30;
 
     for (mtmp = fmon; mtmp; mtmp = mtmp->nmon) {
         if (DEADMONSTER(mtmp))

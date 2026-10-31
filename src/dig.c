@@ -703,7 +703,7 @@ int ttyp;
                 if (is_flyer(mtmp->data) || is_floater(mtmp->data)
                     || mtmp->data == &mons[PM_WUMPUS]
                     || (mtmp->wormno && count_wsegs(mtmp) > 5)
-                    || mtmp->data->msize >= MZ_HUGE)
+                    || pm_get(mtmp->data)->msize >= MZ_HUGE)
                     return;
                 if (mtmp == u.ustuck) /* probably a vortex */
                     return;           /* temporary? kludge */

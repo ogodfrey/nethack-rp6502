@@ -28,8 +28,8 @@ struct monst *mtmp;
 {
     struct permonst *ptr = mtmp->data;
 
-    return (index(steeds, ptr->mlet) && (ptr->msize >= MZ_MEDIUM)
-            && (!humanoid(ptr) || ptr->mlet == S_CENTAUR) && !amorphous(ptr)
+    return (index(steeds, pm_get(ptr)->mlet) && (pm_get(ptr)->msize >= MZ_MEDIUM)
+            && (!humanoid(ptr) || pm_get(ptr)->mlet == S_CENTAUR) && !amorphous(ptr)
             && !noncorporeal(ptr) && !is_whirly(ptr) && !unsolid(ptr));
 }
 
@@ -71,7 +71,7 @@ struct obj *otmp;
 
         You("touch %s.", mon_nam(mtmp));
         if (!(poly_when_stoned(youmonst.data) && polymon(PM_STONE_GOLEM))) {
-            Sprintf(kbuf, "attempting to saddle %s", an(mtmp->data->mname));
+            Sprintf(kbuf, "attempting to saddle %s", an(pm_get(mtmp->data)->mname));
             instapetrify(kbuf);
         }
     }
@@ -274,7 +274,7 @@ boolean force;      /* Quietly force this animal */
         char kbuf[BUFSZ];
 
         You("touch %s.", mon_nam(mtmp));
-        Sprintf(kbuf, "attempting to ride %s", an(mtmp->data->mname));
+        Sprintf(kbuf, "attempting to ride %s", an(pm_get(mtmp->data)->mname));
         instapetrify(kbuf);
     }
     if (!mtmp->mtame || mtmp->isminion) {
@@ -534,7 +534,7 @@ int reason; /* Player was thrown off etc. */
         }
         if (!has_mname(mtmp)) {
             pline("You've been through the dungeon on %s with no name.",
-                  an(mtmp->data->mname));
+                  an(pm_get(mtmp->data)->mname));
             if (Hallucination)
                 pline("It felt good to get out of the rain.");
         } else

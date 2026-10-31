@@ -556,7 +556,7 @@ register struct monst *mtmp;
                                            : "disturbs you");
         else /* see note about m_monnam() above */
             pline("Wait, %s!  That %s is really %s named %s!", m_monnam(mtmp),
-                  mimic_obj_name(&youmonst), an(mons[u.umonnum].mname),
+                  mimic_obj_name(&youmonst), an(pm_get(&mons[u.umonnum])->mname),
                   plname);
         if (multi < 0) { /* this should always be the case */
             char buf[BUFSZ];
@@ -996,7 +996,7 @@ register struct attack *mattk;
                     && touch_petrifies(&mons[otmp->corpsenm])) {
                     dmg = 1;
                     pline("%s hits you with the %s corpse.", Monnam(mtmp),
-                          mons[otmp->corpsenm].mname);
+                          pm_get(&mons[otmp->corpsenm])->mname);
                     if (!Stoned)
                         goto do_stone;
                 }

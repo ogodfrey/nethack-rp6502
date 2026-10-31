@@ -144,7 +144,7 @@ struct obj *otmp;
     int dmg, otyp = otmp->otyp;
     const char *zap_type_text = "spell";
     struct obj *obj;
-    boolean disguised_mimic = (mtmp->data->mlet == S_MIMIC
+    boolean disguised_mimic = (pm_get(mtmp->data)->mlet == S_MIMIC
                                && M_AP_TYPE(mtmp) != M_AP_NOTHING);
 
     if (u.uswallow && mtmp == u.ustuck)
@@ -783,8 +783,8 @@ boolean by_hero;
             x = xy.x, y = xy.y;
     }
 
-    if ((mons[montype].mlet == S_EEL && !IS_POOL(levl[x][y].typ))
-        || (mons[montype].mlet == S_TROLL
+    if ((pm_get(&mons[montype])->mlet == S_EEL && !IS_POOL(levl[x][y].typ))
+        || (pm_get(&mons[montype])->mlet == S_TROLL
             && uwep && uwep->oartifact == ART_TROLLSBANE)) {
         if (by_hero && cansee(x, y))
             pline("%s twitches feebly.",
@@ -805,7 +805,7 @@ boolean by_hero;
             if (mtmp->cham == PM_DOPPELGANGER) {
                 /* change shape to match the corpse */
                 (void) newcham(mtmp, mptr, FALSE, FALSE);
-            } else if (mtmp->data->mlet == S_ZOMBIE) {
+            } else if (pm_get(mtmp->data)->mlet == S_ZOMBIE) {
                 mtmp->mhp = mtmp->mhpmax = 100;
                 mon_adjust_speed(mtmp, 2, (struct obj *) 0); /* MFAST */
             }
@@ -1351,7 +1351,7 @@ int okind;
         mdat = &mons[pm_index];
 
     mtmp = makemon(mdat, obj->ox, obj->oy, NO_MM_FLAGS);
-    polyuse(obj, okind, (int) mons[pm_index].cwt);
+    polyuse(obj, okind, (int) pm_get(&mons[pm_index])->cwt);
 
     if (mtmp && cansee(mtmp->mx, mtmp->my)) {
         pline("Some %sobjects meld, and %s arises from the pile!", material,
@@ -1754,7 +1754,7 @@ struct obj *obj;
                 /* this golem handling is redundant... */
                 if (is_golem(ptr) && ptr != &mons[PM_FLESH_GOLEM])
                     (void) newcham(mon, &mons[PM_FLESH_GOLEM], TRUE, FALSE);
-            } else if ((ptr->geno & (G_NOCORPSE | G_UNIQ)) != 0) {
+            } else if ((pm_get(ptr)->geno & (G_NOCORPSE | G_UNIQ)) != 0) {
                 /* didn't revive but can't leave corpse either */
                 res = 0;
             } else {

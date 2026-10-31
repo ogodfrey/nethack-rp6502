@@ -1566,7 +1566,7 @@ struct permonst *pm;
     int loc = DRY;
     if (!pm)
         return loc;
-    if (pm->mlet == S_EEL || amphibious(pm) || is_swimmer(pm))
+    if (pm_get(pm)->mlet == S_EEL || amphibious(pm) || is_swimmer(pm))
         loc = WET;
     if (is_flyer(pm) || is_floater(pm))
         loc |= (HOT | WET);
@@ -1611,7 +1611,7 @@ struct mkroom *croom;
     else if (m->id != NON_PM) {
         pm = &mons[m->id];
         g_mvflags = (unsigned) mvitals[monsndx(pm)].mvflags;
-        if ((pm->geno & G_UNIQ) && (g_mvflags & G_EXTINCT))
+        if ((pm_get(pm)->geno & G_UNIQ) && (g_mvflags & G_EXTINCT))
             return;
         else if (g_mvflags & G_GONE)    /* genocided or extinct */
             pm = (struct permonst *) 0; /* make random monster */
@@ -1660,7 +1660,7 @@ struct mkroom *croom;
          * shapechanger a non-monster shape, it just refuses to comply.
          */
         if (m->appear_as.str
-            && ((mtmp->data->mlet == S_MIMIC)
+            && ((pm_get(mtmp->data)->mlet == S_MIMIC)
                 /* shapechanger (chameleons, et al, and vampires) */
                 || (mtmp->cham >= LOW_PM && m->appear == M_AP_MONSTER))
             && !Protection_from_shape_changers) {
@@ -1731,7 +1731,7 @@ struct mkroom *croom;
                 if (mndx == NON_PM || (is_vampshifter(mtmp)
                                        && !validvamp(mtmp, &mndx, S_HUMAN))) {
                     impossible("create_monster: invalid %s (\"%s\")",
-                               (mtmp->data->mlet == S_MIMIC)
+                               (pm_get(mtmp->data)->mlet == S_MIMIC)
                                  ? "mimic appearance"
                                  : (mtmp->data == &mons[PM_WIZARD_OF_YENDOR])
                                      ? "Wizard appearance"
@@ -1743,7 +1743,7 @@ struct mkroom *croom;
                     /* explicitly forcing a mimic to appear as itself */
                     mtmp->m_ap_type = M_AP_NOTHING;
                     mtmp->mappearance = 0;
-                } else if (mtmp->data->mlet == S_MIMIC
+                } else if (pm_get(mtmp->data)->mlet == S_MIMIC
                            || mtmp->data == &mons[PM_WIZARD_OF_YENDOR]) {
                     /* this is ordinarily only used for Wizard clones
                        and hasn't been exhaustively tested for mimics */

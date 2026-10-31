@@ -655,7 +655,7 @@ register struct obj *otmp;
                 exercise(A_CON, FALSE);
                 if (u.ulycn >= LOW_PM) {
                     Your("affinity to %s disappears!",
-                         makeplural(mons[u.ulycn].mname));
+                         makeplural(pm_get(&mons[u.ulycn])->mname));
                     if (youmonst.data == &mons[u.ulycn])
                         you_unwere(FALSE);
                     set_ulycn(NON_PM); /* cure lycanthropy */
@@ -1513,7 +1513,7 @@ int how;
                     pline("%s %s in pain!", Monnam(mon),
                           is_silent(mon->data) ? "writhes" : "shrieks");
                     if (!is_silent(mon->data))
-                        wake_nearto(tx, ty, mon->data->mlevel * 10);
+                        wake_nearto(tx, ty, pm_get(mon->data)->mlevel * 10);
                     mon->mhp -= d(2, 6);
                     /* should only be by you */
                     if (DEADMONSTER(mon))
@@ -1552,7 +1552,7 @@ int how;
                 pline("%s %s in pain!", Monnam(mon),
                       is_silent(mon->data) ? "writhes" : "shrieks");
                 if (!is_silent(mon->data))
-                    wake_nearto(tx, ty, mon->data->mlevel * 10);
+                    wake_nearto(tx, ty, pm_get(mon->data)->mlevel * 10);
                 mon->mhp -= d(obj->cursed ? 2 : 1, obj->blessed ? 4 : 8);
                 if (DEADMONSTER(mon)) {
                     if (your_fault)

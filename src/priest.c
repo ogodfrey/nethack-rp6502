@@ -277,7 +277,7 @@ struct monst *mon;
 {
     aligntyp algn = mon->ispriest ? EPRI(mon)->shralign
                                   : mon->isminion ? EMIN(mon)->min_align
-                                                  : mon->data->maligntyp;
+                                                  : pm_get(mon->data)->maligntyp;
 
     if (algn == A_NONE)
         return A_NONE; /* negative but differs from chaotic */
@@ -303,7 +303,7 @@ char *pname; /* caller-supplied output buffer */
             aligned_priest = mon->data == &mons[PM_ALIGNED_PRIEST],
             high_priest = mon->data == &mons[PM_HIGH_PRIEST];
     char whatcode = '\0';
-    const char *what = do_hallu ? rndmonnam(&whatcode) : mon->data->mname;
+    const char *what = do_hallu ? rndmonnam(&whatcode) : pm_get(mon->data)->mname;
 
     if (!mon->ispriest && !mon->isminion) /* should never happen...  */
         return strcpy(pname, what);       /* caller must be confused */
@@ -1092,7 +1092,7 @@ ustatusline()
 
     pline("Status of %s (%s):  Level %d  HP %d(%d)  AC %d%s.", plname,
           piousness(FALSE, align_str(u.ualign.type)),
-          Upolyd ? mons[u.umonnum].mlevel : u.ulevel, Upolyd ? u.mh : u.uhp,
+          Upolyd ? pm_get(&mons[u.umonnum])->mlevel : u.ulevel, Upolyd ? u.mh : u.uhp,
           Upolyd ? u.mhmax : u.uhpmax, u.uac, info);
 }
 

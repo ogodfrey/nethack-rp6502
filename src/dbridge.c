@@ -539,7 +539,7 @@ struct entity *etmp;
 
     if (is_u(etmp) ? (Unaware || Fumbling)
                    : (!etmp->emon->mcanmove || etmp->emon->msleeping
-                      || !etmp->edata->mmove || etmp->emon->wormno))
+                      || !pm_get(etmp->edata)->mmove || etmp->emon->wormno))
         return FALSE;
 
     if (is_u(etmp) ? Confusion : etmp->emon->mconf)
