@@ -262,8 +262,28 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
    (3360 bytes each, pointers to RAM structures, which need a separate design).
    2.6 MB of code and about 293 KB of rodata, mostly strings, and the XRAM
    tables remove 31668 bytes of linked data (`.bss` is about 67 KB in both).
-4. **Complete overlay packing and integration.** Implement a profile-guided
-   partitioner for `ovlpack.py`, choose a RAM/slot budget, and split functions
+   Budget plan (measured, XRAM-tables configuration, sums of the object
+   sections): `.text` 2.80 MB (must run from overlays), `.rodata` 89 KB,
+   `.data` 41 KB, `.bss` 55 KB. The 64 KB CPU address space must hold the
+   stack, the zero page and system area, resident code, overlay slots and
+   every RAM-resident datum, so roughly 185 KB of static data has to move out
+   of RAM or shrink. The largest parts, in order:
+   - Literal names and text still in RAM: about 44 KB of `.rodata` (the
+     `compopt`, `extcmdlist`, `boolopt`, `roles` and similar tables keep their
+     names; `mons_names` and the object names are outside the rewrite). Names
+     are matched at run time, so they need an accessor with a fetch slot, not
+     a plain `MSGID`.
+   - Initialized `.data` tables (about 41 KB, role, race and similar).
+   - `.bss` buffers: `gbuf` (5 KB), the vision arrays (`could_see`,
+     `viz_clear`, `left_ptrs`, `right_ptrs`, `cs_rows0/1`, about 12 KB, hot
+     paths, with pointer swaps), `rooms` (5 KB, 199 uses), `obufs` (3 KB, used
+     as `char *` text buffers, so not XRAM-friendly), `status_hilites` (2 KB).
+   - The per-cell object and monster list heads (6.7 KB, RAM pointers).
+   Each moved structure needs the same kind of accessor as the level map, and
+   each access costs an XRAM transfer. The XRAM access cost is not measured on
+   the target yet; measure it with `xramtest` before choosing between XRAM and
+   storage for the hot tables. Priority 4 (overlays) is still required for the
+   code itself. Implement a profile-guided   partitioner for `ovlpack.py`, choose a RAM/slot budget, and split functions
    that exceed the chosen slot size. Test relocation, pointer lifetimes,
    callbacks, nested/forced reloads, and target ABI behavior. Generate the
    game's assembly and assets reproducibly, initialize the overlay runtime
