@@ -192,6 +192,13 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
    measured unlinked data fit. Investigate `level`, room and display buffers,
    vision data, heap, stack, resident code, and overlay slots; measure the
    actual linked footprint as sections are eliminated or moved.
+   Measured on the object files (llvm-size, `nethack_objs`): `.data` totals
+   40542 bytes with the tables in RAM, and 8874 bytes without them (the
+   monster table is 19864 bytes and the object table 11804 bytes; in the
+   XRAM build these rename copies are unreferenced, and `xramtest` already
+   shows the linker drops them). `.bss` is 65931 bytes in both builds, and
+   `.rodata` strings (about 11.7 KB) stay in RAM. The game link is the real
+   test of these numbers.
 4. **Complete overlay packing and integration.** Implement a profile-guided
    partitioner for `ovlpack.py`, choose a RAM/slot budget, and split functions
    that exceed the chosen slot size. Test relocation, pointer lifetimes,
