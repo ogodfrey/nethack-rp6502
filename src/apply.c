@@ -271,7 +271,7 @@ int rx, ry, *resp;
                     humanoid(mptr) ? "person" : "creature");
             what = buf;
         } else {
-            what = pm_get(mptr)->mname;
+            what = pm_name(mptr);
             if (!type_is_pname(mptr))
                 what = The(what);
         }
@@ -407,7 +407,7 @@ register struct obj *obj;
                               || odummy->otyp == LENSES);
                 break;
             case M_AP_MONSTER: /* ignore Hallucination here */
-                what = pm_get(&mons[mtmp->mappearance])->mname;
+                what = pm_name(&mons[mtmp->mappearance]);
                 break;
             case M_AP_FURNITURE:
                 what = defsyms[mtmp->mappearance].explanation;
@@ -1859,12 +1859,12 @@ struct obj *obj;
 
         if (poly_when_stoned(youmonst.data))
             You("tin %s without wearing gloves.",
-                an(pm_get(&mons[corpse->corpsenm])->mname));
+                an(pm_name(&mons[corpse->corpsenm])));
         else {
             pline("Tinning %s without wearing gloves is a fatal mistake...",
-                  an(pm_get(&mons[corpse->corpsenm])->mname));
+                  an(pm_name(&mons[corpse->corpsenm])));
             Sprintf(kbuf, "trying to tin %s without gloves",
-                    an(pm_get(&mons[corpse->corpsenm])->mname));
+                    an(pm_name(&mons[corpse->corpsenm])));
         }
         instapetrify(kbuf);
     }
@@ -2856,7 +2856,7 @@ struct obj *obj;
                         char kbuf[BUFSZ];
 
                         Sprintf(kbuf, "%s corpse",
-                                an(pm_get(&mons[otmp->corpsenm])->mname));
+                                an(pm_name(&mons[otmp->corpsenm])));
                         pline("Snatching %s is a fatal mistake.", kbuf);
                         instapetrify(kbuf);
                     }

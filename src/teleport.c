@@ -205,7 +205,7 @@ unsigned entflags;
         if (allow_xx_yy && goodpos(xx, yy, &fakemon, entflags)) {
             return TRUE; /* 'cc' is set */
         } else {
-            debugpline3("enexto(\"%s\",%d,%d) failed", pm_get(mdat)->mname, xx, yy);
+            debugpline3("enexto(\"%s\",%d,%d) failed", pm_name(mdat), xx, yy);
             return FALSE;
         }
     }

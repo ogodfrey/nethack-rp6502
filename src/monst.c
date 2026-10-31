@@ -44,10 +44,17 @@ void NDECL(monst_init);
  *      For AT_BREA attacks, '# sides' is ignored; 6 is used for most
  *      damage types, 25 for sleep, not applicable for death or poison.
  */
+/* With MONST_NAMES, this file yields mons_names[] (see monnames.c) from the
+   same entries: MON() keeps only the name. */
+#ifdef MONST_NAMES
+#define MON(nam, sym, lvl, gen, atk, siz, mr1, mr2, flg1, flg2, flg3, d, col) \
+    nam
+#else
 #define MON(nam, sym, lvl, gen, atk, siz, mr1, mr2, flg1, flg2, flg3, d, col) \
     {                                                                      \
-        nam, sym, lvl, gen, atk, siz, mr1, mr2, flg1, flg2, flg3, d, C(col)   \
+        sym, lvl, gen, atk, siz, mr1, mr2, flg1, flg2, flg3, d, C(col)     \
     }
+#endif
 /* LVL() and SIZ() collect several fields to cut down on # of args for MON()
  */
 #define LVL(lvl, mov, ac, mr, aln) lvl, mov, ac, mr, aln
@@ -101,7 +108,11 @@ void NDECL(monst_init);
  */
 
 #ifndef SPLITMON_2
+#ifdef MONST_NAMES
+const char *const mons_names[] = {
+#else
 NEARDATA struct permonst mons[] = {
+#endif
     /*
      * ants
      */
@@ -3227,7 +3238,7 @@ struct permonst _mons2[] = {
 };
 #endif /* !SPLITMON_1 */
 
-#ifndef SPLITMON_1
+#if !defined(SPLITMON_1) && !defined(MONST_NAMES)
 /* dummy routine used to force linkage */
 void
 monst_init()

@@ -29,6 +29,12 @@ rpm_pm_put(struct permonst *p, const struct permonst *rec)
     xram0_write((unsigned) (uintptr_t) p, rec, sizeof *rec);
 }
 
+int
+rpm_index(const struct permonst *p)
+{
+    return (int) (((uintptr_t) p - MONS_XRAM_ADDR) / sizeof(struct permonst));
+}
+
 struct objclass *
 rpo_get(const struct objclass *p)
 {

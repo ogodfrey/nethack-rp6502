@@ -99,13 +99,13 @@ register struct monst *mon;
 
     pm = counter_were(monsndx(mon->data));
     if (pm < LOW_PM) {
-        impossible("unknown lycanthrope %s.", pm_get(mon->data)->mname);
+        impossible("unknown lycanthrope %s.", pm_name(mon->data));
         return;
     }
 
     if (canseemon(mon) && !Hallucination)
         pline("%s changes into a %s.", Monnam(mon),
-              is_human(&mons[pm]) ? "human" : pm_get(&mons[pm])->mname + 4);
+              is_human(&mons[pm]) ? "human" : pm_name(&mons[pm]) + 4);
 
     set_mon_data(mon, &mons[pm]);
     if (mon->msleeping || !mon->mcanmove) {
@@ -183,7 +183,7 @@ you_were()
     if (controllable_poly) {
         /* `+4' => skip "were" prefix to get name of beast */
         Sprintf(qbuf, "Do you want to change into %s?",
-                an(pm_get(&mons[u.ulycn])->mname + 4));
+                an(pm_name(&mons[u.ulycn]) + 4));
         if (!paranoid_query(ParanoidWerechange, qbuf))
             return;
     }

@@ -444,7 +444,7 @@ HACKCSRC = allmain.c alloc.c apply.c artifact.c attrib.c ball.c bones.c \
 	   files.c fountain.c hack.c hacklib.c invent.c isaac64.c light.c \
 	   lock.c mail.c makemon.c mapglyph.c mcastu.c mhitm.c mhitu.c \
 	   minion.c mklev.c mkmap.c \
-	   mkmaze.c mkobj.c mkroom.c mon.c mondata.c monmove.c monst.c \
+	   mkmaze.c mkobj.c mkroom.c mon.c mondata.c monmove.c monnames.c monst.c \
 	   mplayer.c mthrowu.c muse.c music.c o_init.c objects.c objnam.c \
 	   options.c pager.c pickup.c pline.c polyself.c potion.c pray.c \
 	   priest.c quest.c questpgr.c read.c rect.c region.c restore.c \
@@ -502,7 +502,7 @@ HSOURCES = $(HACKINCL) date.h onames.h pm.h vis_tab.h \
 		lev_comp.h dgn_comp.h dgn_file.h
 
 # the following .o's _must_ be made before any others (for makedefs)
-FIRSTOBJ = monst.o objects.o
+FIRSTOBJ = monst.o monnames.o objects.o
 
 HOBJ = $(FIRSTOBJ) allmain.o alloc.o apply.o artifact.o attrib.o ball.o \
 	bones.o botl.o cmd.o dbridge.o decl.o detect.o dig.o display.o dlb.o \
@@ -589,6 +589,9 @@ all:	$(GAME)
 # below in the 'make depend' output.
 monst.o:
 	$(CC) $(CFLAGS) -c monst.c
+	@rm -f $(MAKEDEFS)
+monnames.o:
+	$(CC) $(CFLAGS) -c monnames.c
 	@rm -f $(MAKEDEFS)
 
 objects.o:

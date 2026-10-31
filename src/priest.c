@@ -303,7 +303,7 @@ char *pname; /* caller-supplied output buffer */
             aligned_priest = mon->data == &mons[PM_ALIGNED_PRIEST],
             high_priest = mon->data == &mons[PM_HIGH_PRIEST];
     char whatcode = '\0';
-    const char *what = do_hallu ? rndmonnam(&whatcode) : pm_get(mon->data)->mname;
+    const char *what = do_hallu ? rndmonnam(&whatcode) : pm_name(mon->data);
 
     if (!mon->ispriest && !mon->isminion) /* should never happen...  */
         return strcpy(pname, what);       /* caller must be confused */

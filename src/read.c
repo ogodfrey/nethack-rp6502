@@ -2095,7 +2095,7 @@ do_class_genocide()
             if (pm_get(&mons[i])->mlet == class) {
                 char nam[BUFSZ];
 
-                Strcpy(nam, makeplural(pm_get(&mons[i])->mname));
+                Strcpy(nam, makeplural(pm_name(&mons[i])));
                 /* Although "genus" is Latin for race, the hero benefits
                  * from both race and role; thus genocide affects either.
                  */
@@ -2161,7 +2161,7 @@ do_class_genocide()
 
                         You("aren't permitted to genocide %s%s.",
                             (uniq && !named) ? "the " : "",
-                            (uniq || named) ? pm_get(&mons[i])->mname : nam);
+                            (uniq || named) ? pm_name(&mons[i]) : nam);
                     }
                 }
             }
@@ -2196,7 +2196,7 @@ int how;
     if (how & PLAYER) {
         mndx = u.umonster; /* non-polymorphed mon num */
         ptr = &mons[mndx];
-        Strcpy(buf, pm_get(ptr)->mname);
+        Strcpy(buf, pm_name(ptr));
         killplayer++;
     } else {
         for (i = 0;; i++) {
@@ -2263,14 +2263,14 @@ int how;
     which = "all ";
     if (Hallucination) {
         if (Upolyd)
-            Strcpy(buf, pm_get(youmonst.data)->mname);
+            Strcpy(buf, pm_name(youmonst.data));
         else {
             Strcpy(buf, (flags.female && urole.name.f) ? urole.name.f
                                                        : urole.name.m);
             buf[0] = lowc(buf[0]);
         }
     } else {
-        Strcpy(buf, pm_get(ptr)->mname); /* make sure we have standard singular */
+        Strcpy(buf, pm_name(ptr)); /* make sure we have standard singular */
         if ((pm_get(ptr)->geno & G_UNIQ) && ptr != &mons[PM_HIGH_PRIEST])
             which = !type_is_pname(ptr) ? "the " : "";
     }
@@ -2536,7 +2536,7 @@ struct _create_particular_data *d;
             char buf[BUFSZ];
 
             Sprintf(buf, "Creating %s instead; force %s?",
-                    pm_get(&mons[d->which])->mname, pm_get(&mons[firstchoice])->mname);
+                    pm_name(&mons[d->which]), pm_name(&mons[firstchoice]));
             if (yn(buf) == 'y')
                 d->which = firstchoice;
         }

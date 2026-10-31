@@ -1067,7 +1067,7 @@ long new_value;
                 char mname[BUFSZ];
                 int k;
 
-                Strcpy(mname, mons[u.umonnum].mname);
+                Strcpy(mname, pm_name(&mons[u.umonnum]));
                 for (k = 0; mname[k] != '\0'; k++) {
                     if (k == 0 || mname[k - 1] == ' ')
                         mname[k] = highc(mname[k]);

@@ -55,6 +55,20 @@ rpm_pm_put(struct permonst *p, const struct permonst *rec)
     rp6502_ram_mons[off / sizeof(struct permonst)] = *rec;
 }
 
+int
+rpm_index(const struct permonst *p)
+{
+    uintptr_t off = (uintptr_t) p - (uintptr_t) MONS_XRAM_ADDR;
+
+    if (off % sizeof(struct permonst) != 0
+        || off / sizeof(struct permonst) >= NUMMONS) {
+        fprintf(stderr, "pm_name: %p is not a monster table address\n",
+                (const void *) p);
+        abort();
+    }
+    return (int) (off / sizeof(struct permonst));
+}
+
 struct objclass *
 rpo_get(const struct objclass *p)
 {

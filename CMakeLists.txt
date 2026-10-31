@@ -81,6 +81,14 @@ if(DEFINED LLVM_MOS_PLATFORM)
     target_compile_options(xram_objs PRIVATE -Oz -fno-inline -fno-lto
         -ffunction-sections -fdata-sections)
 
+    # The names are not part of either image: mons_names[] is ordinary RAM.
+    add_library(xram_names OBJECT src/monnames.c)
+    add_dependencies(xram_names nethack_gen)
+    target_include_directories(xram_names PRIVATE ${NH_GEN}/include include)
+    target_compile_definitions(xram_names PRIVATE RP6502)
+    target_compile_options(xram_names PRIVATE -Oz -fno-inline -fno-lto
+        -ffunction-sections -fdata-sections)
+
     add_executable(xramtest)
     # The XRAM images of the tables are byproducts of the link: after the
     # link, elfsym.py copies each table's initial data from the output, so the
@@ -110,6 +118,7 @@ if(DEFINED LLVM_MOS_PLATFORM)
         sys/rp6502/rp6502xram.c
         $<TARGET_OBJECTS:xram_monst>
         $<TARGET_OBJECTS:xram_objs>
+        $<TARGET_OBJECTS:xram_names>
     )
     # objects[] is not linked into the program; its name is given the XRAM
     # address, so &objects[i] is the address in the image.

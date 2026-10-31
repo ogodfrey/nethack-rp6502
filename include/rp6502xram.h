@@ -35,4 +35,15 @@ extern NEARDATA struct permonst mons[]; /* the master list of monster types */
 
 #define mons_at(i) (&mons[i])
 
+/* Names are not in the record: mons_names[] (src/monnames.c) holds them,
+   indexed like mons[]. pm_name() takes a table address, never a copy. */
+extern const char *const mons_names[];
+#if defined(RP6502_MONS_XRAM) && !defined(RP6502_MONS_RAM)
+int rpm_index(const struct permonst *p);
+#define pm_index(p) rpm_index(p)
+#else
+#define pm_index(p) ((int) ((p) - mons))
+#endif
+#define pm_name(p) (mons_names[pm_index(p)])
+
 #endif /* RP6502XRAM_H */

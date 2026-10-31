@@ -30,7 +30,7 @@ cp "$SRC"/dat/* "$OUT/dat/"
 cd "$OUT/util"
 # shellcheck disable=SC2086
 $HOSTCC $CFLAGS -o makedefs \
-    "$SRC/util/makedefs.c" "$SRC/src/monst.c" "$SRC/src/objects.c"
+    "$SRC/util/makedefs.c" "$SRC/src/monst.c" "$SRC/src/monnames.c" "$SRC/src/objects.c"
 
 ./makedefs -o
 ./makedefs -p
@@ -39,7 +39,7 @@ $HOSTCC $CFLAGS -o makedefs \
 [ "$MODE" = data ] || exit 0
 
 COMMON="$SRC/src/alloc.c $SRC/util/panic.c"
-NAMING="$SRC/src/drawing.c $SRC/src/decl.c $SRC/src/monst.c $SRC/src/objects.c"
+NAMING="$SRC/src/drawing.c $SRC/src/decl.c $SRC/src/monst.c $SRC/src/monnames.c $SRC/src/objects.c"
 # shellcheck disable=SC2086
 $HOSTCC $CFLAGS -o lev_comp "$SRC/sys/share/lev_yacc.c" \
     "$SRC/sys/share/lev_lex.c" "$SRC/util/lev_main.c" $COMMON $NAMING

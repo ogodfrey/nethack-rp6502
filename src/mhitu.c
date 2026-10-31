@@ -509,11 +509,11 @@ register struct monst *mtmp;
                         || u.umonnum == PM_TRAPPER)
                         pline(
                              "Wait, %s!  There's a hidden %s named %s there!",
-                              m_monnam(mtmp), pm_get(youmonst.data)->mname, plname);
+                              m_monnam(mtmp), pm_name(youmonst.data), plname);
                     else
                         pline(
                           "Wait, %s!  There's a %s named %s hiding under %s!",
-                              m_monnam(mtmp), pm_get(youmonst.data)->mname, plname,
+                              m_monnam(mtmp), pm_name(youmonst.data), plname,
                               doname(level.objects[u.ux][u.uy]));
                     if (obj)
                         obj->spe = save_spe;
@@ -536,7 +536,7 @@ register struct monst *mtmp;
             pline("It gets stuck on you.");
         else /* see note about m_monnam() above */
             pline("Wait, %s!  That's a %s named %s!", m_monnam(mtmp),
-                  pm_get(youmonst.data)->mname, plname);
+                  pm_name(youmonst.data), plname);
         if (sticky)
             u.ustuck = mtmp;
         youmonst.m_ap_type = M_AP_NOTHING;
@@ -556,14 +556,13 @@ register struct monst *mtmp;
                                            : "disturbs you");
         else /* see note about m_monnam() above */
             pline("Wait, %s!  That %s is really %s named %s!", m_monnam(mtmp),
-                  mimic_obj_name(&youmonst), an(pm_get(&mons[u.umonnum])->mname),
+                  mimic_obj_name(&youmonst), an(pm_name(&mons[u.umonnum])),
                   plname);
         if (multi < 0) { /* this should always be the case */
             char buf[BUFSZ];
 
             Sprintf(buf, "You appear to be %s again.",
-                    Upolyd ?                     (const char *) an(pm_get(youmonst.data)->mname)                           : (const char *) "yourself");
-            unmul(buf); /* immediately stop mimicking */
+                    Upolyd ?                                         (const char *) an(pm_name(youmonst.data))                           : (const char *) "yourself");            unmul(buf); /* immediately stop mimicking */
         }
         return 0;
     }
@@ -822,7 +821,7 @@ struct permonst *mdat;
         return FALSE;
     } else {
         make_sick(Sick ? Sick / 3L + 1L : (long) rn1(ACURR(A_CON), 20),
-                  pm_get(mdat)->mname, TRUE, SICK_NONVOMITABLE);
+                  pm_name(mdat), TRUE, SICK_NONVOMITABLE);
         return TRUE;
     }
 }
@@ -996,7 +995,7 @@ register struct attack *mattk;
                     && touch_petrifies(&mons[otmp->corpsenm])) {
                     dmg = 1;
                     pline("%s hits you with the %s corpse.", Monnam(mtmp),
-                          pm_get(&mons[otmp->corpsenm])->mname);
+                          pm_name(&mons[otmp->corpsenm]));
                     if (!Stoned)
                         goto do_stone;
                 }
@@ -1136,7 +1135,7 @@ register struct attack *mattk;
         if (uncancelled && !rn2(8)) {
             Sprintf(buf, "%s %s", s_suffix(Monnam(mtmp)),
                     mpoisons_subj(mtmp, mattk));
-            poisoned(buf, ptmp, pm_get(mdat)->mname, 30, FALSE);
+            poisoned(buf, ptmp, pm_name(mdat), 30, FALSE);
         }
         break;
     case AD_DRIN:
@@ -1254,7 +1253,7 @@ register struct attack *mattk;
                         && !(poly_when_stoned(youmonst.data)
                              && polymon(PM_STONE_GOLEM))) {
                         int kformat = KILLED_BY_AN;
-                        const char *kname = pm_get(mtmp->data)->mname;
+                        const char *kname = pm_name(mtmp->data);
 
                         if (pm_get(mtmp->data)->geno & G_UNIQ) {
                             if (!type_is_pname(mtmp->data))
@@ -1294,7 +1293,7 @@ register struct attack *mattk;
                     killer.format = KILLED_BY_AN;
                     Sprintf(killer.name, "%s by %s",
                             moat ? "moat" : "pool of water",
-                            an(pm_get(mtmp->data)->mname));
+                            an(pm_name(mtmp->data)));
                     done(DROWNING);
                 } else if (mattk->aatyp == AT_HUGS)
                     You("are being crushed.");
@@ -1647,7 +1646,7 @@ register struct attack *mattk;
         } else if (!Slimed) {
             You("don't feel very well.");
             make_slimed(10L, (char *) 0);
-            delayed_killer(SLIMED, KILLED_BY_AN, pm_get(mtmp->data)->mname);
+            delayed_killer(SLIMED, KILLED_BY_AN, pm_name(mtmp->data));
         } else
             pline("Yuck!");
         break;
@@ -2213,7 +2212,7 @@ struct attack *mattk;
                 break;
             You("turn to stone...");
             killer.format = KILLED_BY;
-            Strcpy(killer.name, pm_get(mtmp->data)->mname);
+            Strcpy(killer.name, pm_name(mtmp->data));
             done(STONING);
         }
         break;
@@ -2889,7 +2888,7 @@ struct attack *mattk;
                     && (perceives(mtmp->data) || !Invis)) {
                     if (Blind)
                         pline("As a blind %s, you cannot defend yourself.",
-                              pm_get(youmonst.data)->mname);
+                              pm_name(youmonst.data));
                     else {
                         if (mon_reflects(mtmp,
                                          "Your gaze is reflected by %s %s."))

@@ -459,7 +459,7 @@ int psflags;
                        && !(mntmp == PM_HUMAN || your_race(&mons[mntmp])
                             || mntmp == urole.malenum
                             || mntmp == urole.femalenum)) {
-                const char *pm_name;
+                const char *nm;
 
                 /* mkclass_poly() can pick a !polyok()
                    candidate; if so, usually try again */
@@ -471,12 +471,12 @@ int psflags;
                        0 and trigger thats_enough_tries message */
                     ++tryct;
                 }
-                pm_name = pm_get(&mons[mntmp])->mname;
+                nm = pm_name(&mons[mntmp]);
                 if (the_unique_pm(&mons[mntmp]))
-                    pm_name = the(pm_name);
+                    nm = the(nm);
                 else if (!type_is_pname(&mons[mntmp]))
-                    pm_name = an(pm_name);
-                You_cant("polymorph into %s.", pm_name);
+                    nm = an(nm);
+                You_cant("polymorph into %s.", nm);
             } else
                 break;
         } while (--tryct > 0);
@@ -538,7 +538,7 @@ int psflags;
                             ? PM_WOLF
                             : !rn2(4) ? PM_FOG_CLOUD : PM_VAMPIRE_BAT;
             if (controllable_poly) {
-                Sprintf(buf, "Become %s?", an(pm_get(&mons[mntmp])->mname));
+                Sprintf(buf, "Become %s?", an(pm_name(&mons[mntmp])));
                 if (yn(buf) != 'y')
                     return;
             }
@@ -600,7 +600,7 @@ int mntmp;
     int mlvl;
 
     if (mvitals[mntmp].mvflags & G_GENOD) { /* allow G_EXTINCT */
-        You_feel("rather %s-ish.", pm_get(&mons[mntmp])->mname);
+        You_feel("rather %s-ish.", pm_name(&mons[mntmp]));
         exercise(A_WIS, TRUE);
         return 0;
     }
@@ -654,7 +654,7 @@ int mntmp;
         Strcat(buf, (is_male(&mons[mntmp]) || is_female(&mons[mntmp]))
                        ? "" : flags.female ? "female " : "male ");
     }
-    Strcat(buf, pm_get(&mons[mntmp])->mname);
+    Strcat(buf, pm_name(&mons[mntmp]));
     You("%s %s!", (u.umonnum != mntmp) ? "turn into" : "feel like", an(buf));
 
     if (Stoned && poly_when_stoned(&mons[mntmp])) {
@@ -752,7 +752,7 @@ int mntmp;
         if (touch_petrifies(u.usteed->data) && !Stone_resistance && rnl(3)) {
             pline("%s touch %s.", no_longer_petrify_resistant,
                   mon_nam(u.usteed));
-            Sprintf(buf, "riding %s", an(pm_get(u.usteed->data)->mname));
+            Sprintf(buf, "riding %s", an(pm_name(u.usteed->data)));
             instapetrify(buf);
         }
         if (!can_ride(u.usteed))
@@ -1530,7 +1530,7 @@ dopoly()
     if (is_vampire(youmonst.data)) {
         polyself(2);
         if (savedat != youmonst.data) {
-            You("transform into %s.", an(pm_get(youmonst.data)->mname));
+            You("transform into %s.", an(pm_name(youmonst.data)));
             newsym(u.ux, u.uy);
         }
     }

@@ -1659,7 +1659,7 @@ boolean called;
 {
     char *buf = nextmbuf();
     struct permonst *mdat = mtmp->data;
-    const char *pm_name = pm_get(mdat)->mname;
+    const char *nm = pm_name(mdat);
     boolean do_hallu, do_invis, do_it, do_saddle, do_name;
     boolean name_at_start, has_adjectives;
     char *bp;
@@ -1707,9 +1707,9 @@ boolean called;
     /* an "aligned priest" not flagged as a priest or minion should be
        "priest" or "priestess" (normally handled by priestname()) */
     if (mdat == &mons[PM_ALIGNED_PRIEST])
-        pm_name = mtmp->female ? "priestess" : "priest";
+        nm = mtmp->female ? "priestess" : "priest";
     else if (mdat == &mons[PM_HIGH_PRIEST] && mtmp->female)
-        pm_name = "high priestess";
+        nm = "high priestess";
 
     /* Shopkeepers: use shopkeeper name.  For normal shopkeepers, just
      * "Asidonhopo"; for unusual ones, "Asidonhopo the invisible
@@ -1731,7 +1731,7 @@ boolean called;
         Strcat(buf, " the ");
         if (do_invis)
             Strcat(buf, "invisible ");
-        Strcat(buf, pm_name);
+        Strcat(buf, nm);
         return buf;
     }
 
@@ -1760,7 +1760,7 @@ boolean called;
             Sprintf(eos(buf), "%s ghost", s_suffix(name));
             name_at_start = TRUE;
         } else if (called) {
-            Sprintf(eos(buf), "%s called %s", pm_name, name);
+            Sprintf(eos(buf), "%s called %s", nm, name);
             name_at_start = (boolean) type_is_pname(mdat);
         } else if (is_mplayer(mdat) && (bp = strstri(name, " the ")) != 0) {
             /* <name> the <adjective> <invisible> <saddled> <rank> */
@@ -1786,7 +1786,7 @@ boolean called;
         Strcat(buf, lcase(pbuf));
         name_at_start = FALSE;
     } else {
-        Strcat(buf, pm_name);
+        Strcat(buf, nm);
         name_at_start = (boolean) type_is_pname(mdat);
     }
 
@@ -2010,13 +2010,13 @@ boolean ckloc;
     } else if (ckloc && ptr == &mons[PM_LONG_WORM]
                && level.monsters[mon->mx][mon->my] != mon) {
         Sprintf(outbuf, "%s <%d,%d>",
-                pm_get(&mons[PM_LONG_WORM_TAIL])->mname, mon->mx, mon->my);
+                pm_name(&mons[PM_LONG_WORM_TAIL]), mon->mx, mon->my);
     } else {
         Sprintf(outbuf, "%s%s <%d,%d>",
                 mon->mtame ? "tame " : mon->mpeaceful ? "peaceful " : "",
-                pm_get(mon->data)->mname, mon->mx, mon->my);
+                pm_name(mon->data), mon->mx, mon->my);
         if (mon->cham != NON_PM)
-            Sprintf(eos(outbuf), "{%s}", pm_get(&mons[mon->cham])->mname);
+            Sprintf(eos(outbuf), "{%s}", pm_name(&mons[mon->cham]));
     }
     return outbuf;
 }
@@ -2064,7 +2064,7 @@ char *code;
     if (name >= SPECIAL_PM) {
         mname = bogusmon(buf, code);
     } else {
-        mname = strcpy(buf, pm_get(&mons[name])->mname);
+        mname = strcpy(buf, pm_name(&mons[name]));
     }
     return mname;
 #undef BOGUSMONSIZE

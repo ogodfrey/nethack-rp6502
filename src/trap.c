@@ -2795,8 +2795,8 @@ const char *arg;
 
     if (uwep && uwep->otyp == CORPSE && touch_petrifies(&mons[uwep->corpsenm])
         && !Stone_resistance) {
-        pline("%s touch the %s corpse.", arg, pm_get(&mons[uwep->corpsenm])->mname);
-        Sprintf(kbuf, "%s corpse", an(pm_get(&mons[uwep->corpsenm])->mname));
+        pline("%s touch the %s corpse.", arg, pm_name(&mons[uwep->corpsenm]));
+        Sprintf(kbuf, "%s corpse", an(pm_name(&mons[uwep->corpsenm])));
         instapetrify(kbuf);
         /* life-saved; unwield the corpse if we can't handle it */
         if (!uarmg && !Stone_resistance)
@@ -2806,8 +2806,8 @@ const char *arg;
        allow two-weapon combat when either weapon is a corpse] */
     if (u.twoweap && uswapwep && uswapwep->otyp == CORPSE
         && touch_petrifies(&mons[uswapwep->corpsenm]) && !Stone_resistance) {
-        pline("%s touch the %s corpse.", arg, pm_get(&mons[uswapwep->corpsenm])->mname);
-        Sprintf(kbuf, "%s corpse", an(pm_get(&mons[uswapwep->corpsenm])->mname));
+        pline("%s touch the %s corpse.", arg, pm_name(&mons[uswapwep->corpsenm]));
+        Sprintf(kbuf, "%s corpse", an(pm_name(&mons[uswapwep->corpsenm])));
         instapetrify(kbuf);
         /* life-saved; unwield the corpse */
         if (!uarmg && !Stone_resistance)
@@ -4315,7 +4315,7 @@ struct trap *ttmp;
 
     /* is it a cockatrice?... */
     if (touch_petrifies(mtmp->data) && !uarmg && !Stone_resistance) {
-        You("grab the trapped %s using your bare %s.", pm_get(mtmp->data)->mname,
+        You("grab the trapped %s using your bare %s.", pm_name(mtmp->data),
             makeplural(body_part(HAND)));
 
         if (poly_when_stoned(youmonst.data) && polymon(PM_STONE_GOLEM)) {
@@ -4324,7 +4324,7 @@ struct trap *ttmp;
             char kbuf[BUFSZ];
 
             Sprintf(kbuf, "trying to help %s out of a pit",
-                    an(pm_get(mtmp->data)->mname));
+                    an(pm_name(mtmp->data)));
             instapetrify(kbuf);
             return 1;
         }

@@ -2583,7 +2583,7 @@ struct monst *mon;
         return (pm_get(ptr)->mcolor == CLR_GREEN || pm_get(ptr)->mcolor == CLR_BRIGHT_GREEN);
 #endif
     /* approximation */
-    if (strstri(pm_get(ptr)->mname, "green"))
+    if (strstri(pm_name(ptr), "green"))
         return TRUE;
     switch (monsndx(ptr)) {
     case PM_FOREST_CENTAUR:

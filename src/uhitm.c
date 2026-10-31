@@ -952,7 +952,7 @@ int dieroll;
                         pline("Splat!  You hit %s with %s %s egg%s!",
                               mon_nam(mon),
                               obj->known ? "the" : cnt > 1L ? "some" : "a",
-                              obj->known ? pm_get(&mons[obj->corpsenm])->mname
+                              obj->known ? pm_name(&mons[obj->corpsenm])
                                          : "petrifying",
                               plur(cnt));
                         obj->known = 1; /* (not much point...) */
@@ -965,7 +965,7 @@ int dieroll;
                     } else { /* ordinary egg(s) */
                         const char *eggp = (obj->corpsenm != NON_PM
                                             && obj->known)
-                                           ? the(pm_get(&mons[obj->corpsenm])->mname)
+                                           ? the(pm_name(&mons[obj->corpsenm]))
                                            : (cnt > 1L) ? "some" : "an";
 
                         You("hit %s with %s egg%s.", mon_nam(mon), eggp,
@@ -2164,7 +2164,7 @@ register struct attack *mattk;
 
         if (fatal_gulp && !is_rider(pd)) { /* petrification */
             char kbuf[BUFSZ];
-            const char *mname = pm_get(pd)->mname;
+            const char *mname = pm_name(pd);
 
             if (!type_is_pname(pd))
                 mname = an(mname);
@@ -2180,7 +2180,7 @@ register struct attack *mattk;
                     pline("Unfortunately, digesting any of it is fatal.");
                     end_engulf();
                     Sprintf(killer.name, "unwisely tried to eat %s",
-                            pm_get(pd)->mname);
+                            pm_name(pd));
                     killer.format = NO_KILLER_PREFIX;
                     done(DIED);
                     return 0; /* lifesaved */
@@ -2231,7 +2231,7 @@ register struct attack *mattk;
                         pline1(msgbuf);
                     if (pd == &mons[PM_GREEN_SLIME]) {
                         Sprintf(msgbuf, "%s isn't sitting well with you.",
-                                The(pm_get(pd)->mname));
+                                The(pm_name(pd)));
                         if (!Unchanging) {
                             make_slimed(5L, (char *) 0);
                         }

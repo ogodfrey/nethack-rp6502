@@ -171,11 +171,14 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
      the link. A RAM copy linked into the game would use RAM, so the game
      needs either a separate dump link with the same string addresses or the
      names-in-XRAM design. Decide before the game's table moves.
-   - Name strings (decided): `mname` becomes a 16-bit index into a RAM name
-     table of string pointers (about 762 bytes of RAM). The XRAM image then
-     has no link addresses, so a small dump program that links only monst.c
-     can produce `mons.bin` for the game, and the game no longer needs a
-     second link. About 126 `mname` reads change to `pm_name(p)`. Not started.
+   - Name strings (done): `struct permonst` no longer has a name pointer.
+     `mons_names[]` (RAM, src/monnames.c) holds the names, indexed like
+     `mons[]`, and `pm_name(p)` reads it at `pm_index(p)`, which needs no
+     fetch. `monst.c` builds both arrays from one set of `MON()` entries
+     (`MONST_NAMES` selects the names). The image is now pure data:
+     `mons.bin` is 382 records of 52 bytes. The target `xramtest` output
+     (monster sums with names, flags, and objects) matches the host run.
+     `pm_index()` aborts in the host harness on a non-table pointer.
    - Harness status: the XRAM host harness passes role_init and stops at
      polyself.c:77 (set_uasmon). `polyself.c` has about 74 sites, several
      through local `mdat`/`mptr` pointers, so convert the whole file in one
@@ -184,8 +187,11 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
      across `src/` and `include/obj.h`, `objclass.h`, and `hack.h`. The table
      is a plain extern; with `RP6502_MONS_XRAM` the link gives the symbol
      `OBJS_XRAM_ADDR` (`--defsym`), and the host harness does the same with
-     `-no-pie`. Still open: the target game link, which needs the same
-     `--defsym` and the objects image asset.
+     `-no-pie`. `xramtest` also writes `objects.bin` and checks it on target.
+   - Still open: there is no game executable target in CMake yet, only
+     `nethack_objs` and the XRAM test targets. Linking the game is part of
+     priorities 3 and 4 (memory budget and overlays), and the flag-on game
+     needs the two `--defsym` links and both image assets.
 3. **Budget the rest of memory.** Moving both tables alone will not make the
    measured unlinked data fit. Investigate `level`, room and display buffers,
    vision data, heap, stack, resident code, and overlay slots; measure the

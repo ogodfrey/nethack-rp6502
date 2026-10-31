@@ -186,8 +186,8 @@ DLBSRC = dlb_main.c
 UTILSRCS = $(MAKESRC) panic.c $(SPLEVSRC) $(DGNCOMPSRC) $(RECOVSRC) $(DLBSRC)
 
 # files that define all monsters and objects
-CMONOBJ = ../src/monst.c ../src/objects.c
-OMONOBJ = $(OBJDIR)/monst.o $(OBJDIR)/objects.o
+CMONOBJ = ../src/monst.c ../src/monnames.c ../src/objects.c
+OMONOBJ = $(OBJDIR)/monst.o $(OBJDIR)/monnames.o $(OBJDIR)/objects.o
 # files that provide access to NetHack's names
 CNAMING = ../src/drawing.c ../src/decl.c $(CMONOBJ)
 ONAMING = $(OBJDIR)/drawing.o $(OBJDIR)/decl.o $(OMONOBJ)
@@ -471,6 +471,8 @@ $(OBJDIR)/decl.o: ../src/decl.c $(CONFIG_H)
 	$(CC) $(CFLAGS) -c ../src/decl.c -o $@
 $(OBJDIR)/monst.o: ../src/monst.c $(CONFIG_H)
 	$(CC) $(CFLAGS) -c ../src/monst.c -o $@
+$(OBJDIR)/monnames.o: ../src/monnames.c $(CONFIG_H)
+	$(CC) $(CFLAGS) -c ../src/monnames.c -o $@
 $(OBJDIR)/objects.o: ../src/objects.c $(CONFIG_H)
 	$(CC) $(CFLAGS) -c ../src/objects.c -o $@
 $(OBJDIR)/dlb.o: ../src/dlb.c $(CONFIG_H) ../include/dlb.h

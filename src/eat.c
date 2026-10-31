@@ -522,7 +522,7 @@ int *dmg_p; /* for dishing out extra damage in lieu of Int loss */
            tentacle-touch should have been caught before reaching this far) */
         if (magr == &youmonst) {
             if (!Stone_resistance && !Stoned)
-                make_stoned(5L, (char *) 0, KILLED_BY_AN, pm_get(pd)->mname);
+                make_stoned(5L, (char *) 0, KILLED_BY_AN, pm_name(pd));
         } else {
             /* no need to check for poly_when_stoned or Stone_resistance;
                mind flayers don't have those capabilities */
@@ -552,7 +552,7 @@ int *dmg_p; /* for dishing out extra damage in lieu of Int loss */
             return MM_MISS;
         } else if (is_rider(pd)) {
             pline("Ingesting that is fatal.");
-            Sprintf(killer.name, "unwisely ate the brain of %s", pm_get(pd)->mname);
+            Sprintf(killer.name, "unwisely ate the brain of %s", pm_name(pd));
             killer.format = NO_KILLER_PREFIX;
             done(DIED);
             /* life-saving needed to reach here */
@@ -682,7 +682,7 @@ register int pm;
         if (!Stone_resistance
             && !(poly_when_stoned(youmonst.data)
                  && polymon(PM_STONE_GOLEM))) {
-            Sprintf(killer.name, "tasting %s meat", pm_get(&mons[pm])->mname);
+            Sprintf(killer.name, "tasting %s meat", pm_name(&mons[pm]));
             killer.format = KILLED_BY;
             You("turn to stone.");
             done(STONING);
@@ -701,7 +701,7 @@ register int pm;
     case PM_LARGE_CAT:
         /* cannibals are allowed to eat domestic animals without penalty */
         if (!CANNIBAL_ALLOWED()) {
-            You_feel("that eating the %s was a bad idea.", pm_get(&mons[pm])->mname);
+            You_feel("that eating the %s was a bad idea.", pm_name(&mons[pm]));
             HAggravate_monster |= FROMOUTSIDE;
         }
         break;
@@ -713,7 +713,7 @@ register int pm;
     case PM_PESTILENCE:
     case PM_FAMINE: {
         pline("Eating that is instantly fatal.");
-        Sprintf(killer.name, "unwisely ate the body of %s", pm_get(&mons[pm])->mname);
+        Sprintf(killer.name, "unwisely ate the body of %s", pm_name(&mons[pm]));
         killer.format = NO_KILLER_PREFIX;
         done(DIED);
         /* life-saving needed to reach here */
@@ -1036,7 +1036,7 @@ int pm;
                     Hallucination
                        ? "You suddenly dread being peeled and mimic %s again!"
                        : "You now prefer mimicking %s again.",
-                    an(Upolyd ? pm_get(youmonst.data)->mname : urace.noun));
+                    an(Upolyd ? pm_name(youmonst.data) : urace.noun));
             eatmbuf = dupstr(buf);
             nomovemsg = eatmbuf;
             afternmv = eatmdone;
@@ -1237,9 +1237,9 @@ char *buf;
                 Strcpy(eos(buf), " of ");
             }
             if (vegetarian(&mons[mnum]))
-                Sprintf(eos(buf), "%s", pm_get(&mons[mnum])->mname);
+                Sprintf(eos(buf), "%s", pm_name(&mons[mnum]));
             else
-                Sprintf(eos(buf), "%s meat", pm_get(&mons[mnum])->mname);
+                Sprintf(eos(buf), "%s meat", pm_name(&mons[mnum]));
         }
     }
 }
@@ -1333,7 +1333,7 @@ const char *mesg;
         } else if (Hallucination) {
             what = rndmonnam(NULL);
         } else {
-            what = pm_get(&mons[mnum])->mname;
+            what = pm_name(&mons[mnum]);
             if (the_unique_pm(&mons[mnum]))
                 which = 2;
             else if (type_is_pname(&mons[mnum]))
@@ -1360,7 +1360,7 @@ const char *mesg;
         context.victual.fullwarn = context.victual.eating =
             context.victual.doreset = FALSE;
 
-        You("consume %s %s.", tintxts[r].txt, pm_get(&mons[mnum])->mname);
+        You("consume %s %s.", tintxts[r].txt, pm_name(&mons[mnum]));
 
         eating_conducts(&mons[mnum]);
 
@@ -2236,7 +2236,7 @@ struct obj *otmp;
                      && polymon(PM_STONE_GOLEM))) {
                 if (!Stoned) {
                     Sprintf(killer.name, "%s egg",
-                            pm_get(&mons[otmp->corpsenm])->mname);
+                            pm_name(&mons[otmp->corpsenm]));
                     make_stoned(5L, (char *) 0, KILLED_BY_AN, killer.name);
                 }
             }

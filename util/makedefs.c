@@ -2425,9 +2425,9 @@ do_permonst()
             Fprintf(ofp, "\n        PM_");
         else
             Fprintf(ofp, "\n#define\tPM_");
-        if (mons[i].mlet == S_HUMAN && !strncmp(mons[i].mname, "were", 4))
+        if (mons[i].mlet == S_HUMAN && !strncmp(mons_names[i], "were", 4))
             Fprintf(ofp, "HUMAN_");
-        for (nam = c = tmpdup(mons[i].mname); *c; c++)
+        for (nam = c = tmpdup(mons_names[i]); *c; c++)
             if (*c >= 'a' && *c <= 'z')
                 *c -= (char) ('a' - 'A');
             else if (*c < 'A' || *c > 'Z')

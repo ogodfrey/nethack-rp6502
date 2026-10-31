@@ -673,7 +673,7 @@ nh_timeout()
                     context.warntype.speciesidx = NON_PM;
                     if (context.warntype.species) {
                         You("are no longer warned about %s.",
-                            makeplural(pm_get(context.warntype.species)->mname));
+                            makeplural(pm_name(context.warntype.species)));
                         context.warntype.species = (struct permonst *) 0;
                     }
                 }
@@ -1034,7 +1034,7 @@ slip_or_trip()
         if (!uarmf && otmp->otyp == CORPSE
             && touch_petrifies(&mons[otmp->corpsenm]) && !Stone_resistance) {
             Sprintf(killer.name, "tripping over %s corpse",
-                    an(pm_get(&mons[otmp->corpsenm])->mname));
+                    an(pm_name(&mons[otmp->corpsenm])));
             instapetrify(killer.name);
         }
     } else if (rn2(3) && is_ice(u.ux, u.uy)) {

@@ -528,8 +528,8 @@ unsigned cxn_flags; /* bitmask of CXN_xxx values */
             char anbuf[10]; /* [4] would be enough: 'a','n',' ','\0' */
 
             Sprintf(eos(buf), " of %s%s",
-                    just_an(anbuf, pm_get(&mons[omndx])->mname),
-                    pm_get(&mons[omndx])->mname);
+                    just_an(anbuf, pm_name(&mons[omndx])),
+                    pm_name(&mons[omndx]));
         } else if (is_wet_towel(obj)) {
             if (wizard)
                 Sprintf(eos(buf), " (%d)", obj->spe);
@@ -627,8 +627,8 @@ unsigned cxn_flags; /* bitmask of CXN_xxx values */
                        ? ""
                        : the_unique_pm(&mons[omndx])
                           ? "the "
-                          : just_an(anbuf, pm_get(&mons[omndx])->mname),
-                    pm_get(&mons[omndx])->mname);
+                          : just_an(anbuf, pm_name(&mons[omndx])),
+                    pm_name(&mons[omndx]));
         } else
             Strcpy(buf, actualn);
         break;
@@ -1195,7 +1195,7 @@ unsigned doname_flags;
 #endif
             if (omndx >= LOW_PM
                 && (known || (mvitals[omndx].mvflags & MV_KNOWS_EGG))) {
-                Strcat(prefix, pm_get(&mons[omndx])->mname);
+                Strcat(prefix, pm_name(&mons[omndx]));
                 Strcat(prefix, " ");
                 if (obj->spe)
                     Strcat(bp, " (laid by you)");
@@ -1423,7 +1423,7 @@ unsigned cxn_flags; /* bitmask of CXN_xxx values */
         /* avoid "aligned priest"; it just exposes internal details */
         mname = "priest";
     } else {
-        mname = pm_get(&mons[omndx])->mname;
+        mname = pm_name(&mons[omndx]);
         if (the_unique_pm(&mons[omndx]) || type_is_pname(&mons[omndx])) {
             mname = s_suffix(mname);
             possessive = TRUE;
@@ -3267,7 +3267,7 @@ struct obj *no_wish;
            variant (grey ooze) or player used inverted syntax (<foo> glob);
            if player has given a valid monster type but not valid glob type,
            object name lookup won't find it and wish attempt will fail */
-        Sprintf(globbuf, "glob of %s", pm_get(&mons[mntmp])->mname);
+        Sprintf(globbuf, "glob of %s", pm_name(&mons[mntmp]));
         bp = globbuf;
         mntmp = NON_PM; /* not useful for "glob of <foo>" object lookup */
         cnt = 0; /* globs don't stack */
@@ -3310,7 +3310,7 @@ struct obj *no_wish;
             char *obp = bp;
 
             mntmptoo = title_to_mon(bp, (int *) 0, &mntmplen);
-            bp += (mntmp != mntmptoo) ? (int) strlen(pm_get(&mons[mntmp])->mname)
+            bp += (mntmp != mntmptoo) ? (int) strlen(pm_name(&mons[mntmp]))
                                       : mntmplen;
             if (*bp == ' ') {
                 bp++;

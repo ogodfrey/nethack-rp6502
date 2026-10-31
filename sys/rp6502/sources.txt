@@ -53,6 +53,7 @@ src/mon.c
 src/mondata.c
 src/monmove.c
 src/monst.c
+src/monnames.c
 src/mplayer.c
 src/mthrowu.c
 src/muse.c

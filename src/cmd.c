@@ -1859,7 +1859,7 @@ int final;
         if (!is_male(uasmon) && !is_female(uasmon) && !is_neuter(uasmon))
             Sprintf(tmpbuf, "%s ", genders[flags.female ? 1 : 0].adj);
         Sprintf(buf, "%sin %s%s form", !final ? "currently " : "", tmpbuf,
-                pm_get(uasmon)->mname);
+                pm_name(uasmon));
         you_are(buf, "");
     }
 
@@ -2711,7 +2711,7 @@ int final;
     }
     if (Warn_of_mon && context.warntype.speciesidx >= LOW_PM) {
         Sprintf(buf, "aware of the presence of %s",
-                makeplural(pm_get(&mons[context.warntype.speciesidx])->mname));
+                makeplural(pm_name(&mons[context.warntype.speciesidx])));
         you_are(buf, from_what(WARN_OF_MON));
     }
     if (Undead_warning)
@@ -2904,7 +2904,7 @@ int final;
         && !(final == ENL_GAMEOVERDEAD
              && u.umonnum == PM_GREEN_SLIME && !Unchanging)) {
         /* foreign shape (except were-form which is handled below) */
-        Sprintf(buf, "polymorphed into %s", an(pm_get(youmonst.data)->mname));
+        Sprintf(buf, "polymorphed into %s", an(pm_name(youmonst.data)));
         if (wizard)
             Sprintf(eos(buf), " (%d)", u.mtimedone);
         you_are(buf, "");
@@ -2913,7 +2913,7 @@ int final;
         you_can("lay eggs", "");
     if (u.ulycn >= LOW_PM) {
         /* "you are a werecreature [in beast form]" */
-        Strcpy(buf, an(pm_get(&mons[u.ulycn])->mname));
+        Strcpy(buf, an(pm_name(&mons[u.ulycn])));
         if (u.umonnum == u.ulycn) {
             Strcat(buf, " in beast form");
             if (wizard)
@@ -3099,7 +3099,7 @@ minimal_enlightenment()
     add_menu(tmpwin, NO_GLYPH, &any, 0, 0, ATR_NONE, "", FALSE);
     add_menu(tmpwin, NO_GLYPH, &any, 0, 0, iflags.menu_headings,
              "Current", FALSE);
-    Sprintf(buf, fmtstr, "race", Upolyd ? pm_get(youmonst.data)->mname : urace.noun);
+    Sprintf(buf, fmtstr, "race", Upolyd ? pm_name(youmonst.data) : urace.noun);
     add_menu(tmpwin, NO_GLYPH, &any, 0, 0, ATR_NONE, buf, FALSE);
     if (Upolyd) {
         Sprintf(buf, fmtstr, "role (base)",
@@ -5514,7 +5514,7 @@ boolean doit;
 #if 0
     if (Upolyd) { /* before objects */
         Sprintf(buf, "Use %s special ability",
-                s_suffix(pm_get(&mons[u.umonnum])->mname));
+                s_suffix(pm_name(&mons[u.umonnum])));
         add_herecmd_menuitem(win, domonability, buf);
     }
 #endif

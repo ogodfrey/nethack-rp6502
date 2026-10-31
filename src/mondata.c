@@ -793,9 +793,9 @@ const char *in_str;
     }
 
     for (len = 0, i = LOW_PM; i < NUMMONS; i++) {
-        register int m_i_len = (int) strlen(pm_get(&mons[i])->mname);
+        register int m_i_len = (int) strlen(pm_name(&mons[i]));
 
-        if (m_i_len > len && !strncmpi(pm_get(&mons[i])->mname, str, m_i_len)) {
+        if (m_i_len > len && !strncmpi(pm_name(&mons[i]), str, m_i_len)) {
             if (m_i_len == slen) {
                 mntmp = i;
                 break; /* exact match */

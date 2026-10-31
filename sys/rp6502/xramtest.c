@@ -75,7 +75,7 @@ fold_pm(uint32_t sum, struct permonst *p)
     FOLD(q->mcolor);
 #endif
 #undef FOLD
-    for (s = q->mname; *s; s++)
+    for (s = pm_name(p); *s; s++)
         sum = sum * 31u + (uint32_t) (unsigned char) *s;
     return sum;
 }

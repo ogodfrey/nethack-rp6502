@@ -93,7 +93,7 @@ char *outbuf;
     Sprintf(outbuf, "%s%s%s called %s",
             /* being blinded may hide invisibility from self */
             (Invis && (senseself() || !Blind)) ? "invisible " : "", race,
-            pm_get(&mons[u.umonnum])->mname, plname);
+            pm_name(&mons[u.umonnum]), plname);
     if (u.usteed)
         Sprintf(eos(outbuf), ", mounted on %s", y_monnam(u.usteed));
     if (u.uundetected || (Upolyd && U_AP_TYPE))
@@ -140,7 +140,7 @@ char *outbuf;
     } else if (M_AP_TYPE(mon) == M_AP_MONSTER) {
         if (altmon)
             Sprintf(outbuf, ", masquerading as %s",
-                    an(pm_get(&mons[mon->mappearance])->mname));
+                    an(pm_name(&mons[mon->mappearance])));
     } else if (isyou ? u.uundetected : mon->mundetected) {
         Strcpy(outbuf, ", hiding");
         if (hides_under(mon->data)) {
@@ -377,7 +377,7 @@ int x, y;
                                         : (mW & M2_ELF & m2) ? "elf"
                                           : (mW & M2_ORC & m2) ? "orc"
                                             : (mW & M2_DEMON & m2) ? "demon"
-                                              : pm_get(mtmp->data)->mname);
+                                              : pm_name(mtmp->data));
 
                     Sprintf(eos(monbuf), "warned of %s", makeplural(whom));
                 }
@@ -580,7 +580,7 @@ char *supplemental_name;
      * user_typed_name and picked name.
      */
     if (pm != (struct permonst *) 0 && !user_typed_name)
-        dbase_str = strcpy(newstr, pm_get(pm)->mname);
+        dbase_str = strcpy(newstr, pm_name(pm));
     else
         dbase_str = strcpy(newstr, inp);
     (void) lcase(dbase_str);

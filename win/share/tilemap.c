@@ -120,7 +120,7 @@ int set, entry;
 
     for (i = 0; i < NUMMONS; i++) {
         if (set == MON_GLYPH && tilenum == entry)
-            return mons[i].mname;
+            return pm_name(&mons[i]);
         tilenum++;
         while (conditionals[condnum].sequence == MON_GLYPH
                && conditionals[condnum].predecessor == i) {

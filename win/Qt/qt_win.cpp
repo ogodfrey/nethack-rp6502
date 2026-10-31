@@ -2536,7 +2536,7 @@ void NetHackQtStatusWindow::updateStats()
 	char mname[BUFSZ];
 	int k = 0;
 
-	Strcpy(mname, mons[u.umonnum].mname);
+	Strcpy(mname, pm_name(&mons[u.umonnum]));
 	while(mname[k] != 0) {
 	    if ((k == 0 || (k > 0 && mname[k-1] == ' '))
 	     && 'a' <= mname[k] && mname[k] <= 'z')

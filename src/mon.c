@@ -67,12 +67,12 @@ const char *msg;
             /* bad if not fmons list or if not vault guard */
             if (strcmp(msg, "fmon") || !mtmp->isgd)
                 impossible("dead monster on %s; %s at <%d,%d>",
-                           msg, pm_get(&mons[mndx])->mname, mtmp->mx, mtmp->my);
+                           msg, pm_name(&mons[mndx]), mtmp->mx, mtmp->my);
 #endif
             return;
         }
         if (chk_geno && (mvitals[mndx].mvflags & G_GENOD) != 0)
-            impossible("genocided %s in play (%s)", pm_get(&mons[mndx])->mname, msg);
+            impossible("genocided %s in play (%s)", pm_name(&mons[mndx]), msg);
     }
     if (mtmp->isshk && !has_eshk(mtmp))
         impossible("shk without eshk (%s)", msg);
@@ -2097,7 +2097,7 @@ boolean was_swallowed; /* digestion */
                 if (magr == &youmonst) {
                     There("is an explosion in your %s!", body_part(STOMACH));
                     Sprintf(killer.name, "%s explosion",
-                            s_suffix(pm_get(mdat)->mname));
+                            s_suffix(pm_name(mdat)));
                     losehp(Maybe_Half_Phys(tmp), killer.name, KILLED_BY_AN);
                 } else {
                     You_hear("an explosion.");
@@ -2114,7 +2114,7 @@ boolean was_swallowed; /* digestion */
                 return FALSE;
             }
 
-            Sprintf(killer.name, "%s explosion", s_suffix(pm_get(mdat)->mname));
+            Sprintf(killer.name, "%s explosion", s_suffix(pm_name(mdat)));
             killer.format = KILLED_BY_AN;
             explode(mon->mx, mon->my, -1, tmp, MON_EXPLODE, EXPL_NOXIOUS);
             killer.name[0] = '\0';
@@ -2526,7 +2526,7 @@ struct monst *mtmp;
             pline("%s solidifies...", Monnam(mtmp));
         if (newcham(mtmp, &mons[PM_STONE_GOLEM], FALSE, FALSE)) {
             if (canseemon(mtmp))
-                pline("Now it's %s.", an(pm_get(mtmp->data)->mname));
+                pline("Now it's %s.", an(pm_name(mtmp->data)));
         } else {
             if (canseemon(mtmp))
                 pline("... and returns to normal.");
@@ -2951,7 +2951,7 @@ boolean via_attack;
             }
         }
         if (got_mad && !Hallucination) {
-            const char *who = pm_get(q_guardian)->mname;
+            const char *who = pm_name(q_guardian);
 
             if (got_mad > 1)
                 who = makeplural(who);
