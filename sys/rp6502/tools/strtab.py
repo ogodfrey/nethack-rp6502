@@ -152,6 +152,33 @@ class Stats:
         self.by_decl[decl] = self.by_decl.get(decl, 0) + nbytes
 
 
+def read_marker(text, k):
+    """Parse '( "text" "more" )' after an MSG_ST marker at text[k:].
+
+    Returns (body, end) with the joined raw literal body and the index past
+    ')', or None if the marker is not followed by a parenthesized literal.
+    """
+    n = len(text)
+    k = skip_space(text, k)
+    if k >= n or text[k] != '(':
+        return None
+    k = skip_space(text, k + 1)
+    if k >= n or text[k] != '"':
+        return None
+    j = scan_quoted(text, k, '"')
+    parts = [text[k + 1:j - 1]]
+    k = skip_space(text, j)
+    while k < n and text[k] == '"':
+        e = scan_quoted(text, k, '"')
+        parts.append(text[k + 1:e - 1])
+        j = e
+        k = skip_space(text, j)
+    if k >= n or text[k] != ')':
+        return None
+    body = ''.join(parts).replace('\\\r\n', '').replace('\\\n', '')
+    return body, k + 1
+
+
 def rewrite(text, table, stats, ids=frozenset()):
     """Rewrite one source. ids: names of static declarations whose literals
     become MSGID(n) constants (the declaration's type must be msgid_t)."""
@@ -272,6 +299,15 @@ def rewrite(text, table, stats, ids=frozenset()):
         m = IDENT.match(text, i)
         if m:
             word = m.group(0)
+            if word == 'MSG_ST':
+                marked = read_marker(text, m.end())
+                if marked is not None:
+                    body, end = marked
+                    out.append('MSGID(%d)' % table.id_for(decode(body)))
+                    stats.rewritten += 1
+                    i = end
+                    last = 'STR'
+                    continue
             out.append(word)
             i = m.end()
             if word == 'static':

@@ -262,7 +262,8 @@ static struct Bool_Opt {
 /* compound options, for option_help() and external programs like Amiga
  * frontend */
 static struct Comp_Opt {
-    const char *name, *descr;
+    const char *name;
+    msgid_t descr;
     int size; /* for frontends and such allocating space --
                * usually allowed size of data in game, but
                * occasionally maximum reasonable size for
@@ -270,79 +271,79 @@ static struct Comp_Opt {
                * a different format */
     int optflags;
 } compopt[] = {
-    { "align", "your starting alignment (lawful, neutral, or chaotic)", 8,
+    { "align", MSG_ST("your starting alignment (lawful, neutral, or chaotic)"), 8,
       DISP_IN_GAME },
-    { "align_message", "message window alignment", 20, DISP_IN_GAME }, /*WC*/
-    { "align_status", "status window alignment", 20, DISP_IN_GAME },   /*WC*/
-    { "altkeyhandler", "alternate key handler", 20, SET_IN_GAME },
+    { "align_message", MSG_ST("message window alignment"), 20, DISP_IN_GAME }, /*WC*/
+    { "align_status", MSG_ST("status window alignment"), 20, DISP_IN_GAME },   /*WC*/
+    { "altkeyhandler", MSG_ST("alternate key handler"), 20, SET_IN_GAME },
 #ifdef BACKWARD_COMPAT
-    { "boulder", "deprecated (use S_boulder in sym file instead)", 1,
+    { "boulder", MSG_ST("deprecated (use S_boulder in sym file instead)"), 1,
       SET_IN_GAME },
 #endif
-    { "catname", "the name of your (first) cat (e.g., catname:Tabby)",
+    { "catname", MSG_ST("the name of your (first) cat (e.g., catname:Tabby)"),
       PL_PSIZ, DISP_IN_GAME },
-    { "disclose", "the kinds of information to disclose at end of game",
+    { "disclose", MSG_ST("the kinds of information to disclose at end of game"),
       sizeof flags.end_disclose * 2, SET_IN_GAME },
-    { "dogname", "the name of your (first) dog (e.g., dogname:Fang)", PL_PSIZ,
+    { "dogname", MSG_ST("the name of your (first) dog (e.g., dogname:Fang)"), PL_PSIZ,
       DISP_IN_GAME },
-    { "dungeon", "the symbols to use in drawing the dungeon map",
+    { "dungeon", MSG_ST("the symbols to use in drawing the dungeon map"),
       MAXDCHARS + 1, SET_IN_FILE },
-    { "effects", "the symbols to use in drawing special effects",
+    { "effects", MSG_ST("the symbols to use in drawing special effects"),
       MAXECHARS + 1, SET_IN_FILE },
-    { "font_map", "the font to use in the map window", 40,
+    { "font_map", MSG_ST("the font to use in the map window"), 40,
       DISP_IN_GAME },                                              /*WC*/
-    { "font_menu", "the font to use in menus", 40, DISP_IN_GAME }, /*WC*/
-    { "font_message", "the font to use in the message window", 40,
+    { "font_menu", MSG_ST("the font to use in menus"), 40, DISP_IN_GAME }, /*WC*/
+    { "font_message", MSG_ST("the font to use in the message window"), 40,
       DISP_IN_GAME },                                                  /*WC*/
-    { "font_size_map", "the size of the map font", 20, DISP_IN_GAME }, /*WC*/
-    { "font_size_menu", "the size of the menu font", 20,
+    { "font_size_map", MSG_ST("the size of the map font"), 20, DISP_IN_GAME }, /*WC*/
+    { "font_size_menu", MSG_ST("the size of the menu font"), 20,
       DISP_IN_GAME }, /*WC*/
-    { "font_size_message", "the size of the message font", 20,
+    { "font_size_message", MSG_ST("the size of the message font"), 20,
       DISP_IN_GAME }, /*WC*/
-    { "font_size_status", "the size of the status font", 20,
+    { "font_size_status", MSG_ST("the size of the status font"), 20,
       DISP_IN_GAME }, /*WC*/
-    { "font_size_text", "the size of the text font", 20,
+    { "font_size_text", MSG_ST("the size of the text font"), 20,
       DISP_IN_GAME }, /*WC*/
-    { "font_status", "the font to use in status window", 40,
+    { "font_status", MSG_ST("the font to use in status window"), 40,
       DISP_IN_GAME }, /*WC*/
-    { "font_text", "the font to use in text windows", 40,
+    { "font_text", MSG_ST("the font to use in text windows"), 40,
       DISP_IN_GAME }, /*WC*/
-    { "fruit", "the name of a fruit you enjoy eating", PL_FSIZ, SET_IN_GAME },
-    { "gender", "your starting gender (male or female)", 8, DISP_IN_GAME },
-    { "horsename", "the name of your (first) horse (e.g., horsename:Silver)",
+    { "fruit", MSG_ST("the name of a fruit you enjoy eating"), PL_FSIZ, SET_IN_GAME },
+    { "gender", MSG_ST("your starting gender (male or female)"), 8, DISP_IN_GAME },
+    { "horsename", MSG_ST("the name of your (first) horse (e.g., horsename:Silver)"),
       PL_PSIZ, DISP_IN_GAME },
-    { "map_mode", "map display mode under Windows", 20, DISP_IN_GAME }, /*WC*/
-    { "menustyle", "user interface for object selection", MENUTYPELEN,
+    { "map_mode", MSG_ST("map display mode under Windows"), 20, DISP_IN_GAME }, /*WC*/
+    { "menustyle", MSG_ST("user interface for object selection"), MENUTYPELEN,
       SET_IN_GAME },
-    { "menu_deselect_all", "deselect all items in a menu", 4, SET_IN_FILE },
-    { "menu_deselect_page", "deselect all items on this page of a menu", 4,
+    { "menu_deselect_all", MSG_ST("deselect all items in a menu"), 4, SET_IN_FILE },
+    { "menu_deselect_page", MSG_ST("deselect all items on this page of a menu"), 4,
       SET_IN_FILE },
-    { "menu_first_page", "jump to the first page in a menu", 4, SET_IN_FILE },
-    { "menu_headings", "text attribute for menu headings", 9, SET_IN_GAME },
-    { "menu_invert_all", "invert all items in a menu", 4, SET_IN_FILE },
-    { "menu_invert_page", "invert all items on this page of a menu", 4,
+    { "menu_first_page", MSG_ST("jump to the first page in a menu"), 4, SET_IN_FILE },
+    { "menu_headings", MSG_ST("text attribute for menu headings"), 9, SET_IN_GAME },
+    { "menu_invert_all", MSG_ST("invert all items in a menu"), 4, SET_IN_FILE },
+    { "menu_invert_page", MSG_ST("invert all items on this page of a menu"), 4,
       SET_IN_FILE },
-    { "menu_last_page", "jump to the last page in a menu", 4, SET_IN_FILE },
-    { "menu_next_page", "goto the next menu page", 4, SET_IN_FILE },
-    { "menu_previous_page", "goto the previous menu page", 4, SET_IN_FILE },
-    { "menu_search", "search for a menu item", 4, SET_IN_FILE },
-    { "menu_select_all", "select all items in a menu", 4, SET_IN_FILE },
-    { "menu_select_page", "select all items on this page of a menu", 4,
+    { "menu_last_page", MSG_ST("jump to the last page in a menu"), 4, SET_IN_FILE },
+    { "menu_next_page", MSG_ST("goto the next menu page"), 4, SET_IN_FILE },
+    { "menu_previous_page", MSG_ST("goto the previous menu page"), 4, SET_IN_FILE },
+    { "menu_search", MSG_ST("search for a menu item"), 4, SET_IN_FILE },
+    { "menu_select_all", MSG_ST("select all items in a menu"), 4, SET_IN_FILE },
+    { "menu_select_page", MSG_ST("select all items on this page of a menu"), 4,
       SET_IN_FILE },
-    { "monsters", "the symbols to use for monsters", MAXMCLASSES,
+    { "monsters", MSG_ST("the symbols to use for monsters"), MAXMCLASSES,
       SET_IN_FILE },
-    { "msghistory", "number of top line messages to save", 5, DISP_IN_GAME },
+    { "msghistory", MSG_ST("number of top line messages to save"), 5, DISP_IN_GAME },
 #if defined(TTY_GRAPHICS) || defined(CURSES_GRAPHICS)
-    { "msg_window", "the type of message window required", 1, SET_IN_GAME },
+    { "msg_window", MSG_ST("the type of message window required"), 1, SET_IN_GAME },
 #else
-    { "msg_window", "the type of message window required", 1, SET_IN_FILE },
+    { "msg_window", MSG_ST("the type of message window required"), 1, SET_IN_FILE },
 #endif
-    { "name", "your character's name (e.g., name:Merlin-W)", PL_NSIZ,
+    { "name", MSG_ST("your character's name (e.g., name:Merlin-W)"), PL_NSIZ,
       DISP_IN_GAME },
-    { "mouse_support", "game receives click info from mouse", 0, SET_IN_GAME },
-    { "number_pad", "use the number pad for movement", 1, SET_IN_GAME },
-    { "objects", "the symbols to use for objects", MAXOCLASSES, SET_IN_FILE },
-    { "packorder", "the inventory order of the items in your pack",
+    { "mouse_support", MSG_ST("game receives click info from mouse"), 0, SET_IN_GAME },
+    { "number_pad", MSG_ST("use the number pad for movement"), 1, SET_IN_GAME },
+    { "objects", MSG_ST("the symbols to use for objects"), MAXOCLASSES, SET_IN_FILE },
+    { "packorder", MSG_ST("the inventory order of the items in your pack"),
       MAXOCLASSES, SET_IN_GAME },
 #ifdef CHANGE_COLOR
     { "palette",
@@ -353,109 +354,109 @@ static struct Comp_Opt {
 #endif
     },
 #if defined(MAC)
-    { "hicolor", "same as palette, only order is reversed", 15, SET_IN_FILE },
+    { "hicolor", MSG_ST("same as palette, only order is reversed"), 15, SET_IN_FILE },
 #endif
 #endif
-    { "paranoid_confirmation", "extra prompting in certain situations", 28,
+    { "paranoid_confirmation", MSG_ST("extra prompting in certain situations"), 28,
       SET_IN_GAME },
-    { "petattr",  "attributes for highlighting pets", 88, SET_IN_GAME },
-    { "pettype", "your preferred initial pet type", 4, DISP_IN_GAME },
-    { "pickup_burden", "maximum burden picked up before prompt", 20,
+    { "petattr",  MSG_ST("attributes for highlighting pets"), 88, SET_IN_GAME },
+    { "pettype", MSG_ST("your preferred initial pet type"), 4, DISP_IN_GAME },
+    { "pickup_burden", MSG_ST("maximum burden picked up before prompt"), 20,
       SET_IN_GAME },
-    { "pickup_types", "types of objects to pick up automatically",
+    { "pickup_types", MSG_ST("types of objects to pick up automatically"),
       MAXOCLASSES, SET_IN_GAME },
-    { "pile_limit", "threshold for \"there are many objects here\"", 24,
+    { "pile_limit", MSG_ST("threshold for \"there are many objects here\""), 24,
       SET_IN_GAME },
-    { "playmode", "normal play, non-scoring explore mode, or debug mode", 8,
+    { "playmode", MSG_ST("normal play, non-scoring explore mode, or debug mode"), 8,
       DISP_IN_GAME },
-    { "player_selection", "choose character via dialog or prompts", 12,
+    { "player_selection", MSG_ST("choose character via dialog or prompts"), 12,
       DISP_IN_GAME },
-    { "race", "your starting race (e.g., Human, Elf)", PL_CSIZ,
+    { "race", MSG_ST("your starting race (e.g., Human, Elf)"), PL_CSIZ,
       DISP_IN_GAME },
-    { "role", "your starting role (e.g., Barbarian, Valkyrie)", PL_CSIZ,
+    { "role", MSG_ST("your starting role (e.g., Barbarian, Valkyrie)"), PL_CSIZ,
       DISP_IN_GAME },
-    { "runmode", "display frequency when `running' or `travelling'",
+    { "runmode", MSG_ST("display frequency when `running' or `travelling'"),
       sizeof "teleport", SET_IN_GAME },
-    { "scores", "the parts of the score list you wish to see", 32,
+    { "scores", MSG_ST("the parts of the score list you wish to see"), 32,
       SET_IN_GAME },
-    { "scroll_amount", "amount to scroll map when scroll_margin is reached",
+    { "scroll_amount", MSG_ST("amount to scroll map when scroll_margin is reached"),
       20, DISP_IN_GAME }, /*WC*/
-    { "scroll_margin", "scroll map when this far from the edge", 20,
+    { "scroll_margin", MSG_ST("scroll map when this far from the edge"), 20,
       DISP_IN_GAME }, /*WC*/
-    { "sortloot", "sort object selection lists by description", 4,
+    { "sortloot", MSG_ST("sort object selection lists by description"), 4,
       SET_IN_GAME },
 #ifdef MSDOS
-    { "soundcard", "type of sound card to use", 20, SET_IN_FILE },
+    { "soundcard", MSG_ST("type of sound card to use"), 20, SET_IN_FILE },
 #endif
     { "statushilites",
 #ifdef STATUS_HILITES
-      "0=no status highlighting, N=show highlights for N turns",
+      MSG_ST("0=no status highlighting, N=show highlights for N turns"),
       20, SET_IN_GAME
 #else
-    "highlight control", 20, SET_IN_FILE
+      MSG_ST("highlight control"), 20, SET_IN_FILE
 #endif
     },
     { "statuslines",
 #ifdef CURSES_GRAPHICS
-      "2 or 3 lines for horizontal (bottom or top) status display",
+      MSG_ST("2 or 3 lines for horizontal (bottom or top) status display"),
       20, SET_IN_GAME
 #else
-      "2 or 3 lines for status display",
+      MSG_ST("2 or 3 lines for status display"),
       20, SET_IN_FILE
 #endif
     }, /*WC2*/
-    { "symset", "load a set of display symbols from the symbols file", 70,
+    { "symset", MSG_ST("load a set of display symbols from the symbols file"), 70,
       SET_IN_GAME },
     { "roguesymset",
-      "load a set of rogue display symbols from the symbols file", 70,
+      MSG_ST("load a set of rogue display symbols from the symbols file"), 70,
       SET_IN_GAME },
 #ifdef WIN32
-    { "subkeyvalue", "override keystroke value", 7, SET_IN_FILE },
+    { "subkeyvalue", MSG_ST("override keystroke value"), 7, SET_IN_FILE },
 #endif
-    { "suppress_alert", "suppress alerts about version-specific features", 8,
+    { "suppress_alert", MSG_ST("suppress alerts about version-specific features"), 8,
       SET_IN_GAME },
     /* term_cols,term_rows -> WC2_TERM_SIZE (6: room to format 1..32767) */
-    { "term_cols", "number of columns", 6, SET_IN_FILE }, /*WC2*/
-    { "term_rows", "number of rows", 6, SET_IN_FILE }, /*WC2*/
-    { "tile_width", "width of tiles", 20, DISP_IN_GAME },   /*WC*/
-    { "tile_height", "height of tiles", 20, DISP_IN_GAME }, /*WC*/
-    { "tile_file", "name of tile file", 70, DISP_IN_GAME }, /*WC*/
-    { "traps", "the symbols to use in drawing traps", MAXTCHARS + 1,
+    { "term_cols", MSG_ST("number of columns"), 6, SET_IN_FILE }, /*WC2*/
+    { "term_rows", MSG_ST("number of rows"), 6, SET_IN_FILE }, /*WC2*/
+    { "tile_width", MSG_ST("width of tiles"), 20, DISP_IN_GAME },   /*WC*/
+    { "tile_height", MSG_ST("height of tiles"), 20, DISP_IN_GAME }, /*WC*/
+    { "tile_file", MSG_ST("name of tile file"), 70, DISP_IN_GAME }, /*WC*/
+    { "traps", MSG_ST("the symbols to use in drawing traps"), MAXTCHARS + 1,
       SET_IN_FILE },
-    { "vary_msgcount", "show more old messages at a time", 20,
+    { "vary_msgcount", MSG_ST("show more old messages at a time"), 20,
       DISP_IN_GAME }, /*WC*/
 #ifdef MSDOS
-    { "video", "method of video updating", 20, SET_IN_FILE },
+    { "video", MSG_ST("method of video updating"), 20, SET_IN_FILE },
 #endif
 #ifdef VIDEOSHADES
-    { "videocolors", "color mappings for internal screen routines", 40,
+    { "videocolors", MSG_ST("color mappings for internal screen routines"), 40,
       DISP_IN_GAME },
-    { "videoshades", "gray shades to map to black/gray/white", 32,
+    { "videoshades", MSG_ST("gray shades to map to black/gray/white"), 32,
       DISP_IN_GAME },
 #endif
-    { "whatis_coord", "show coordinates when auto-describing cursor position",
+    { "whatis_coord", MSG_ST("show coordinates when auto-describing cursor position"),
       1, SET_IN_GAME },
     { "whatis_filter",
-      "filter coordinate locations when targeting next or previous",
+      MSG_ST("filter coordinate locations when targeting next or previous"),
       1, SET_IN_GAME },
-    { "windowborders", "0 (off), 1 (on), 2 (auto)", 9, SET_IN_GAME }, /*WC2*/
-    { "windowcolors", "the foreground/background colors of windows", /*WC*/
+    { "windowborders", MSG_ST("0 (off), 1 (on), 2 (auto)"), 9, SET_IN_GAME }, /*WC2*/
+    { "windowcolors", MSG_ST("the foreground/background colors of windows"), /*WC*/
       80, DISP_IN_GAME },
-    { "windowtype", "windowing system to use", WINTYPELEN, DISP_IN_GAME },
+    { "windowtype", MSG_ST("windowing system to use"), WINTYPELEN, DISP_IN_GAME },
 #ifdef WINCHAIN
-    { "windowchain", "window processor to use", WINTYPELEN, SET_IN_SYS },
+    { "windowchain", MSG_ST("window processor to use"), WINTYPELEN, SET_IN_SYS },
 #endif
 #ifdef BACKWARD_COMPAT
-    { "DECgraphics", "load DECGraphics display symbols", 70, SET_IN_FILE },
-    { "IBMgraphics", "load IBMGraphics display symbols", 70, SET_IN_FILE },
+    { "DECgraphics", MSG_ST("load DECGraphics display symbols"), 70, SET_IN_FILE },
+    { "IBMgraphics", MSG_ST("load IBMGraphics display symbols"), 70, SET_IN_FILE },
 #ifdef CURSES_GRAPHICS
-    { "cursesgraphics", "load curses display symbols", 70, SET_IN_FILE },
+    { "cursesgraphics", MSG_ST("load curses display symbols"), 70, SET_IN_FILE },
 #endif
 #ifdef MAC_GRAPHICS_ENV
-    { "Macgraphics", "load MACGraphics display symbols", 70, SET_IN_FILE },
+    { "Macgraphics", MSG_ST("load MACGraphics display symbols"), 70, SET_IN_FILE },
 #endif
 #endif
-    { (char *) 0, (char *) 0, 0, 0 }
+    { (char *) 0, 0, 0, 0 }
 };
 
 #ifdef OPTION_LISTS_ONLY
@@ -6297,7 +6298,7 @@ option_help()
     putstr(datawin, 0, "Compound options:");
     for (i = 0; compopt[i].name; i++) {
         Sprintf(buf2, "`%s'", compopt[i].name);
-        Sprintf(buf, "%-20s - %s%c", buf2, compopt[i].descr,
+        Sprintf(buf, "%-20s - %s%c", buf2, MSGTXT(compopt[i].descr),
                 compopt[i + 1].name ? ',' : '.');
         putstr(datawin, 0, buf);
     }

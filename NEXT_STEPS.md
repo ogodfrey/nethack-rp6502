@@ -211,13 +211,15 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
    (generated sources in the build directory), `hostbuild.sh`, and
    `xramhost.sh`, all compiled with `MSG_CHECK`, which compares each fetch with
    its literal. Verified: the full verification passes; autoplay runs; the
-   storage test [msgtest.c](sys/rp6502/msgtest.c) reads all 9299 strings in the
-   emulator from the null drive and matches the host checksum. Still in RAM:
-   50.6 KB of literals in static tables (largest: option and command
-   descriptions in `compopt` 4.4 KB and `extcmdlist` 3.9 KB, then `loadsyms`,
-   `roles`, `boolopt`, `propertynames`), plus `mons_names` and the object names,
-   which are outside the rewrite. Next: convert those tables the way `rip_txt`
-   was (the compiler lists each use once the type changes), then install
+   storage test [msgtest.c](sys/rp6502/msgtest.c) reads all 9389 strings in the
+   emulator from the null drive and matches the host checksum. The `compopt`
+   option descriptions now use `MSG_ST("text")` markers (rewritten to
+   `MSGID(n)`), read with `MSGTXT`; names stay in RAM because they are matched
+   at runtime. Still in RAM: about 46 KB of literals in static tables (largest:
+   command descriptions in `extcmdlist` 3.9 KB, then `loadsyms`, `roles`,
+   `boolopt`, `propertynames`), plus `mons_names` and the object names, which
+   are outside the rewrite. Next: convert those tables the same way (the
+   compiler lists each use once the type changes), then install
    `msg.dat`/`msg.idx` with the target game.
    XRAM map (defined in [xram.h](include/xram.h)): `mons[]` at $1000
    (19864 bytes), `objects[]` at $6100 (11804 bytes, ending at $8F1B). The

@@ -16,7 +16,9 @@ unsigned msg_count(void);
 
 /* Tables of text ids: a msgid_t is a string number, MSGID(n) is a constant
  * for a static initializer, and MSGTXT(x) is the text of the id x (valid
- * until MSG_SLOTS more strings are fetched). MSGNULL ends a table. */
+ * until MSG_SLOTS more strings are fetched). MSGNULL ends a table. MSG_ST("text")
+ * in a static initializer is rewritten by strtab.py to MSGID(n), so the text
+ * moves to storage. */
 typedef unsigned short msgid_t;
 #define MSGID(n) ((msgid_t) (n))
 #define MSGNULL ((msgid_t) 0xFFFF)
