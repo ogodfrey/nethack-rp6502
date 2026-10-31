@@ -409,8 +409,8 @@ register struct monst *magr, *mdef;
                 res[i] = hitmm(magr, mdef, mattk);
                 if ((mdef->data == &mons[PM_BLACK_PUDDING]
                      || mdef->data == &mons[PM_BROWN_PUDDING])
-                    && (otmp && (objects[otmp->otyp].oc_material == IRON
-                                 || objects[otmp->otyp].oc_material == METAL))
+                    && (otmp && (oc_get(&objects[otmp->otyp])->oc_material == IRON
+                                 || oc_get(&objects[otmp->otyp])->oc_material == METAL))
                     && mdef->mhp > 1 && !mdef->mcan) {
                     struct monst *mclone;
 
@@ -541,7 +541,7 @@ struct attack *mattk;
     boolean weaponhit = ((mattk->aatyp == AT_WEAP
                           || (mattk->aatyp == AT_CLAW && otmp))),
             silverhit = (weaponhit && otmp
-                         && objects[otmp->otyp].oc_material == SILVER),
+                         && oc_get(&objects[otmp->otyp])->oc_material == SILVER),
             showit = FALSE;
 
     /* unhiding or unmimicking happens even if hero can't see it
@@ -1569,7 +1569,7 @@ struct obj *otemp;
 {
     if (flags.verbose && !Blind && mon_visible(magr)) {
         pline("%s %s %s%s %s at %s.", Monnam(magr),
-              (objects[otemp->otyp].oc_dir & PIERCE) ? "thrusts" : "swings",
+              (oc_get(&objects[otemp->otyp])->oc_dir & PIERCE) ? "thrusts" : "swings",
               (otemp->quan > 1L) ? "one of " : "", mhis(magr), xname(otemp),
               mon_nam(mdef));
     }

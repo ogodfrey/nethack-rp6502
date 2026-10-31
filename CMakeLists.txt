@@ -71,29 +71,49 @@ if(DEFINED LLVM_MOS_PLATFORM)
     target_compile_options(xram_monst PRIVATE -Oz -fno-inline -fno-lto
         -ffunction-sections -fdata-sections)
 
+    # Same for objects[]: objects.c is built with the table renamed to a RAM
+    # copy for the image. The game itself never has this copy.
+    add_library(xram_objs OBJECT src/objects.c)
+    add_dependencies(xram_objs nethack_gen)
+    target_include_directories(xram_objs PRIVATE ${NH_GEN}/include include)
+    target_compile_definitions(xram_objs PRIVATE RP6502 RP6502_MONS_RAM
+        objects=rp6502_ram_objects)
+    target_compile_options(xram_objs PRIVATE -Oz -fno-inline -fno-lto
+        -ffunction-sections -fdata-sections)
+
     add_executable(xramtest)
-    # The XRAM image of the monster table is a byproduct of the link: after
-    # the link, elfsym.py copies the table's initial data from the output, so
-    # the pointers in the image match this program. The address comes from
+    # The XRAM images of the tables are byproducts of the link: after the
+    # link, elfsym.py copies each table's initial data from the output, so the
+    # pointers in the image match this program. The addresses come from
     # include/xram.h.
     file(STRINGS include/xram.h MONS_XRAM_LINE REGEX "^#define MONS_XRAM_ADDR")
     string(REGEX MATCH "0x[0-9a-fA-F]+" MONS_XRAM_ADDR "${MONS_XRAM_LINE}")
+    file(STRINGS include/xram.h OBJS_XRAM_LINE REGEX "^#define OBJS_XRAM_ADDR")
+    string(REGEX MATCH "0x[0-9a-fA-F]+" OBJS_XRAM_ADDR "${OBJS_XRAM_LINE}")
     find_package(Python3 REQUIRED COMPONENTS Interpreter)
     add_custom_command(TARGET xramtest POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:xramtest>
         COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/sys/rp6502/tools/elfsym.py
                 $<TARGET_FILE:xramtest>.elf rp6502_ram_mons
                 $<TARGET_FILE_DIR:xramtest>/mons.bin
+        COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/sys/rp6502/tools/elfsym.py
+                $<TARGET_FILE:xramtest>.elf rp6502_ram_objects
+                $<TARGET_FILE_DIR:xramtest>/objects.bin
         VERBATIM)
     set_property(TARGET xramtest APPEND PROPERTY LINK_DEPENDS
         ${CMAKE_CURRENT_SOURCE_DIR}/sys/rp6502/tools/elfsym.py)
     rp6502_byproduct(xramtest XRAM(${MONS_XRAM_ADDR}) mons.bin)
+    rp6502_byproduct(xramtest XRAM(${OBJS_XRAM_ADDR}) objects.bin)
     rp6502_executable(xramtest DATA default RESET default)
     target_sources(xramtest PRIVATE
         sys/rp6502/xramtest.c
         sys/rp6502/rp6502xram.c
         $<TARGET_OBJECTS:xram_monst>
+        $<TARGET_OBJECTS:xram_objs>
     )
+    # objects[] is not linked into the program; its name is given the XRAM
+    # address, so &objects[i] is the address in the image.
+    target_link_options(xramtest PRIVATE -Wl,--defsym,objects=${OBJS_XRAM_ADDR})
     add_dependencies(xramtest nethack_gen)
     target_include_directories(xramtest PRIVATE ${NH_GEN}/include include)
     target_compile_definitions(xramtest PRIVATE RP6502 RP6502_MONS_XRAM)

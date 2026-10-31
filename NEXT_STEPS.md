@@ -180,8 +180,12 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
      polyself.c:77 (set_uasmon). `polyself.c` has about 74 sites, several
      through local `mdat`/`mptr` pointers, so convert the whole file in one
      pass, then rerun the harness.
-   - objclass (`objects[]`) follows the same plan later (about 470 direct
-     sites).
+   - objclass (`objects[]`): converted to `oc_get()`/`oc_put()`/`oc_set()`
+     across `src/` and `include/obj.h`, `objclass.h`, and `hack.h`. The table
+     is a plain extern; with `RP6502_MONS_XRAM` the link gives the symbol
+     `OBJS_XRAM_ADDR` (`--defsym`), and the host harness does the same with
+     `-no-pie`. Still open: the target game link, which needs the same
+     `--defsym` and the objects image asset.
 3. **Budget the rest of memory.** Moving both tables alone will not make the
    measured unlinked data fit. Investigate `level`, room and display buffers,
    vision data, heap, stack, resident code, and overlay slots; measure the

@@ -6,6 +6,9 @@
 #ifndef OBJCLASS_H
 #define OBJCLASS_H
 
+#include <stdint.h>
+#include "xram.h"
+
 /* [misnamed] definition of a type of object; many objects are composites
    (liquid potion inside glass bottle, metal arrowhead on wooden shaft)
    and object definitions only specify one type on a best-fit basis */
@@ -78,19 +81,20 @@ struct objclass {
 
     Bitfield(oc_material, 5); /* one of obj_material_types */
 
-#define is_organic(otmp) (objects[otmp->otyp].oc_material <= WOOD)
-#define is_metallic(otmp)                    \
-    (objects[otmp->otyp].oc_material >= IRON \
-     && objects[otmp->otyp].oc_material <= MITHRIL)
+#define is_organic(otmp) (oc_get(&objects[otmp->otyp])->oc_material <= WOOD)
+#define is_metallic(otmp)                                   \
+    (oc_get(&objects[otmp->otyp])->oc_material >= IRON      \
+     && oc_get(&objects[otmp->otyp])->oc_material <= MITHRIL)
 
 /* primary damage: fire/rust/--- */
 /* is_flammable(otmp), is_rottable(otmp) in mkobj.c */
-#define is_rustprone(otmp) (objects[otmp->otyp].oc_material == IRON)
+#define is_rustprone(otmp) \
+    (oc_get(&objects[otmp->otyp])->oc_material == IRON)
 
 /* secondary damage: rot/acid/acid */
-#define is_corrodeable(otmp)                   \
-    (objects[otmp->otyp].oc_material == COPPER \
-     || objects[otmp->otyp].oc_material == IRON)
+#define is_corrodeable(otmp)                                  \
+    (oc_get(&objects[otmp->otyp])->oc_material == COPPER      \
+     || oc_get(&objects[otmp->otyp])->oc_material == IRON)
 
 #define is_damageable(otmp)                                        \
     (is_rustprone(otmp) || is_flammable(otmp) || is_rottable(otmp) \
@@ -134,7 +138,30 @@ struct objdescr {
     const char *oc_descr; /* description when name unknown */
 };
 
+/* objects[] lives in XRAM when RP6502_MONS_XRAM is set (the same scheme as
+   mons[] in rp6502xram.h): oc_get()/oc_put() copy a record in and out, and
+   oc_set(p, field, val) changes one field. */
+/* objects[] is not in RAM when RP6502_MONS_XRAM is set: the link places the
+   symbol at OBJS_XRAM_ADDR, so &objects[i] is an XRAM address. oc_get() and
+   oc_put() copy a record in and out, and oc_set(p, field, val) changes one
+   field. */
 extern NEARDATA struct objclass objects[];
+#if defined(RP6502_MONS_XRAM) && !defined(RP6502_MONS_RAM)
+#define oc_get(p) rpo_get(p)
+#define oc_put(p, rec) rpo_put(p, rec)
+#define oc_set(p, field, val)                \
+    do {                                     \
+        struct objclass rp_oc_ = *oc_get(p); \
+        rp_oc_.field = (val);                \
+        oc_put((p), &rp_oc_);                \
+    } while (0)
+struct objclass *rpo_get(const struct objclass *p);
+void rpo_put(struct objclass *p, const struct objclass *rec);
+#else
+#define oc_get(p) ((struct objclass *) (p))
+#define oc_put(p, rec) (*(struct objclass *) (p) = *(rec))
+#define oc_set(p, field, val) (oc_get(p)->field = (val))
+#endif
 extern NEARDATA struct objdescr obj_descr[];
 
 /*

@@ -71,7 +71,7 @@ long mask;
                     if (wp->w_mask & ~(W_SWAPWEP | W_QUIVER)) {
                         /* leave as "x = x <op> y", here and below, for broken
                          * compilers */
-                        p = objects[oobj->otyp].oc_oprop;
+                        p = oc_get(&objects[oobj->otyp])->oc_oprop;
                         u.uprops[p].extrinsic =
                             u.uprops[p].extrinsic & ~wp->w_mask;
                         if ((p = w_blocks(oobj, mask)) != 0)
@@ -94,7 +94,7 @@ long mask;
                     if (wp->w_mask & ~(W_SWAPWEP | W_QUIVER)) {
                         if (obj->oclass == WEAPON_CLASS || is_weptool(obj)
                             || mask != W_WEP) {
-                            p = objects[obj->otyp].oc_oprop;
+                            p = oc_get(&objects[obj->otyp])->oc_oprop;
                             u.uprops[p].extrinsic =
                                 u.uprops[p].extrinsic | wp->w_mask;
                             if ((p = w_blocks(obj, mask)) != 0)
@@ -129,7 +129,7 @@ register struct obj *obj;
             cancel_doff(obj, wp->w_mask);
 
             *(wp->w_obj) = 0;
-            p = objects[obj->otyp].oc_oprop;
+            p = oc_get(&objects[obj->otyp])->oc_oprop;
             u.uprops[p].extrinsic = u.uprops[p].extrinsic & ~wp->w_mask;
             obj->owornmask &= ~wp->w_mask;
             if (obj->oartifact)
@@ -171,7 +171,7 @@ struct obj *obj;
         res = W_RINGL | W_RINGR; /* W_RING, BOTH_SIDES */
         break;
     case ARMOR_CLASS:
-        switch (objects[otyp].oc_armcat) {
+        switch (oc_get(&objects[otyp])->oc_armcat) {
         case ARM_SUIT:
             res = W_ARM;
             break; /* WORN_ARMOR */
@@ -197,7 +197,7 @@ struct obj *obj;
         break;
     case WEAPON_CLASS:
         res = W_WEP | W_SWAPWEP;
-        if (objects[otyp].oc_merge)
+        if (oc_get(&objects[otyp])->oc_merge)
             res |= W_QUIVER;
         break;
     case TOOL_CLASS:
@@ -287,7 +287,7 @@ struct obj *obj; /* item to make known if effect can be seen */
     }
 
     for (otmp = mon->minvent; otmp; otmp = otmp->nobj)
-        if (otmp->owornmask && objects[otmp->otyp].oc_oprop == FAST)
+        if (otmp->owornmask && oc_get(&objects[otmp->otyp])->oc_oprop == FAST)
             break;
     if (otmp) /* speed boots */
         mon->mspeed = MFAST;
@@ -328,7 +328,7 @@ boolean on, silently;
     int unseen;
     uchar mask;
     struct obj *otmp;
-    int which = (int) objects[obj->otyp].oc_oprop;
+    int which = (int) oc_get(&objects[obj->otyp])->oc_oprop;
 
     unseen = !canseemon(mon);
     if (!which)
@@ -401,7 +401,7 @@ boolean on, silently;
             for (otmp = mon->minvent; otmp; otmp = otmp->nobj)
                 if (otmp != obj
                     && otmp->owornmask
-                    && (int) objects[otmp->otyp].oc_oprop == which)
+                    && (int) oc_get(&objects[otmp->otyp])->oc_oprop == which)
                     break;
             if (!otmp)
                 mon->mextrinsics &= ~((unsigned short) mask);
@@ -607,7 +607,7 @@ outer_break:
     /* when upgrading a piece of armor, account for time spent
        taking off current one */
     if (old)
-        m_delay += objects[old->otyp].oc_delay;
+        m_delay += oc_get(&objects[old->otyp])->oc_delay;
 
     if (old) /* do this first to avoid "(being worn)" */
         old->owornmask = 0L;
@@ -626,7 +626,7 @@ outer_break:
                       simpleonames(best), otense(best, "glow"),
                       hcolor(NH_BLACK));
         } /* can see it */
-        m_delay += objects[best->otyp].oc_delay;
+        m_delay += oc_get(&objects[best->otyp])->oc_delay;
         mon->mfrozen = m_delay;
         if (mon->mfrozen)
             mon->mcanmove = 0;
@@ -727,7 +727,7 @@ clear_bypasses()
              * [Changing the fobj chain mid-traversal would also be risky.]
              */
 #if 0
-            if (objects[otmp->otyp].oc_merge) {
+            if (oc_get(&objects[otmp->otyp])->oc_merge) {
                 xchar ox, oy;
 
                 (void) get_obj_location(otmp, &ox, &oy, 0);

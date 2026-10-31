@@ -105,7 +105,7 @@ int shotlimit;
      * (potential volley of up to N missiles; default for N is 1)
      */
     multishot = 1;
-    skill = objects[obj->otyp].oc_skill;
+    skill = oc_get(&objects[obj->otyp])->oc_skill;
     if (obj->quan > 1L /* no point checking if there's only 1 */
         /* ammo requires corresponding launcher be wielded */
         && (is_ammo(obj) ? matching_launcher(obj, uwep)
@@ -300,10 +300,10 @@ autoquiver()
         } else if (otmp->otyp == ROCK
                    /* seen rocks or known flint or known glass */
                    || (otmp->otyp == FLINT
-                       && objects[otmp->otyp].oc_name_known)
+                       && oc_get(&objects[otmp->otyp])->oc_name_known)
                    || (otmp->oclass == GEM_CLASS
-                       && objects[otmp->otyp].oc_material == GLASS
-                       && objects[otmp->otyp].oc_name_known)) {
+                       && oc_get(&objects[otmp->otyp])->oc_material == GLASS
+                       && oc_get(&objects[otmp->otyp])->oc_name_known)) {
             if (uslinging())
                 oammo = otmp;
             else if (ammo_and_launcher(otmp, uswapwep))
@@ -327,7 +327,7 @@ autoquiver()
             omissile = otmp;
         } else if (otmp->oclass == WEAPON_CLASS && throwing_weapon(otmp)) {
             /* Ordinary weapon */
-            if (objects[otmp->otyp].oc_skill == P_DAGGER && !omissile)
+            if (oc_get(&objects[otmp->otyp])->oc_skill == P_DAGGER && !omissile)
                 omissile = otmp;
             else
                 omisc = otmp;
@@ -1016,7 +1016,7 @@ boolean hitsroof;
             else if (dmg > 6)
                 dmg = 6;
             if (youmonst.data == &mons[PM_SHADE]
-                && objects[obj->otyp].oc_material != SILVER)
+                && oc_get(&objects[obj->otyp])->oc_material != SILVER)
                 dmg = 0;
         }
         if (dmg > 1 && less_damage)
@@ -1065,7 +1065,7 @@ struct obj *obj;
     return (boolean) (is_missile(obj) || is_spear(obj)
                       /* daggers and knife (excludes scalpel) */
                       || (is_blade(obj) && !is_sword(obj)
-                          && (objects[obj->otyp].oc_dir & PIERCE))
+                          && (oc_get(&objects[obj->otyp])->oc_dir & PIERCE))
                       /* special cases [might want to add AXE] */
                       || obj->otyp == WAR_HAMMER || obj->otyp == AKLYS);
 }
@@ -1566,7 +1566,7 @@ register struct obj *obj; /* thrownobj or kickedobj or uwep */
     tmp += disttmp;
 
     /* gloves are a hindrance to proper use of bows */
-    if (uarmg && uwep && objects[uwep->otyp].oc_skill == P_BOW) {
+    if (uarmg && uwep && oc_get(&objects[uwep->otyp])->oc_skill == P_BOW) {
         switch (uarmg->otyp) {
         case GAUNTLETS_OF_POWER: /* metal */
             tmp -= 2;
@@ -1658,7 +1658,7 @@ register struct obj *obj; /* thrownobj or kickedobj or uwep */
                  */
                 if ((Race_if(PM_ELF) || Role_if(PM_SAMURAI))
                     && (!Upolyd || your_race(youmonst.data))
-                    && objects[uwep->otyp].oc_skill == P_BOW) {
+                    && oc_get(&objects[uwep->otyp])->oc_skill == P_BOW) {
                     tmp++;
                     if (Race_if(PM_ELF) && uwep->otyp == ELVEN_BOW)
                         tmp++;
@@ -1701,9 +1701,9 @@ register struct obj *obj; /* thrownobj or kickedobj or uwep */
             /* projectiles other than magic stones sometimes disappear
                when thrown; projectiles aren't among the types of weapon
                that hmon() might have destroyed so obj is intact */
-            if (objects[otyp].oc_skill < P_NONE
-                && objects[otyp].oc_skill > -P_BOOMERANG
-                && !objects[otyp].oc_magic) {
+            if (oc_get(&objects[otyp])->oc_skill < P_NONE
+                && oc_get(&objects[otyp])->oc_skill > -P_BOOMERANG
+                && !oc_get(&objects[otyp])->oc_magic) {
                 /* we were breaking 2/3 of everything unconditionally.
                  * we still don't want anything to survive unconditionally,
                  * but we need ammo to stay around longer on average.
@@ -1805,7 +1805,7 @@ register struct obj *obj;
 {
     char buf[BUFSZ];
     boolean is_buddy = sgn(pm_get(mon->data)->maligntyp) == sgn(u.ualign.type);
-    boolean is_gem = objects[obj->otyp].oc_material == GEMSTONE;
+    boolean is_gem = oc_get(&objects[obj->otyp])->oc_material == GEMSTONE;
     int ret = 0;
     static NEARDATA const char nogood[] = " is not interested in your junk.";
     static NEARDATA const char acceptgift[] = " accepts your gift.";
@@ -1818,7 +1818,7 @@ register struct obj *obj;
     mon->mavenge = 0;
 
     /* object properly identified */
-    if (obj->dknown && objects[obj->otyp].oc_name_known) {
+    if (obj->dknown && oc_get(&objects[obj->otyp])->oc_name_known) {
         if (is_gem) {
             if (is_buddy) {
                 Strcat(buf, addluck);
@@ -1832,7 +1832,7 @@ register struct obj *obj;
             goto nopick;
         }
         /* making guesses */
-    } else if (has_oname(obj) || objects[obj->otyp].oc_uname) {
+    } else if (has_oname(obj) || oc_get(&objects[obj->otyp])->oc_uname) {
         if (is_gem) {
             if (is_buddy) {
                 Strcat(buf, addluck);
@@ -2056,7 +2056,7 @@ struct obj *obj;
 {
     if (obj_resists(obj, 1, 99))
         return 0;
-    if (objects[obj->otyp].oc_material == GLASS && !obj->oartifact
+    if (oc_get(&objects[obj->otyp])->oc_material == GLASS && !obj->oartifact
         && obj->oclass != GEM_CLASS)
         return 1;
     switch (obj->oclass == POTION_CLASS ? POT_WATER : obj->otyp) {

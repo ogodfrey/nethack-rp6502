@@ -154,8 +154,8 @@ struct obj *obj;
             mtmp->meating = 3 + (pm_get(&mons[obj->corpsenm])->cwt >> 6);
             nutrit = pm_get(&mons[obj->corpsenm])->cnutrit;
         } else {
-            mtmp->meating = objects[obj->otyp].oc_delay;
-            nutrit = objects[obj->otyp].oc_nutrition;
+            mtmp->meating = oc_get(&objects[obj->otyp])->oc_delay;
+            nutrit = oc_get(&objects[obj->otyp])->oc_nutrition;
         }
         switch (pm_get(mtmp->data)->msize) {
         case MZ_TINY:
@@ -196,7 +196,7 @@ struct obj *obj;
          * eat.c.  (This also applies to pets eating gold.)
          */
         mtmp->meating = obj->owt / 20 + 1;
-        nutrit = 5 * objects[obj->otyp].oc_nutrition;
+        nutrit = 5 * oc_get(&objects[obj->otyp])->oc_nutrition;
     }
     return nutrit;
 }
@@ -1416,11 +1416,11 @@ struct monst *mtmp;
             (M_AP_TYPE(mtmp) == M_AP_FURNITURE)
                 ? an(defsyms[mtmp->mappearance].explanation)
                 : (M_AP_TYPE(mtmp) == M_AP_OBJECT
-                   && OBJ_DESCR(objects[mtmp->mappearance]))
-                      ? an(OBJ_DESCR(objects[mtmp->mappearance]))
+                   && OBJ_DESCR(*oc_get(&objects[mtmp->mappearance])))
+                      ? an(OBJ_DESCR(*oc_get(&objects[mtmp->mappearance])))
                       : (M_AP_TYPE(mtmp) == M_AP_OBJECT
-                         && OBJ_NAME(objects[mtmp->mappearance]))
-                            ? an(OBJ_NAME(objects[mtmp->mappearance]))
+                         && OBJ_NAME(*oc_get(&objects[mtmp->mappearance])))
+                            ? an(OBJ_NAME(*oc_get(&objects[mtmp->mappearance])))
                             : (M_AP_TYPE(mtmp) == M_AP_MONSTER)
                                   ? an(pm_get(&mons[mtmp->mappearance])->mname)
                                   : something,

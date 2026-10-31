@@ -76,7 +76,7 @@ struct obj *obj;
         const char *potion_descr;
         struct monst *mtmp;
 
-        potion_descr = OBJ_DESCR(objects[obj->otyp]);
+        potion_descr = OBJ_DESCR(*oc_get(&objects[obj->otyp]));
         if (potion_descr && !strcmp(potion_descr, "milky")) {
             if (!(mvitals[PM_GHOST].mvflags & G_GONE)
                 && !rn2(POTION_OCCUPANT_CHANCE(mvitals[PM_GHOST].born))) {
@@ -827,8 +827,8 @@ struct monst *mtmp;
          */
         if (known)
             makeknown(SCR_CREATE_MONSTER);
-        else if (!objects[SCR_CREATE_MONSTER].oc_name_known
-                 && !objects[SCR_CREATE_MONSTER].oc_uname)
+        else if (!oc_get(&objects[SCR_CREATE_MONSTER])->oc_name_known
+                 && !oc_get(&objects[SCR_CREATE_MONSTER])->oc_uname)
             docall(otmp);
         m_useup(mtmp, otmp);
         return 2;
@@ -1802,8 +1802,8 @@ struct monst *mtmp;
                 if (vismon) {
                     pline("%s rises up, through the %s!", Monnam(mtmp),
                           ceiling(mtmp->mx, mtmp->my));
-                    if (!objects[POT_GAIN_LEVEL].oc_name_known
-                        && !objects[POT_GAIN_LEVEL].oc_uname)
+                                              if (!oc_get(&objects[POT_GAIN_LEVEL])->oc_name_known
+                                                  && !oc_get(&objects[POT_GAIN_LEVEL])->oc_uname)
                         docall(otmp);
                 }
                 m_useup(mtmp, otmp);
@@ -1814,8 +1814,8 @@ struct monst *mtmp;
  skipmsg:
                 if (vismon) {
                     pline("%s looks uneasy.", Monnam(mtmp));
-                    if (!objects[POT_GAIN_LEVEL].oc_name_known
-                        && !objects[POT_GAIN_LEVEL].oc_uname)
+                                        if (!oc_get(&objects[POT_GAIN_LEVEL])->oc_name_known
+                                            && !oc_get(&objects[POT_GAIN_LEVEL])->oc_uname)
                         docall(otmp);
                 }
                 m_useup(mtmp, otmp);
@@ -1949,7 +1949,7 @@ struct monst *mtmp;
                 pline_The("whip slips free."); /* not `The_whip' */
                 return 1;
             } else if (where_to == 3 && mon_hates_silver(mtmp)
-                       && objects[obj->otyp].oc_material == SILVER) {
+                       && oc_get(&objects[obj->otyp])->oc_material == SILVER) {
                 /* this monster won't want to catch a silver
                    weapon; drop it at hero's feet instead */
                 where_to = 2;
@@ -2070,7 +2070,7 @@ struct obj *obj;
             return (boolean) !is_floater(mon->data);
         if (typ == WAN_POLYMORPH)
             return (boolean) (pm_get(&mons[monsndx(mon->data)])->difficulty < 6);
-        if (objects[typ].oc_dir == RAY || typ == WAN_STRIKING
+        if (oc_get(&objects[typ])->oc_dir == RAY || typ == WAN_STRIKING
             || typ == WAN_TELEPORTATION || typ == WAN_CREATE_MONSTER)
             return TRUE;
         break;
@@ -2358,8 +2358,8 @@ struct monst *mon;
 
         if (obj->otyp == TIN_OPENER
             || (obj->oclass == WEAPON_CLASS
-                && (objects[obj->otyp].oc_skill == P_DAGGER
-                    || objects[obj->otyp].oc_skill == P_KNIFE)))
+                && (oc_get(&objects[obj->otyp])->oc_skill == P_DAGGER
+                    || oc_get(&objects[obj->otyp])->oc_skill == P_KNIFE)))
             return TRUE;
     }
     return FALSE;
@@ -2494,8 +2494,8 @@ boolean by_you; /* true: if mon kills itself, hero gets credit/blame */
         if (mon->mconf) {
             if (cansee(mon->mx, mon->my))
                 pline("Oh, what a pretty fire!");
-            if (vis && !objects[otyp].oc_name_known
-                && !objects[otyp].oc_uname)
+            if (vis && !oc_get(&objects[otyp])->oc_name_known
+                && !oc_get(&objects[otyp])->oc_uname)
                 docall(obj);
             m_useup(mon, obj); /* after docall() */
             vis = FALSE;       /* skip makeknown() below */

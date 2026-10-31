@@ -2035,7 +2035,7 @@ struct obj *obj;
 
     if (obj->globby) {
         /* globs must be sold by weight not by volume */
-        long unit_weight = (long) objects[obj->otyp].oc_weight,
+        long unit_weight = (long) oc_get(&objects[obj->otyp])->oc_weight,
              wt = (obj->owt > 0) ? (long) obj->owt : (long) weight(obj);
 
         if (unit_weight)
@@ -2053,8 +2053,8 @@ unsigned oid;
 {
     int res = 0, otyp = obj->otyp;
 
-    if (!(obj->dknown && objects[otyp].oc_name_known)
-        && (obj->oclass != GEM_CLASS || objects[otyp].oc_material != GLASS)) {
+    if (!(obj->dknown && oc_get(&objects[otyp])->oc_name_known)
+        && (obj->oclass != GEM_CLASS || oc_get(&objects[otyp])->oc_material != GLASS)) {
         res = ((oid % 4) == 0); /* id%4 ==0 -> +1, ==1..3 -> 0 */
     }
     return res;
@@ -2075,9 +2075,9 @@ register struct monst *shkp; /* if angry, impose a surcharge */
         tmp = 5L;
     /* shopkeeper may notice if the player isn't very knowledgeable -
        especially when gem prices are concerned */
-    if (!obj->dknown || !objects[obj->otyp].oc_name_known) {
+    if (!obj->dknown || !oc_get(&objects[obj->otyp])->oc_name_known) {
         if (obj->oclass == GEM_CLASS
-            && objects[obj->otyp].oc_material == GLASS) {
+            && oc_get(&objects[obj->otyp])->oc_material == GLASS) {
             int i;
             /* get a value that's 'random' from game to game, but the
                same within the same game */
@@ -2118,7 +2118,7 @@ register struct monst *shkp; /* if angry, impose a surcharge */
                 i = STRANGE_OBJECT;
                 break;
             }
-            tmp = (long) objects[i].oc_cost;
+            tmp = (long) oc_get(&objects[i])->oc_cost;
         } else if (oid_price_adjustment(obj, obj->o_id) > 0) {
             /* unid'd, arbitrarily impose surcharge: tmp *= 4/3 */
             multiplier *= 4L;
@@ -2204,7 +2204,7 @@ boolean unpaid_only;
                 && otmp->oclass != BALL_CLASS
                 && !(otmp->oclass == FOOD_CLASS && otmp->oeaten)
                 && !(Is_candle(otmp)
-                     && otmp->age < 20L * (long) objects[otmp->otyp].oc_cost))
+                     && otmp->age < 20L * (long) oc_get(&objects[otmp->otyp])->oc_cost))
                 price += set_cost(otmp, shkp);
         } else {
             /* no_charge is only set for floor items (including
@@ -2339,11 +2339,11 @@ register struct monst *shkp;
 
     /* shopkeeper may notice if the player isn't very knowledgeable -
        especially when gem prices are concerned */
-    if (!obj->dknown || !objects[obj->otyp].oc_name_known) {
+    if (!obj->dknown || !oc_get(&objects[obj->otyp])->oc_name_known) {
         if (obj->oclass == GEM_CLASS) {
             /* different shop keepers give different prices */
-            if (objects[obj->otyp].oc_material == GEMSTONE
-                || objects[obj->otyp].oc_material == GLASS) {
+            if (oc_get(&objects[obj->otyp])->oc_material == GEMSTONE
+                || oc_get(&objects[obj->otyp])->oc_material == GLASS) {
                 tmp = (obj->otyp % (6 - shkp->m_id % 3));
                 tmp = (tmp + 3) * obj->quan;
             }
@@ -2564,11 +2564,11 @@ const char *arg;
      * scrolls/books (that is, blank and mail), but only if the
      * object is within the shk's area of interest/expertise.
      */
-    if (!objects[obj->otyp].oc_magic && saleable(shkp, obj)
+    if (!oc_get(&objects[obj->otyp])->oc_magic && saleable(shkp, obj)
         && (obj->oclass == WEAPON_CLASS || obj->oclass == ARMOR_CLASS
             || obj->oclass == SCROLL_CLASS || obj->oclass == SPBOOK_CLASS
             || obj->otyp == MIRROR)) {
-        was_unknown |= !objects[obj->otyp].oc_name_known;
+        was_unknown |= !oc_get(&objects[obj->otyp])->oc_name_known;
         makeknown(obj->otyp);
     }
     obj_name = doname(obj);
@@ -3152,7 +3152,7 @@ xchar x, y;
         || obj->oclass == BALL_CLASS || obj->oclass == CHAIN_CLASS
         || offer == 0L || (obj->oclass == FOOD_CLASS && obj->oeaten)
         || (Is_candle(obj)
-            && obj->age < 20L * (long) objects[obj->otyp].oc_cost)) {
+            && obj->age < 20L * (long) oc_get(&objects[obj->otyp])->oc_cost)) {
         pline("%s seems uninterested%s.", Shknam(shkp),
               cgold ? " in the rest" : "");
         if (container)
@@ -3391,7 +3391,7 @@ getprice(obj, shk_buying)
 register struct obj *obj;
 boolean shk_buying;
 {
-    register long tmp = (long) objects[obj->otyp].oc_cost;
+    register long tmp = (long) oc_get(&objects[obj->otyp])->oc_cost;
 
     if (obj->oartifact) {
         tmp = arti_cost(obj);
@@ -3421,7 +3421,7 @@ boolean shk_buying;
         break;
     case TOOL_CLASS:
         if (Is_candle(obj)
-            && obj->age < 20L * (long) objects[obj->otyp].oc_cost)
+            && obj->age < 20L * (long) oc_get(&objects[obj->otyp])->oc_cost)
             tmp /= 2L;
         break;
     }
@@ -4369,8 +4369,8 @@ long cost;
                 o = itm->oclass;
             if (o == FOOD_CLASS)
                 return ", gourmets' delight!";
-            if (objects[itm->otyp].oc_name_known
-                    ? objects[itm->otyp].oc_magic
+            if (oc_get(&objects[itm->otyp])->oc_name_known
+                    ? oc_get(&objects[itm->otyp])->oc_magic
                     : (o == AMULET_CLASS || o == RING_CLASS || o == WAND_CLASS
                        || o == POTION_CLASS || o == SCROLL_CLASS
                        || o == SPBOOK_CLASS))
@@ -4522,7 +4522,7 @@ boolean altusage; /* some items have an "alternate" use with different cost */
            what is charged for an ordinary lamp (don't bother with
            angry shk surcharge) */
         if (!altusage)
-            tmp = (long) objects[OIL_LAMP].oc_cost;
+            tmp = (long) oc_get(&objects[OIL_LAMP])->oc_cost;
         else
             tmp += tmp / 3L;                 /* djinni is being released */
     } else if (otmp->otyp == MAGIC_MARKER) { /* 70 - 100 */
@@ -4570,7 +4570,7 @@ boolean altusage;
     long tmp;
 
     if (!otmp->unpaid || !*u.ushops
-        || (otmp->spe <= 0 && objects[otmp->otyp].oc_charged))
+        || (otmp->spe <= 0 && oc_get(&objects[otmp->otyp])->oc_charged))
         return;
     if (!(shkp = shop_keeper(*u.ushops)) || !inhishop(shkp))
         return;

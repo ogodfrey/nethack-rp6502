@@ -262,10 +262,10 @@ boolean artif;
     }
 
     i = bases[(int) oclass];
-    while ((prob -= objects[i].oc_prob) > 0)
+    while ((prob -= oc_get(&objects[i])->oc_prob) > 0)
         i++;
 
-    if (objects[i].oc_class != oclass || !OBJ_NAME(objects[i]))
+    if (oc_get(&objects[i])->oc_class != oclass || !OBJ_NAME(*oc_get(&objects[i])))
         panic("probtype error, oclass=%d i=%d", (int) oclass, i);
 
     return mksobj(i, TRUE, artif);
@@ -775,7 +775,7 @@ boolean artif;
 {
     int mndx, tryct;
     struct obj *otmp;
-    char let = objects[otyp].oc_class;
+    char let = oc_get(&objects[otyp])->oc_class;
 
     otmp = newobj();
     *otmp = zeroobj;
@@ -790,9 +790,9 @@ boolean artif;
     otmp->dknown = index(dknowns, let) ? 0 : 1;
     if ((otmp->otyp >= ELVEN_SHIELD && otmp->otyp <= ORCISH_SHIELD)
         || otmp->otyp == SHIELD_OF_REFLECTION
-        || objects[otmp->otyp].oc_merge)
+        || oc_get(&objects[otmp->otyp])->oc_merge)
         otmp->dknown = 0;
-    if (!objects[otmp->otyp].oc_uses_known)
+    if (!oc_get(&objects[otmp->otyp])->oc_uses_known)
         otmp->known = 1;
     otmp->lknown = 0;
     otmp->cknown = 0;
@@ -900,7 +900,7 @@ boolean artif;
             case WAX_CANDLE:
                 otmp->spe = 1;
                 otmp->age = 20L * /* 400 or 200 */
-                            (long) objects[otmp->otyp].oc_cost;
+                            (long) oc_get(&objects[otmp->otyp])->oc_cost;
                 otmp->lamplit = 0;
                 otmp->quan = 1L + (long) (rn2(2) ? rn2(7) : 0);
                 blessorcurse(otmp, 5);
@@ -1021,12 +1021,12 @@ boolean artif;
                 otmp->spe = rnd(3);
             else
                 otmp->spe =
-                    rn1(5, (objects[otmp->otyp].oc_dir == NODIR) ? 11 : 4);
+                    rn1(5, (oc_get(&objects[otmp->otyp])->oc_dir == NODIR) ? 11 : 4);
             blessorcurse(otmp, 17);
             otmp->recharged = 0; /* used to control recharging */
             break;
         case RING_CLASS:
-            if (objects[otmp->otyp].oc_charged) {
+            if (oc_get(&objects[otmp->otyp])->oc_charged) {
                 blessorcurse(otmp, 3);
                 if (rn2(10)) {
                     if (rn2(10) && bcsign(otmp))
@@ -1064,7 +1064,7 @@ boolean artif;
                but most callers aren't prepared to deal with Null result
                and cluttering them up to do so is pointless */
             panic("mksobj tried to make type %d, class %d.",
-                  (int) otmp->otyp, (int) objects[otmp->otyp].oc_class);
+                  (int) otmp->otyp, (int) oc_get(&objects[otmp->otyp])->oc_class);
             /*NOTREACHED*/
         }
     }
@@ -1105,7 +1105,7 @@ boolean artif;
     }
 
     /* unique objects may have an associated artifact entry */
-    if (objects[otyp].oc_unique && !otmp->oartifact) {
+    if (oc_get(&objects[otyp])->oc_unique && !otmp->oartifact) {
         /* mk_artifact() with otmp and A_NONE will never return NULL */
         otmp = mk_artifact(otmp, (aligntyp) A_NONE);
     }
@@ -1418,7 +1418,7 @@ int
 weight(obj)
 register struct obj *obj;
 {
-    int wt = (int) objects[obj->otyp].oc_weight;
+    int wt = (int) oc_get(&objects[obj->otyp])->oc_weight;
 
     /* glob absorpsion means that merging globs accumulates weight while
        quantity stays 1, so update 'wt' to reflect that, unless owt is 0,
@@ -1468,7 +1468,7 @@ register struct obj *obj;
     } else if (obj->otyp == HEAVY_IRON_BALL && obj->owt != 0) {
         return (int) obj->owt; /* kludge for "very" heavy iron ball */
     } else if (obj->otyp == CANDELABRUM_OF_INVOCATION && obj->spe) {
-        return wt + obj->spe * (int) objects[TALLOW_CANDLE].oc_weight;
+        return wt + obj->spe * (int) oc_get(&objects[TALLOW_CANDLE])->oc_weight;
     }
     return (wt ? wt * (int) obj->quan : ((int) obj->quan + 1) >> 1);
 }
@@ -1708,7 +1708,7 @@ is_flammable(otmp)
 register struct obj *otmp;
 {
     int otyp = otmp->otyp;
-    int omat = objects[otyp].oc_material;
+    int omat = oc_get(&objects[otyp])->oc_material;
 
     /* Candles can be burned, but they're not flammable in the sense that
      * they can't get fire damage and it makes no sense for them to be
@@ -1717,7 +1717,7 @@ register struct obj *otmp;
     if (Is_candle(otmp))
         return FALSE;
 
-    if (objects[otyp].oc_oprop == FIRE_RES || otyp == WAN_FIRE)
+    if (oc_get(&objects[otyp])->oc_oprop == FIRE_RES || otyp == WAN_FIRE)
         return FALSE;
 
     return (boolean) ((omat <= WOOD && omat != LIQUID) || omat == PLASTIC);
@@ -1729,8 +1729,8 @@ register struct obj *otmp;
 {
     int otyp = otmp->otyp;
 
-    return (boolean) (objects[otyp].oc_material <= WOOD
-                      && objects[otyp].oc_material != LIQUID);
+    return (boolean) (oc_get(&objects[otyp])->oc_material <= WOOD
+                      && oc_get(&objects[otyp])->oc_material != LIQUID);
 }
 
 /*
@@ -2212,7 +2212,7 @@ boolean tipping; /* caller emptying entire contents; affects shop handling */
         consume_obj_charge(horn, !tipping);
         if (!rn2(13)) {
             obj = mkobj(POTION_CLASS, FALSE);
-            if (objects[obj->otyp].oc_magic)
+            if (oc_get(&objects[obj->otyp])->oc_magic)
                 do {
                     obj->otyp = rnd_class(POT_BOOZE, POT_WATER);
                 } while (obj->otyp == POT_SICKNESS);
@@ -2486,13 +2486,13 @@ long oquan;
      if (obj) {
          *obj = zeroobj;
          obj->otyp = otyp;
-         obj->oclass = objects[otyp].oc_class;
+         obj->oclass = oc_get(&objects[otyp])->oc_class;
          /* obj->dknown = 0; */
          /* suppress known except for amulets (needed for fakes & real AoY) */
          obj->known = (obj->oclass == AMULET_CLASS)
                        ? obj->known
                          /* default is "on" for types which don't use it */
-                         : !objects[otyp].oc_uses_known;
+                         : !oc_get(&objects[otyp])->oc_uses_known;
          obj->quan = oquan ? oquan : 1L;
          obj->corpsenm = NON_PM; /* suppress statue and figurine details */
          /* but suppressing fruit details leads to "bad fruit #0" */
@@ -2562,7 +2562,7 @@ const char *mesg;
         || obj->otyp < LOWEST_GLOB || obj->otyp > HIGHEST_GLOB
         /* a partially eaten glob could have any non-zero weight but an
            intact one should weigh an exact multiple of base weight (20) */
-        || ((obj->owt % objects[obj->otyp].oc_weight) != 0 && !obj->oeaten)) {
+        || ((obj->owt % oc_get(&objects[obj->otyp])->oc_weight) != 0 && !obj->oeaten)) {
         char mesgbuf[BUFSZ], globbuf[QBUFSZ];
 
         Sprintf(globbuf, " glob %d,quan=%ld,owt=%u ",

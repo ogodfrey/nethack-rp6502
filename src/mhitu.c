@@ -103,7 +103,7 @@ struct obj *otemp;
 {
     if (flags.verbose && !Blind && mon_visible(mtmp)) {
         pline("%s %s %s%s %s.", Monnam(mtmp),
-              (objects[otemp->otyp].oc_dir & PIERCE) ? "thrusts" : "swings",
+              (oc_get(&objects[otemp->otyp])->oc_dir & PIERCE) ? "thrusts" : "swings",
               (otemp->quan > 1L) ? "one of " : "", mhis(mtmp), xname(otemp));
     }
 }
@@ -850,7 +850,7 @@ struct attack *mattk;
               obj->greased ? "greased" : "slippery",
               /* avoid "slippery slippery cloak"
                  for undiscovered oilskin cloak */
-              (obj->greased || objects[obj->otyp].oc_name_known)
+              (obj->greased || oc_get(&objects[obj->otyp])->oc_name_known)
                   ? xname(obj)
                   : cloak_simple_name(obj));
 
@@ -880,7 +880,7 @@ struct monst *mon;
     for (o = is_you ? invent : mon->minvent; o; o = o->nobj) {
         /* a_can field is only applicable for armor (which must be worn) */
         if ((o->owornmask & W_ARMOR) != 0L) {
-            armpro = objects[o->otyp].a_can;
+            armpro = oc_get(&objects[o->otyp])->a_can;
             if (armpro > mc)
                 mc = armpro;
         }
@@ -1011,7 +1011,7 @@ register struct attack *mattk;
                     hitmsg(mtmp, mattk);
                 if (!dmg)
                     break;
-                if (objects[otmp->otyp].oc_material == SILVER
+                if (oc_get(&objects[otmp->otyp])->oc_material == SILVER
                     && Hate_silver) {
                     pline_The("silver sears your flesh!");
                     exercise(A_CON, FALSE);
@@ -1025,9 +1025,9 @@ register struct attack *mattk;
                 if (tmp < 1)
                     tmp = 1;
                 if (u.mh - tmp > 1
-                    && (objects[otmp->otyp].oc_material == IRON
+                    && (oc_get(&objects[otmp->otyp])->oc_material == IRON
                         /* relevant 'metal' objects are scalpel and tsurugi */
-                        || objects[otmp->otyp].oc_material == METAL)
+                        || oc_get(&objects[otmp->otyp])->oc_material == METAL)
                     && (u.umonnum == PM_BLACK_PUDDING
                         || u.umonnum == PM_BROWN_PUDDING)) {
                     if (tmp > 1)

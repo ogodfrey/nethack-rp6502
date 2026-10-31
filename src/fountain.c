@@ -467,7 +467,7 @@ register struct obj *obj;
                 money = somegold(money) / 10;
                 for (otmp = invent; otmp && money > 0; otmp = otmp->nobj)
                     if (otmp->oclass == COIN_CLASS) {
-                        int denomination = objects[otmp->otyp].oc_cost;
+                        int denomination = oc_get(&objects[otmp->otyp])->oc_cost;
                         long coin_loss =
                             (money + denomination - 1) / denomination;
                         coin_loss = min(coin_loss, otmp->quan);
@@ -564,7 +564,7 @@ drinksink()
         } while (!otmp);
         otmp->cursed = otmp->blessed = 0;
         pline("Some %s liquid flows from the faucet.",
-              Blind ? "odd" : hcolor(OBJ_DESCR(objects[otmp->otyp])));
+              Blind ? "odd" : hcolor(OBJ_DESCR(*oc_get(&objects[otmp->otyp]))));
         otmp->dknown = !(Blind || Hallucination);
         otmp->quan++;       /* Avoid panic upon useup() */
         otmp->fromsink = 1; /* kludge for docall() */

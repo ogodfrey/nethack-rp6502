@@ -1391,7 +1391,7 @@ struct obj *obj;
             pline("%s flame%s %s%s", s_suffix(Yname2(obj)), plur(obj->quan),
                   otense(obj, "burn"), Blind ? "." : " brightly!");
             if (obj->unpaid && costly_spot(u.ux, u.uy)
-                && obj->age == 20L * (long) objects[obj->otyp].oc_cost) {
+                && obj->age == 20L * (long) oc_get(&objects[obj->otyp])->oc_cost) {
                 const char *ithem = (obj->quan > 1L) ? "them" : "it";
 
                 verbalize("You burn %s, you bought %s!", ithem, ithem);
@@ -2361,7 +2361,7 @@ struct obj *tstone;
     /* when the touchstone is fully known, don't bother listing extra
        junk as likely candidates for rubbing */
     choices = (tstone->otyp == TOUCHSTONE && tstone->dknown
-               && objects[TOUCHSTONE].oc_name_known)
+               && oc_get(&objects[TOUCHSTONE])->oc_name_known)
                   ? coins_gems
                   : allowall;
     Sprintf(stonebuf, "rub on the stone%s", plur(tstone->quan));
@@ -2401,8 +2401,8 @@ struct obj *tstone;
     oclass = obj->oclass;
     /* prevent non-gemstone rings from being treated like gems */
     if (oclass == RING_CLASS
-        && objects[obj->otyp].oc_material != GEMSTONE
-        && objects[obj->otyp].oc_material != MINERAL)
+        && oc_get(&objects[obj->otyp])->oc_material != GEMSTONE
+        && oc_get(&objects[obj->otyp])->oc_material != MINERAL)
         oclass = RANDOM_CLASS; /* something that's neither gem nor ring */
 
     switch (oclass) {
@@ -2420,16 +2420,16 @@ struct obj *tstone;
             return;
         } else {
             /* either a ring or the touchstone was not effective */
-            if (objects[obj->otyp].oc_material == GLASS) {
+            if (oc_get(&objects[obj->otyp])->oc_material == GLASS) {
                 do_scratch = TRUE;
                 break;
             }
         }
-        streak_color = c_obj_colors[objects[obj->otyp].oc_color];
+        streak_color = c_obj_colors[oc_get(&objects[obj->otyp])->oc_color];
         break; /* gem or ring */
 
     default:
-        switch (objects[obj->otyp].oc_material) {
+        switch (oc_get(&objects[obj->otyp])->oc_material) {
         case CLOTH:
             pline("%s a little more polished now.", Tobjnam(tstone, "look"));
             return;
@@ -2458,7 +2458,7 @@ struct obj *tstone;
                scratch a stone.  They will leave streaks on
                non-touchstones and touchstones alike. */
             if (is_flimsy(obj))
-                streak_color = c_obj_colors[objects[obj->otyp].oc_color];
+                streak_color = c_obj_colors[oc_get(&objects[obj->otyp])->oc_color];
             else
                 do_scratch = (tstone->otyp != TOUCHSTONE);
             break;
@@ -3304,7 +3304,7 @@ struct obj *obj;
     boolean fillmsg = FALSE;
     int expltype = EXPL_MAGICAL;
     char confirm[QBUFSZ], buf[BUFSZ];
-    boolean is_fragile = (!strcmp(OBJ_DESCR(objects[obj->otyp]), "balsa"));
+    boolean is_fragile = (!strcmp(OBJ_DESCR(*oc_get(&objects[obj->otyp])), "balsa"));
 
     if (!paranoid_query(ParanoidBreakwand,
                        safe_qbuf(confirm,
@@ -3539,20 +3539,20 @@ char class_list[];
     int otyp;
     boolean knowoil, knowtouchstone, addpotions, addstones, addfood;
 
-    knowoil = objects[POT_OIL].oc_name_known;
-    knowtouchstone = objects[TOUCHSTONE].oc_name_known;
+    knowoil = oc_get(&objects[POT_OIL])->oc_name_known;
+    knowtouchstone = oc_get(&objects[TOUCHSTONE])->oc_name_known;
     addpotions = addstones = addfood = FALSE;
     for (otmp = invent; otmp; otmp = otmp->nobj) {
         otyp = otmp->otyp;
         if (otyp == POT_OIL
             || (otmp->oclass == POTION_CLASS
                 && (!otmp->dknown
-                    || (!knowoil && !objects[otyp].oc_name_known))))
+                    || (!knowoil && !oc_get(&objects[otyp])->oc_name_known))))
             addpotions = TRUE;
         if (otyp == TOUCHSTONE
             || (is_graystone(otmp)
                 && (!otmp->dknown
-                    || (!knowtouchstone && !objects[otyp].oc_name_known))))
+                    || (!knowtouchstone && !oc_get(&objects[otyp])->oc_name_known))))
             addstones = TRUE;
         if (otyp == CREAM_PIE || otyp == EUCALYPTUS_LEAF)
             addfood = TRUE;

@@ -1084,7 +1084,7 @@ winid endwin;
                 Sprintf(pbuf, "%s%s (worth %ld %s and %ld points)",
                         the_unique_obj(otmp) ? "The " : "",
                         otmp->oartifact ? artifact_name(xname(otmp), &dummy)
-                                        : OBJ_NAME(objects[otmp->otyp]),
+                                        : OBJ_NAME(*oc_get(&objects[otmp->otyp])),
                         value, currency(value), points);
                 putstr(endwin, 0, pbuf);
             }
@@ -1499,7 +1499,7 @@ int how;
             for (i = 0; i < val->size; i++)
                 if (val->list[i].count != 0L) {
                     tmp = val->list[i].count
-                          * (long) objects[val->list[i].typ].oc_cost;
+                          * (long) oc_get(&objects[val->list[i].typ])->oc_cost;
                     nowrap_add(u.urexp, tmp);
                 }
 
@@ -1554,7 +1554,7 @@ int how;
 
                 if (count == 0L)
                     continue;
-                if (objects[typ].oc_class != GEM_CLASS || typ <= LAST_GEM) {
+                if (oc_get(&objects[typ])->oc_class != GEM_CLASS || typ <= LAST_GEM) {
                     otmp = mksobj(typ, FALSE, FALSE);
                     discover_object(otmp->otyp, TRUE, FALSE);
                     otmp->known = 1;  /* for fake amulets */
@@ -1563,7 +1563,7 @@ int how;
                         free_oname(otmp);
                     otmp->quan = count;
                     Sprintf(pbuf, "%8ld %s (worth %ld %s),", count,
-                            xname(otmp), count * (long) objects[typ].oc_cost,
+                            xname(otmp), count * (long) oc_get(&objects[typ])->oc_cost,
                             currency(2L));
                     obfree(otmp, (struct obj *) 0);
                 } else {

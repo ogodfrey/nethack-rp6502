@@ -113,7 +113,7 @@ struct obj *obj;
     if (obj->oclass != SPBOOK_CLASS) {
         /* if type already discovered, treat this item has having been seen
            even if hero is currently blinded (skips redundant makeknown) */
-        if (objects[obj->otyp].oc_name_known) {
+        if (oc_get(&objects[obj->otyp])->oc_name_known) {
             obj->dknown = 1; /* will usually be set already */
 
         /* otherwise discover it if item itself has been or can be seen */
@@ -1046,7 +1046,7 @@ register struct obj *obj;
         break;
         /* case RIN_PROTECTION:  not needed */
     }
-    if (objects[otyp].oc_magic
+    if (oc_get(&objects[otyp])->oc_magic
         || (obj->spe && (obj->oclass == ARMOR_CLASS
                          || obj->oclass == WEAPON_CLASS || is_weptool(obj)))
         || otyp == POT_ACID
@@ -1107,7 +1107,7 @@ boolean by_you;
 
     /* Is this a charged/enchanted object? */
     if (!obj
-        || (!objects[obj->otyp].oc_charged && obj->oclass != WEAPON_CLASS
+        || (!oc_get(&objects[obj->otyp])->oc_charged && obj->oclass != WEAPON_CLASS
             && obj->oclass != ARMOR_CLASS && !is_weptool(obj))
         || obj->spe <= 0)
         return FALSE;
@@ -1244,7 +1244,7 @@ int mat, minwt;
             continue;
 #endif
 
-        if (((int) objects[otmp->otyp].oc_material == mat)
+        if (((int) oc_get(&objects[otmp->otyp])->oc_material == mat)
             == (rn2(minwt + 1) != 0)) {
             /* appropriately add damage to bill */
             if (costly_spot(otmp->ox, otmp->oy)) {
@@ -1376,7 +1376,7 @@ struct obj *obj;
         /* some may metamorphosize */
         for (i = obj->quan; i; i--)
             if (!rn2(Luck + 45)) {
-                poly_zapped = objects[obj->otyp].oc_material;
+                poly_zapped = oc_get(&objects[obj->otyp])->oc_material;
                 break;
             }
     }
@@ -1432,7 +1432,7 @@ int id;
         sokoban_guilt();
     if (id == STRANGE_OBJECT) { /* preserve symbol */
         int try_limit = 3;
-        unsigned magic_obj = objects[obj->otyp].oc_magic;
+        unsigned magic_obj = oc_get(&objects[obj->otyp])->oc_magic;
 
         if (obj->otyp == UNICORN_HORN && obj->degraded_horn)
             magic_obj = 0;
@@ -1444,7 +1444,7 @@ int id;
                 delobj(otmp);
             otmp = mkobj(obj->oclass, FALSE);
         } while (--try_limit > 0
-                 && objects[otmp->otyp].oc_magic != magic_obj);
+                 && oc_get(&objects[otmp->otyp])->oc_magic != magic_obj);
     } else {
         /* literally replace obj with this new thing */
         otmp = mksobj(id, FALSE, FALSE);
@@ -1541,7 +1541,7 @@ int id;
         delete_contents(otmp);
 
     /* 'n' merged objects may be fused into 1 object */
-    if (otmp->quan > 1L && (!objects[otmp->otyp].oc_merge
+    if (otmp->quan > 1L && (!oc_get(&objects[otmp->otyp])->oc_merge
                             || (can_merge && otmp->quan > (long) rn2(1000))))
         otmp->quan = 1L;
 
@@ -1588,8 +1588,8 @@ int id;
 
     case GEM_CLASS:
         if (otmp->quan > (long) rnd(4)
-            && objects[obj->otyp].oc_material == MINERAL
-            && objects[otmp->otyp].oc_material != MINERAL) {
+            && oc_get(&objects[obj->otyp])->oc_material == MINERAL
+            && oc_get(&objects[otmp->otyp])->oc_material != MINERAL) {
             otmp->otyp = ROCK; /* transmutation backfired */
             otmp->quan /= 2L;  /* some material has been lost */
         }
@@ -1699,8 +1699,8 @@ struct obj *obj;
     xchar oox, ooy;
     boolean smell = FALSE, golem_xform = FALSE;
 
-    if (objects[obj->otyp].oc_material != MINERAL
-        && objects[obj->otyp].oc_material != GEMSTONE)
+    if (oc_get(&objects[obj->otyp])->oc_material != MINERAL
+        && oc_get(&objects[obj->otyp])->oc_material != GEMSTONE)
         return 0;
     /* Heart of Ahriman usually resists; ordinary items rarely do */
     if (obj_resists(obj, 2, 98))
@@ -1708,7 +1708,7 @@ struct obj *obj;
 
     (void) get_obj_location(obj, &oox, &ooy, 0);
     /* add more if stone objects are added.. */
-    switch (objects[obj->otyp].oc_class) {
+    switch (oc_get(&objects[obj->otyp])->oc_class) {
     case ROCK_CLASS: /* boulders and statues */
     case TOOL_CLASS: /* figurines */
         if (obj->otyp == BOULDER) {
@@ -2190,7 +2190,7 @@ register struct obj *obj;
         break;
     }
     if (known) {
-        if (!objects[obj->otyp].oc_name_known)
+        if (!oc_get(&objects[obj->otyp])->oc_name_known)
             more_experienced(0, 10);
         /* effect was observable; discover the wand type provided
            that the wand itself has been seen */
@@ -2235,12 +2235,12 @@ dozap()
         backfire(obj); /* the wand blows up in your face! */
         exercise(A_STR, FALSE);
         return 1;
-    } else if (!(objects[obj->otyp].oc_dir == NODIR) && !getdir((char *) 0)) {
+    } else if (!(oc_get(&objects[obj->otyp])->oc_dir == NODIR) && !getdir((char *) 0)) {
         if (!Blind)
             pline("%s glows and fades.", The(xname(obj)));
         /* make him pay for knowing !NODIR */
     } else if (!u.dx && !u.dy && !u.dz
-               && !(objects[obj->otyp].oc_dir == NODIR)) {
+               && !(oc_get(&objects[obj->otyp])->oc_dir == NODIR)) {
         if ((damage = zapyourself(obj, TRUE)) != 0) {
             char buf[BUFSZ];
 
@@ -3030,13 +3030,13 @@ weffects(obj)
 struct obj *obj;
 {
     int otyp = obj->otyp;
-    boolean disclose = FALSE, was_unkn = !objects[otyp].oc_name_known;
+    boolean disclose = FALSE, was_unkn = !oc_get(&objects[otyp])->oc_name_known;
 
     exercise(A_WIS, TRUE);
-    if (u.usteed && (objects[otyp].oc_dir != NODIR) && !u.dx && !u.dy
+    if (u.usteed && (oc_get(&objects[otyp])->oc_dir != NODIR) && !u.dx && !u.dy
         && (u.dz > 0) && zap_steed(obj)) {
         disclose = TRUE;
-    } else if (objects[otyp].oc_dir == IMMEDIATE) {
+    } else if (oc_get(&objects[otyp])->oc_dir == IMMEDIATE) {
         zapsetup(); /* reset obj_zapped */
         if (u.uswallow) {
             (void) bhitm(u.ustuck, obj);
@@ -3049,7 +3049,7 @@ struct obj *obj;
         }
         zapwrapup(); /* give feedback for obj_zapped */
 
-    } else if (objects[otyp].oc_dir == NODIR) {
+    } else if (oc_get(&objects[otyp])->oc_dir == NODIR) {
         zapnodir(obj);
 
     } else {
@@ -3994,7 +3994,7 @@ const char *fltxt;
 
 /* note: worn amulet of life saving must be preserved in order to operate */
 #define oresist_disintegration(obj)                                       \
-    (objects[obj->otyp].oc_oprop == DISINT_RES || obj_resists(obj, 5, 50) \
+    (oc_get(&objects[obj->otyp])->oc_oprop == DISINT_RES || obj_resists(obj, 5, 50) \
      || is_quest_artifact(obj) || obj == m_amulet)
 
     for (otmp = mon->minvent; otmp; otmp = otmp2) {
@@ -4742,7 +4742,7 @@ register struct obj *obj; /* no texts here! */
     obj->quan = (long) rn1(60, 7);
     obj->owt = weight(obj);
     obj->dknown = obj->bknown = obj->rknown = 0;
-    obj->known = objects[obj->otyp].oc_uses_known ? 0 : 1;
+    obj->known = oc_get(&objects[obj->otyp])->oc_uses_known ? 0 : 1;
     dealloc_oextra(obj);
 
     if (obj->where == OBJ_FLOOR) {
@@ -5010,8 +5010,8 @@ int osym, dmgtyp;
            the rest as already processed once control returns here */
         if (deferral_indx < SIZE(deferrals)
             && ((obj->owornmask != 0L
-                 && (objects[obj->otyp].oc_oprop == LEVITATION
-                     || objects[obj->otyp].oc_oprop == FLYING))
+                 && (oc_get(&objects[obj->otyp])->oc_oprop == LEVITATION
+                     || oc_get(&objects[obj->otyp])->oc_oprop == FLYING))
                 /* destroyed wands and potions of polymorph don't trigger
                    polymorph so don't need to be deferred */
                 || (obj->otyp == POT_WATER && u.ulycn >= LOW_PM

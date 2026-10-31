@@ -299,7 +299,7 @@ STATIC_OVL void
 trycall(obj)
 register struct obj *obj;
 {
-    if (!objects[obj->otyp].oc_name_known && !objects[obj->otyp].oc_uname)
+    if (!oc_get(&objects[obj->otyp])->oc_name_known && !oc_get(&objects[obj->otyp])->oc_uname)
         docall(obj);
 }
 

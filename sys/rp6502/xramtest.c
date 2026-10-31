@@ -4,8 +4,10 @@
  */
 #include "config.h"
 #include "pm.h"
+#include "onames.h"
 #include "monsym.h"
 #include "permonst.h"
+#include "objclass.h"
 #include "mondata.h"
 #include <stdint.h>
 #include <stdio.h>
@@ -13,10 +15,29 @@
 #ifndef RP6502_HOST
 /* monst.c is built with mons renamed to this RAM copy, the XRAM image source.
    This volatile pointer keeps the copy in the link, so elfsym.py can write
-   the XRAM image from it. The program itself reads only XRAM. */
+   the XRAM image from it. The program itself reads only XRAM. objects.c is
+   handled the same way for objects[]. */
 extern struct permonst rp6502_ram_mons[];
 const struct permonst *volatile rp6502_keep_mons = rp6502_ram_mons;
+extern struct objclass rp6502_ram_objects[];
+const struct objclass *volatile rp6502_keep_objects = rp6502_ram_objects;
 #endif
+
+static uint32_t
+fold_obj(uint32_t sum, const struct objclass *p)
+{
+    struct objclass *q = oc_get(p);
+
+    sum = sum * 31u + (uint32_t) q->oc_name_idx;
+    sum = sum * 31u + (uint32_t) q->oc_descr_idx;
+    sum = sum * 31u + (uint32_t) q->oc_class;
+    sum = sum * 31u + (uint32_t) q->oc_material;
+    sum = sum * 31u + (uint32_t) q->oc_prob;
+    sum = sum * 31u + (uint32_t) q->oc_weight;
+    sum = sum * 31u + (uint32_t) q->oc_cost;
+    sum = sum * 31u + (uint32_t) q->oc_nutrition;
+    return sum;
+}
 
 
 static uint32_t
@@ -106,7 +127,7 @@ main(void)
     unsigned i;
 
 #ifndef RP6502_HOST
-    if (rp6502_keep_mons == 0)
+    if (rp6502_keep_mons == 0 || rp6502_keep_objects == 0)
         return 1;
 #endif
     for (i = 0; i < NUMMONS; i++)
@@ -117,5 +138,9 @@ main(void)
     for (i = 0; i < NUMMONS; i++)
         sum = fold_flags(sum, mons_at(i));
     printf("flags %08lx\n", (unsigned long) sum);
+    sum = 0;
+    for (i = 0; i < NUM_OBJECTS; i++)
+        sum = fold_obj(sum, &objects[i]);
+    printf("objs %d sum %08lx\n", NUM_OBJECTS, (unsigned long) sum);
     return 0;
 }

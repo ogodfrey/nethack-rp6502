@@ -911,7 +911,7 @@ int mode;
                     && !(tunnels(youmonst.data) && !needspick(youmonst.data))
                     && !carrying(PICK_AXE) && !carrying(DWARVISH_MATTOCK)
                     && !((obj = carrying(WAN_DIGGING))
-                         && !objects[obj->otyp].oc_name_known))
+                         && !oc_get(&objects[obj->otyp])->oc_name_known))
                     return FALSE;
             }
         }

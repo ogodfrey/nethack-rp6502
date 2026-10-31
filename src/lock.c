@@ -540,9 +540,9 @@ doforce()
     }
     if (!uwep /* proper type test */
         || ((uwep->oclass == WEAPON_CLASS || is_weptool(uwep))
-               ? (objects[uwep->otyp].oc_skill < P_DAGGER
-                  || objects[uwep->otyp].oc_skill == P_FLAIL
-                  || objects[uwep->otyp].oc_skill > P_LANCE)
+               ? (oc_get(&objects[uwep->otyp])->oc_skill < P_DAGGER
+                  || oc_get(&objects[uwep->otyp])->oc_skill == P_FLAIL
+                  || oc_get(&objects[uwep->otyp])->oc_skill > P_LANCE)
                : uwep->oclass != ROCK_CLASS)) {
         You_cant("force anything %s weapon.",
                  !uwep ? "when not wielding a"
@@ -593,7 +593,7 @@ doforce()
             else
                 You("start bashing it with %s.", yname(uwep));
             xlock.box = otmp;
-            xlock.chance = objects[uwep->otyp].oc_wldam * 2;
+            xlock.chance = oc_get(&objects[uwep->otyp])->oc_wldam * 2;
             xlock.picktyp = picktyp;
             xlock.magic_key = FALSE;
             xlock.usedtime = 0;
@@ -1090,7 +1090,7 @@ struct obj *otmp;
     Blinded = 1;
     thing = singular(otmp, xname);
     Blinded = save_Blinded;
-    switch (objects[otmp->otyp].oc_material) {
+    switch (oc_get(&objects[otmp->otyp])->oc_material) {
     case PAPER:
         disposition = "is torn to shreds";
         break;

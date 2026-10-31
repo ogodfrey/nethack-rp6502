@@ -106,7 +106,7 @@ boolean restore;
         } else { /* saving */
             /* do not zero out o_ids for ghost levels anymore */
 
-            if (objects[otmp->otyp].oc_uses_known)
+            if (oc_get(&objects[otmp->otyp])->oc_uses_known)
                 otmp->known = 0;
             otmp->dknown = otmp->bknown = 0;
             otmp->rknown = 0;

@@ -6,7 +6,9 @@
  */
 #include "config.h"
 #include "pm.h"
+#include "onames.h"
 #include "permonst.h"
+#include "objclass.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,9 +16,12 @@
 #define PM_SLOTS 4
 
 extern struct permonst rp6502_ram_mons[];
+extern struct objclass rp6502_ram_objects[];
 
 static struct permonst pm_slot[PM_SLOTS];
 static unsigned char pm_next;
+static struct objclass oc_slot[PM_SLOTS];
+static unsigned char oc_next;
 
 struct permonst *
 rpm_pm_get(const struct permonst *p)
@@ -48,4 +53,36 @@ rpm_pm_put(struct permonst *p, const struct permonst *rec)
         abort();
     }
     rp6502_ram_mons[off / sizeof(struct permonst)] = *rec;
+}
+
+struct objclass *
+rpo_get(const struct objclass *p)
+{
+    uintptr_t off = (uintptr_t) p - (uintptr_t) OBJS_XRAM_ADDR;
+    struct objclass *s;
+
+    if (off % sizeof(struct objclass) != 0
+        || off / sizeof(struct objclass) >= NUM_OBJECTS) {
+        fprintf(stderr, "oc_get: %p is not an object table address\n",
+                (const void *) p);
+        abort();
+    }
+    s = &oc_slot[oc_next];
+    oc_next = (oc_next + 1) % PM_SLOTS;
+    *s = rp6502_ram_objects[off / sizeof(struct objclass)];
+    return s;
+}
+
+void
+rpo_put(struct objclass *p, const struct objclass *rec)
+{
+    uintptr_t off = (uintptr_t) p - (uintptr_t) OBJS_XRAM_ADDR;
+
+    if (off % sizeof(struct objclass) != 0
+        || off / sizeof(struct objclass) >= NUM_OBJECTS) {
+        fprintf(stderr, "oc_put: %p is not an object table address\n",
+                (void *) p);
+        abort();
+    }
+    rp6502_ram_objects[off / sizeof(struct objclass)] = *rec;
 }

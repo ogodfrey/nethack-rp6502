@@ -1099,7 +1099,7 @@ boolean silently;
     }
     for (coins = invent; coins; coins = nextcoins) {
         nextcoins = coins->nobj;
-        if (objects[coins->otyp].oc_class == COIN_CLASS) {
+        if (oc_get(&objects[coins->otyp])->oc_class == COIN_CLASS) {
             freeinv(coins);
             place_object(coins, gx, gy);
             stackobj(coins);

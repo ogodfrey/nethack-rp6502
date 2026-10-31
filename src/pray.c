@@ -817,7 +817,7 @@ gcrownu()
         break;
     }
 
-    if (objects[class_gift].oc_class == SPBOOK_CLASS) {
+    if (oc_get(&objects[class_gift])->oc_class == SPBOOK_CLASS) {
         obj = mksobj(class_gift, TRUE, FALSE);
         bless(obj);
         obj->bknown = 1; /* ok to skip set_bknown() */
@@ -1200,7 +1200,7 @@ aligntyp g_align;
                         && !P_RESTRICTED(spell_skilltype(otmp->otyp)))
                         break; /* usable, but not yet known */
                 } else {
-                    if (!objects[SPE_BLANK_PAPER].oc_name_known
+                    if (!oc_get(&objects[SPE_BLANK_PAPER])->oc_name_known
                         || carrying(MAGIC_MARKER))
                         break;
                 }

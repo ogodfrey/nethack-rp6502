@@ -846,8 +846,8 @@ initoptions_init()
     iflags.wc2_windowborders = 2; /* 'Auto' */
 
     /* since this is done before init_objects(), do partial init here */
-    objects[SLIME_MOLD].oc_name_idx = SLIME_MOLD;
-    nmcpy(pl_fruit, OBJ_NAME(objects[SLIME_MOLD]), PL_FSIZ);
+    oc_set(&objects[SLIME_MOLD], oc_name_idx, SLIME_MOLD);
+    nmcpy(pl_fruit, OBJ_NAME(*oc_get(&objects[SLIME_MOLD])), PL_FSIZ);
 }
 
 void
@@ -5648,7 +5648,7 @@ char *buf;
         Sprintf(buf, "%c",
                 ov_primary_syms[SYM_BOULDER + SYM_OFF_X]
                     ? ov_primary_syms[SYM_BOULDER + SYM_OFF_X]
-                    : showsyms[(int) objects[BOULDER].oc_class + SYM_OFF_O]);
+                    : showsyms[(int) oc_get(&objects[BOULDER])->oc_class + SYM_OFF_O]);
 #endif
     else if (!strcmp(optname, "catname"))
         Sprintf(buf, "%s", catname[0] ? catname : none);
@@ -6392,10 +6392,10 @@ struct fruit *replace_fruit;
                    || !strncmp(pl_fruit, "large ", 6)) ? 6
                   : (!strncmp(pl_fruit, "very large ", 11)) ? 11
                     : 0;
-        for (i = bases[FOOD_CLASS]; objects[i].oc_class == FOOD_CLASS; i++) {
-            if (!strcmp(OBJ_NAME(objects[i]), pl_fruit)
+        for (i = bases[FOOD_CLASS]; oc_get(&objects[i])->oc_class == FOOD_CLASS; i++) {
+            if (!strcmp(OBJ_NAME(*oc_get(&objects[i])), pl_fruit)
                 || (globpfx > 0
-                    && !strcmp(OBJ_NAME(objects[i]), &pl_fruit[globpfx]))) {
+                    && !strcmp(OBJ_NAME(*oc_get(&objects[i])), &pl_fruit[globpfx]))) {
                 found = TRUE;
                 break;
             }

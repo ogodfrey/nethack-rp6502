@@ -55,7 +55,7 @@ int expltype;
             exploding_wand_typ = (short) type;
             /* most attack wands produce specific explosions;
                other types produce a generic magical explosion */
-            if (objects[type].oc_dir == RAY
+            if (oc_get(&objects[type])->oc_dir == RAY
                 && type != WAN_DIGGING && type != WAN_SLEEP) {
                 type -= WAN_MAGIC_MISSILE;
                 if (type < 0 || type > 9) {
@@ -673,7 +673,7 @@ struct obj *obj; /* only scatter this obj        */
 
             /* 1 in 10 chance of destruction of obj; glass, egg destruction */
         } else if ((scflags & MAY_DESTROY) != 0
-                   && (!rn2(10) || (objects[otmp->otyp].oc_material == GLASS
+                   && (!rn2(10) || (oc_get(&objects[otmp->otyp])->oc_material == GLASS
                                     || otmp->otyp == EGG))) {
             if (breaks(otmp, (xchar) sx, (xchar) sy))
                 used_up = TRUE;

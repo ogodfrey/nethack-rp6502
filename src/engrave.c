@@ -603,7 +603,7 @@ doengrave()
         /* "diamond" rings and others should work */
     case GEM_CLASS:
         /* diamonds & other hard gems should work */
-        if (objects[otmp->otyp].oc_tough) {
+        if (oc_get(&objects[otmp->otyp])->oc_tough) {
             type = ENGRAVE;
             break;
         }
@@ -749,7 +749,7 @@ doengrave()
             case WAN_DIGGING:
                 ptext = TRUE;
                 type = ENGRAVE;
-                if (!objects[otmp->otyp].oc_name_known) {
+                if (!oc_get(&objects[otmp->otyp])->oc_name_known) {
                     if (flags.verbose)
                         pline("This %s is a wand of digging!", xname(otmp));
                     doknown = TRUE;
@@ -772,7 +772,7 @@ doengrave()
             case WAN_FIRE:
                 ptext = TRUE;
                 type = BURN;
-                if (!objects[otmp->otyp].oc_name_known) {
+                if (!oc_get(&objects[otmp->otyp])->oc_name_known) {
                     if (flags.verbose)
                         pline("This %s is a wand of fire!", xname(otmp));
                     doknown = TRUE;
@@ -783,7 +783,7 @@ doengrave()
             case WAN_LIGHTNING:
                 ptext = TRUE;
                 type = BURN;
-                if (!objects[otmp->otyp].oc_name_known) {
+                if (!oc_get(&objects[otmp->otyp])->oc_name_known) {
                     if (flags.verbose)
                         pline("This %s is a wand of lightning!", xname(otmp));
                     doknown = TRUE;
@@ -894,7 +894,7 @@ doengrave()
     /* Identify stylus */
     if (doknown) {
         learnwand(otmp);
-        if (objects[otmp->otyp].oc_name_known)
+        if (oc_get(&objects[otmp->otyp])->oc_name_known)
             more_experienced(0, 10);
     }
     if (teleengr) {

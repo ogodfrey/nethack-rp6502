@@ -121,7 +121,7 @@ register struct monst *mtmp;
             monflee(mtmp, 0, FALSE, FALSE);
         }
     } else if (ygold) {
-        const int gold_price = objects[GOLD_PIECE].oc_cost;
+        const int gold_price = oc_get(&objects[GOLD_PIECE])->oc_cost;
 
         tmp = (somegold(money_cnt(invent)) + gold_price - 1) / gold_price;
         tmp = min(tmp, ygold->quan);
@@ -389,7 +389,7 @@ char *objnambuf;
             remove_worn_item(otmp, TRUE);
             break;
         case ARMOR_CLASS:
-            armordelay = objects[otmp->otyp].oc_delay;
+            armordelay = oc_get(&objects[otmp->otyp])->oc_delay;
             if (olddelay > 0 && olddelay < armordelay)
                 armordelay = olddelay;
             if (monkey_business) {

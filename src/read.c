@@ -41,7 +41,7 @@ STATIC_OVL boolean
 learnscrolltyp(scrolltyp)
 short scrolltyp;
 {
-    if (!objects[scrolltyp].oc_name_known) {
+    if (!oc_get(&objects[scrolltyp])->oc_name_known) {
         makeknown(scrolltyp);
         more_experienced(0, 10);
         return TRUE;
@@ -395,10 +395,10 @@ doread()
         }
     }
     if (!seffects(scroll)) {
-        if (!objects[scroll->otyp].oc_name_known) {
+        if (!oc_get(&objects[scroll->otyp])->oc_name_known) {
             if (known)
                 learnscroll(scroll);
-            else if (!objects[scroll->otyp].oc_uname)
+            else if (!oc_get(&objects[scroll->otyp])->oc_uname)
                 docall(scroll);
         }
         scroll->in_use = FALSE;
@@ -450,14 +450,14 @@ struct obj *obj;
         return TRUE;
     /* known && !oc_name_known is possible after amnesia/mind flayer */
     if (obj->oclass == RING_CLASS)
-        return (boolean) (objects[obj->otyp].oc_charged
+        return (boolean) (oc_get(&objects[obj->otyp])->oc_charged
                           && (obj->known
                               || (obj->dknown
-                                  && objects[obj->otyp].oc_name_known)));
+                                  && oc_get(&objects[obj->otyp])->oc_name_known)));
     if (is_weptool(obj)) /* specific check before general tools */
         return FALSE;
     if (obj->oclass == TOOL_CLASS)
-        return (boolean) objects[obj->otyp].oc_charged;
+        return (boolean) oc_get(&objects[obj->otyp])->oc_charged;
     return FALSE; /* why are weapons/armor considered charged anyway? */
 }
 
@@ -477,7 +477,7 @@ int curse_bless;
     if (obj->oclass == WAND_CLASS) {
         int lim = (obj->otyp == WAN_WISHING)
                       ? 3
-                      : (objects[obj->otyp].oc_dir != NODIR) ? 8 : 15;
+                      : (oc_get(&objects[obj->otyp])->oc_dir != NODIR) ? 8 : 15;
 
         /* undo any prior cancellation, even when is_cursed */
         if (obj->spe == -1)
@@ -533,7 +533,7 @@ int curse_bless;
 #endif
         }
 
-    } else if (obj->oclass == RING_CLASS && objects[obj->otyp].oc_charged) {
+    } else if (obj->oclass == RING_CLASS && oc_get(&objects[obj->otyp])->oc_charged) {
         /* charging does not affect ring's curse/bless status */
         int s = is_blessed ? rnd(3) : is_cursed ? -rnd(2) : 1;
         boolean is_on = (obj == uleft || obj == uright);
@@ -570,7 +570,7 @@ int curse_bless;
     } else if (obj->oclass == TOOL_CLASS) {
         int rechrg = (int) obj->recharged;
 
-        if (objects[obj->otyp].oc_charged) {
+        if (oc_get(&objects[obj->otyp])->oc_charged) {
             /* tools don't have a limit, but the counter used does */
             if (rechrg < 7) /* recharge_limit */
                 obj->recharged++;
@@ -718,11 +718,11 @@ STATIC_OVL void
 forget_single_object(obj_id)
 int obj_id;
 {
-    objects[obj_id].oc_name_known = 0;
-    objects[obj_id].oc_pre_discovered = 0; /* a discovery when relearned */
-    if (objects[obj_id].oc_uname) {
-        free((genericptr_t) objects[obj_id].oc_uname);
-        objects[obj_id].oc_uname = 0;
+    oc_set(&objects[obj_id], oc_name_known, 0);
+    oc_set(&objects[obj_id], oc_pre_discovered, 0); /* a discovery when relearned */
+    if (oc_get(&objects[obj_id])->oc_uname) {
+        free((genericptr_t) oc_get(&objects[obj_id])->oc_uname);
+        oc_set(&objects[obj_id], oc_uname, 0);
     }
     undiscover_object(obj_id); /* after clearing oc_name_known */
 
@@ -738,7 +738,7 @@ int oclass;
     int i;
 
     for (i = bases[oclass];
-         i < NUM_OBJECTS && objects[i].oc_class == oclass; i++)
+         i < NUM_OBJECTS && oc_get(&objects[i])->oc_class == oclass; i++)
         forget_single_object(i);
 }
 #endif
@@ -777,8 +777,8 @@ int percent;
 
     indices[0] = 0; /* lint suppression */
     for (count = 0, i = 1; i < NUM_OBJECTS; i++)
-        if (OBJ_DESCR(objects[i])
-            && (objects[i].oc_name_known || objects[i].oc_uname))
+        if (OBJ_DESCR(*oc_get(&objects[i]))
+            && (oc_get(&objects[i])->oc_name_known || oc_get(&objects[i])->oc_uname))
             indices[count++] = i;
 
     if (count > 0) {
@@ -1005,10 +1005,10 @@ struct obj *sobj; /* scroll, or fake spellbook object for scroll-like spell */
             new_erodeproof;
     struct obj *otmp;
 
-    if (objects[otyp].oc_magic)
+    if (oc_get(&objects[otyp])->oc_magic)
         exercise(A_WIS, TRUE);                       /* just for trying */
     already_known = (sobj->oclass == SPBOOK_CLASS /* spell */
-                     || objects[otyp].oc_name_known);
+                     || oc_get(&objects[otyp])->oc_name_known);
 
     switch (otyp) {
 #ifdef MAIL
@@ -1301,7 +1301,7 @@ struct obj *sobj; /* scroll, or fake spellbook object for scroll-like spell */
                         if (obj->oclass == WEAPON_CLASS) {
                             /* mergeable weapon test covers ammo,
                                missiles, spears, daggers & knives */
-                            if (!objects[obj->otyp].oc_merge)
+                            if (!oc_get(&objects[obj->otyp])->oc_merge)
                                 wornmask = 0L;
                         } else if (obj->oclass == GEM_CLASS) {
                             /* possibly ought to check whether

@@ -1744,8 +1744,8 @@ int propindx; /* index of a property which can be conveyed by worn item */
     for (o = invent; o; o = o->nobj) {
         if (!(o->owornmask & mask))
             continue;
-        if ((int) objects[o->otyp].oc_oprop == propindx
-            && objects[o->otyp].oc_name_known && o->dknown)
+        if ((int) oc_get(&objects[o->otyp])->oc_oprop == propindx
+            && oc_get(&objects[o->otyp])->oc_name_known && o->dknown)
             return TRUE;
     }
     return FALSE;
@@ -4141,9 +4141,9 @@ long *total_size;
 
     count = size = 0L;
     for (idx = 0; idx < NUM_OBJECTS; ++idx)
-        if (objects[idx].oc_uname) {
+        if (oc_get(&objects[idx])->oc_uname) {
             ++count;
-            size += (long) (strlen(objects[idx].oc_uname) + 1);
+            size += (long) (strlen(oc_get(&objects[idx])->oc_uname) + 1);
         }
     if (count || size) {
         *total_count += count;

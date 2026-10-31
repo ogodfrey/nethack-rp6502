@@ -562,7 +562,7 @@ knows_object(obj)
 register int obj;
 {
     discover_object(obj, TRUE, FALSE);
-    objects[obj].oc_pre_discovered = 1; /* not a "discovery" */
+    oc_set(&objects[obj], oc_pre_discovered, 1); /* not a "discovery" */
 }
 
 /* Know ordinary (non-magical) objects of a certain class,
@@ -574,7 +574,7 @@ register char sym;
 {
     register int ct;
     for (ct = 1; ct < NUM_OBJECTS; ct++)
-        if (objects[ct].oc_class == sym && !objects[ct].oc_magic)
+        if (oc_get(&objects[ct])->oc_class == sym && !oc_get(&objects[ct])->oc_magic)
             knows_object(ct);
 }
 
@@ -1018,7 +1018,7 @@ register struct trobj *trop;
                       low level players or unbalancing; also
                       spells in restricted skill categories */
                    || (obj->oclass == SPBOOK_CLASS
-                       && (objects[otyp].oc_level > 3
+                       && (oc_get(&objects[otyp])->oc_level > 3
                            || restricted_spell_discipline(otyp)))) {
                 dealloc_obj(obj);
                 obj = mkobj(trop->trclass, FALSE);
@@ -1026,7 +1026,7 @@ register struct trobj *trop;
             }
 
             /* Don't start with +0 or negative rings */
-            if (objects[otyp].oc_charged && obj->spe <= 0)
+            if (oc_get(&objects[otyp])->oc_charged && obj->spe <= 0)
                 obj->spe = rne(3);
 
             /* Heavily relies on the fact that 1) we create wands
@@ -1060,9 +1060,9 @@ register struct trobj *trop;
                 if (inv_subs[i].race_pm == urace.malenum
                     && otyp == inv_subs[i].item_otyp) {
                     debugpline3("ini_inv: substituting %s for %s%s",
-                                OBJ_NAME(objects[inv_subs[i].subs_otyp]),
+                                OBJ_NAME(*oc_get(&objects[inv_subs[i].subs_otyp])),
                                 (trop->trotyp == UNDEF_TYP) ? "random " : "",
-                                OBJ_NAME(objects[otyp]));
+                                OBJ_NAME(*oc_get(&objects[otyp])));
                     otyp = obj->otyp = inv_subs[i].subs_otyp;
                     break;
                 }
@@ -1079,7 +1079,7 @@ register struct trobj *trop;
             /* no "blessed" or "identified" money */
             obj->quan = u.umoney0;
         } else {
-            if (objects[otyp].oc_uses_known)
+            if (oc_get(&objects[otyp])->oc_uses_known)
                 obj->known = 1;
             obj->dknown = obj->bknown = obj->rknown = 1;
             if (Is_container(obj) || obj->otyp == STATUE) {
@@ -1106,7 +1106,7 @@ register struct trobj *trop;
         obj = addinv(obj);
 
         /* Make the type known if necessary */
-        if (OBJ_DESCR(objects[otyp]) && obj->known)
+        if (OBJ_DESCR(*oc_get(&objects[otyp])) && obj->known)
             discover_object(otyp, TRUE, FALSE);
         if (otyp == OIL_LAMP)
             discover_object(POT_OIL, TRUE, FALSE);

@@ -163,7 +163,7 @@ int
 Boots_on(VOID_ARGS)
 {
     long oldprop =
-        u.uprops[objects[uarmf->otyp].oc_oprop].extrinsic & ~WORN_BOOTS;
+        u.uprops[oc_get(&objects[uarmf->otyp])->oc_oprop].extrinsic & ~WORN_BOOTS;
 
     switch (uarmf->otyp) {
     case LOW_BOOTS:
@@ -222,7 +222,7 @@ Boots_off(VOID_ARGS)
 {
     struct obj *otmp = uarmf;
     int otyp = otmp->otyp;
-    long oldprop = u.uprops[objects[otyp].oc_oprop].extrinsic & ~WORN_BOOTS;
+    long oldprop = u.uprops[oc_get(&objects[otyp])->oc_oprop].extrinsic & ~WORN_BOOTS;
 
     context.takeoff.mask &= ~W_ARMF;
     /* For levitation, float_down() returns if Levitation, so we
@@ -281,7 +281,7 @@ STATIC_PTR int
 Cloak_on(VOID_ARGS)
 {
     long oldprop =
-        u.uprops[objects[uarmc->otyp].oc_oprop].extrinsic & ~WORN_CLOAK;
+        u.uprops[oc_get(&objects[uarmc->otyp])->oc_oprop].extrinsic & ~WORN_CLOAK;
 
     switch (uarmc->otyp) {
     case ORCISH_CLOAK:
@@ -337,7 +337,7 @@ Cloak_off(VOID_ARGS)
 {
     struct obj *otmp = uarmc;
     int otyp = otmp->otyp;
-    long oldprop = u.uprops[objects[otyp].oc_oprop].extrinsic & ~WORN_CLOAK;
+    long oldprop = u.uprops[oc_get(&objects[otyp])->oc_oprop].extrinsic & ~WORN_CLOAK;
 
     context.takeoff.mask &= ~W_ARMC;
     /* For mummy wrapping, taking it off first resets `Invisible'. */
@@ -501,7 +501,7 @@ int
 Gloves_on(VOID_ARGS)
 {
     long oldprop =
-        u.uprops[objects[uarmg->otyp].oc_oprop].extrinsic & ~WORN_GLOVES;
+        u.uprops[oc_get(&objects[uarmg->otyp])->oc_oprop].extrinsic & ~WORN_GLOVES;
 
     switch (uarmg->otyp) {
     case LEATHER_GLOVES:
@@ -553,7 +553,7 @@ int
 Gloves_off(VOID_ARGS)
 {
     long oldprop =
-        u.uprops[objects[uarmg->otyp].oc_oprop].extrinsic & ~WORN_GLOVES;
+        u.uprops[oc_get(&objects[uarmg->otyp])->oc_oprop].extrinsic & ~WORN_GLOVES;
     boolean on_purpose = !context.mon_moving && !uarmg->in_use;
 
     context.takeoff.mask &= ~W_ARMG;
@@ -765,8 +765,8 @@ Amulet_on()
             You("don't feel like yourself.");
         pline_The("amulet disintegrates!");
         if (orig_sex == poly_gender() && uamul->dknown
-            && !objects[AMULET_OF_CHANGE].oc_name_known
-            && !objects[AMULET_OF_CHANGE].oc_uname)
+            && !oc_get(&objects[AMULET_OF_CHANGE])->oc_name_known
+            && !oc_get(&objects[AMULET_OF_CHANGE])->oc_uname)
             docall(uamul);
         useup(uamul);
         break;
@@ -861,7 +861,7 @@ boolean observed;
            effect (assumes there is at most one type for each effect),
            mark this ring as having been seen (no need for makeknown);
            otherwise if we have seen this ring, discover its type */
-        if (objects[ringtype].oc_name_known)
+        if (oc_get(&objects[ringtype])->oc_name_known)
             ring->dknown = 1;
         else if (ring->dknown)
             makeknown(ringtype);
@@ -873,8 +873,8 @@ boolean observed;
 
     /* make enchantment of charged ring known (might be +0) and update
        perm invent window if we've seen this ring and know its type */
-    if (ring->dknown && objects[ringtype].oc_name_known) {
-        if (objects[ringtype].oc_charged)
+    if (ring->dknown && oc_get(&objects[ringtype])->oc_name_known) {
+        if (oc_get(&objects[ringtype])->oc_charged)
             ring->known = 1;
         update_inventory();
     }
@@ -884,7 +884,7 @@ void
 Ring_on(obj)
 register struct obj *obj;
 {
-    long oldprop = u.uprops[objects[obj->otyp].oc_oprop].extrinsic;
+    long oldprop = u.uprops[oc_get(&objects[obj->otyp])->oc_oprop].extrinsic;
     int old_attrib, which;
     boolean observable;
 
@@ -1007,7 +1007,7 @@ boolean gone;
     boolean observable;
 
     context.takeoff.mask &= ~mask;
-    if (!(u.uprops[objects[obj->otyp].oc_oprop].extrinsic & mask))
+    if (!(u.uprops[oc_get(&objects[obj->otyp])->oc_oprop].extrinsic & mask))
         impossible("Strange... I didn't know you had that ring.");
     if (gone)
         setnotworn(obj);
@@ -1578,7 +1578,7 @@ armoroff(otmp)
 struct obj *otmp;
 {
     static char offdelaybuf[60];
-    int delay = -objects[otmp->otyp].oc_delay;
+    int delay = -oc_get(&objects[otmp->otyp])->oc_delay;
     const char *what = 0;
 
     if (cursed(otmp))
@@ -1611,7 +1611,7 @@ struct obj *otmp;
             afternmv = Shirt_off;
         } else {
             impossible("Taking off unknown armor (%d: %d), delay %d",
-                       otmp->otyp, objects[otmp->otyp].oc_armcat, delay);
+                       otmp->otyp, oc_get(&objects[otmp->otyp])->oc_armcat, delay);
         }
         if (what) {
             Sprintf(offdelaybuf, "You finish taking off your %s.", what);
@@ -1651,7 +1651,7 @@ struct obj *otmp;
             (void) Armor_off();
         else
             impossible("Taking off unknown armor (%d: %d), no delay",
-                       otmp->otyp, objects[otmp->otyp].oc_armcat);
+                       otmp->otyp, oc_get(&objects[otmp->otyp])->oc_armcat);
         off_msg(otmp);
     }
     context.takeoff.mask = context.takeoff.what = 0L;
@@ -2028,7 +2028,7 @@ struct obj *obj;
         else
             panic("wearing armor not worn as armor? [%08lx]", obj->owornmask);
 
-        delay = -objects[obj->otyp].oc_delay;
+        delay = -oc_get(&objects[obj->otyp])->oc_delay;
         if (delay) {
             nomul(delay);
             multi_reason = "dressing up";
@@ -2550,7 +2550,7 @@ take_off(VOID_ARGS)
          * known cloaks, add 1 so that it actually matters...
          */
         if (uarmc)
-            doff->delay += 2 * objects[uarmc->otyp].oc_delay + 1;
+            doff->delay += 2 * oc_get(&objects[uarmc->otyp])->oc_delay + 1;
     } else if (doff->what == WORN_CLOAK) {
         otmp = uarmc;
     } else if (doff->what == WORN_BOOTS) {
@@ -2565,9 +2565,9 @@ take_off(VOID_ARGS)
         otmp = uarmu;
         /* add the time to take off and put back on armor and/or cloak */
         if (uarm)
-            doff->delay += 2 * objects[uarm->otyp].oc_delay;
+            doff->delay += 2 * oc_get(&objects[uarm->otyp])->oc_delay;
         if (uarmc)
-            doff->delay += 2 * objects[uarmc->otyp].oc_delay + 1;
+            doff->delay += 2 * oc_get(&objects[uarmc->otyp])->oc_delay + 1;
     } else if (doff->what == WORN_AMUL) {
         doff->delay = 1;
     } else if (doff->what == LEFT_RING) {
@@ -2584,7 +2584,7 @@ take_off(VOID_ARGS)
     }
 
     if (otmp)
-        doff->delay += objects[otmp->otyp].oc_delay;
+        doff->delay += oc_get(&objects[otmp->otyp])->oc_delay;
 
     /* Since setting the occupation now starts the counter next move, that
      * would always produce a delay 1 too big per item unless we subtract

@@ -7,5 +7,8 @@
 
 /* Monster table (mons[], permonst records) when it lives in XRAM. */
 #define MONS_XRAM_ADDR 0x1000
+/* Object table (objects[], objclass records) when it lives in XRAM. Follows
+ * the monster table (20628 bytes, ends at 0x6094). */
+#define OBJS_XRAM_ADDR 0x6100
 
 #endif /* RP6502_XRAM_H */

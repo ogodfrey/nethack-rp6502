@@ -921,7 +921,7 @@ boolean FDECL((*allow), (OBJ_P)); /* allow function */
                 add_menu(win, obj_to_glyph(curr, rn2_on_display_rng), &any,
                          (qflags & USE_INVLET) ? curr->invlet
                            : (first && curr->oclass == COIN_CLASS) ? '$' : 0,
-                         def_oc_syms[(int) objects[curr->otyp].oc_class].sym,
+                         def_oc_syms[(int) oc_get(&objects[curr->otyp])->oc_class].sym,
                          ATR_NONE, doname_with_price(curr), MENU_UNSELECTED);
                 first = FALSE;
             }
@@ -1110,7 +1110,7 @@ int how;               /* type of query */
                     any.a_int = curr->oclass;
                     add_menu(
                         win, NO_GLYPH, &any, invlet++,
-                        def_oc_syms[(int) objects[curr->otyp].oc_class].sym,
+                        def_oc_syms[(int) oc_get(&objects[curr->otyp])->oc_class].sym,
                         ATR_NONE, let_to_name(*pack, FALSE,
                                               (how != PICK_NONE)
                                                   && iflags.menu_head_objsym),
@@ -1522,8 +1522,8 @@ boolean telekinesis; /* not picking it up directly by hand */
             pline_The("scroll%s %s to dust as you %s %s up.", plur(obj->quan),
                       otense(obj, "turn"), telekinesis ? "raise" : "pick",
                       (obj->quan == 1L) ? "it" : "them");
-            if (!(objects[SCR_SCARE_MONSTER].oc_name_known)
-                && !(objects[SCR_SCARE_MONSTER].oc_uname))
+            if (!(oc_get(&objects[SCR_SCARE_MONSTER])->oc_name_known)
+                && !(oc_get(&objects[SCR_SCARE_MONSTER])->oc_uname))
                 docall(obj);
             useupf(obj, obj->quan);
             return 1; /* tried to pick something up and failed, but

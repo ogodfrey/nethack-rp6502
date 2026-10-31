@@ -20,14 +20,17 @@ OUT=$(cd "$OUT" && pwd)
 
 "$TOOLS/hostgen.sh" "$SRC" "$OUT/gen" data
 
-CFLAGS="-O1 -g -w -DRP6502 -DRP6502_HOST -DRP6502_MONS_XRAM"
+CFLAGS="-O1 -g -w -DRP6502 -DRP6502_HOST -DRP6502_MONS_XRAM -fno-pie"
 CFLAGS="$CFLAGS -I$OUT/gen/include -I$SRC/include"
 export CC CFLAGS SRC OUT
 grep -v '^#' "$TOOLS/../sources.txt" | grep . |
     xargs -P "$JOBS" -I{} sh -c \
-        'extra=""; [ "{}" = src/monst.c ] && extra="-DRP6502_MONS_RAM -Dmons=rp6502_ram_mons"; o="$OUT/obj/$(basename {} .c).o"; $CC $CFLAGS $extra -c "$SRC/{}" -o "$o"'
+        'extra=""; case "{}" in src/monst.c) extra="-DRP6502_MONS_RAM -Dmons=rp6502_ram_mons";; src/objects.c) extra="-DRP6502_MONS_RAM -Dobjects=rp6502_ram_objects";; esac; o="$OUT/obj/$(basename {} .c).o"; $CC $CFLAGS $extra -c "$SRC/{}" -o "$o"'
 $CC $CFLAGS -c "$TOOLS/../rp6502xram_host.c" -o "$OUT/obj/rp6502xram_host.o"
-$CC -o "$OUT/nethack" "$OUT"/obj/*.o
+# objects[] has no RAM copy here: the link gives the symbol the fake XRAM
+# address, so &objects[i] is an address that rpo_get() can map back.
+OBJS_ADDR=$(sed -n 's/^#define OBJS_XRAM_ADDR[[:space:]]*//p' "$SRC/include/xram.h")
+$CC -no-pie -o "$OUT/nethack" "$OUT"/obj/*.o -Wl,--defsym,objects="$OBJS_ADDR"
 
 rm -rf "$OUT/play"
 mkdir -p "$OUT/play"

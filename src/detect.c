@@ -195,12 +195,12 @@ unsigned material;
     register struct obj *otmp;
     struct obj *temp;
 
-    if (objects[obj->otyp].oc_material == material)
+    if (oc_get(&objects[obj->otyp])->oc_material == material)
         return obj;
 
     if (Has_contents(obj)) {
         for (otmp = obj->cobj; otmp; otmp = otmp->nobj)
-            if (objects[otmp->otyp].oc_material == material)
+            if (oc_get(&objects[otmp->otyp])->oc_material == material)
                 return otmp;
             else if (Has_contents(otmp)
                      && (temp = o_material(otmp, material)) != 0)
@@ -241,7 +241,7 @@ unsigned material;
                                || ((mtmp = m_at(x, y)) != 0 && mtmp->minvent));
         } else {
             if (material
-                && objects[glyph_to_obj(glyph)].oc_material == material) {
+                && oc_get(&objects[glyph_to_obj(glyph)])->oc_material == material) {
                 /* object shown here is of interest because material matches */
                 for (otmp = level.objects[x][y]; otmp; otmp = otmp->nexthere)
                     if (o_material(otmp, GOLD))
@@ -255,7 +255,7 @@ unsigned material;
                 /* detection indicates removal of this object from the map */
                 return TRUE;
             }
-            if (oclass && objects[glyph_to_obj(glyph)].oc_class == oclass) {
+            if (oclass && oc_get(&objects[glyph_to_obj(glyph)])->oc_class == oclass) {
                 /* obj shown here is of interest because its class matches */
                 for (otmp = level.objects[x][y]; otmp; otmp = otmp->nexthere)
                     if (o_in(otmp, oclass))
@@ -656,7 +656,7 @@ int class;            /* an object class, 0 for all */
                 do_dknown_of(obj);
         }
         if ((is_cursed && M_AP_TYPE(mtmp) == M_AP_OBJECT
-             && (!class || class == objects[mtmp->mappearance].oc_class))
+             && (!class || class == oc_get(&objects[mtmp->mappearance])->oc_class))
             || (findgold(mtmp->minvent) && (!class || class == COIN_CLASS))) {
             ct++;
             break;
@@ -731,7 +731,7 @@ int class;            /* an object class, 0 for all */
             }
         /* Allow a mimic to override the detected objects it is carrying. */
         if (is_cursed && M_AP_TYPE(mtmp) == M_AP_OBJECT
-            && (!class || class == objects[mtmp->mappearance].oc_class)) {
+            && (!class || class == oc_get(&objects[mtmp->mappearance])->oc_class)) {
             struct obj temp;
 
             temp = zeroobj;
@@ -871,7 +871,7 @@ int src_cursed;
         }
         obj.otyp = !Hallucination ? GOLD_PIECE : random_object(rn2);
         obj.quan = (long) ((obj.otyp == GOLD_PIECE) ? rnd(10)
-                           : objects[obj.otyp].oc_merge ? rnd(2) : 1);
+                           : oc_get(&objects[obj.otyp])->oc_merge ? rnd(2) : 1);
         obj.corpsenm = random_monster(rn2); /* if otyp == CORPSE */
         map_object(&obj, 1);
     } else if (trap) {

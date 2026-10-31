@@ -245,7 +245,7 @@ xchar x, y;
     if (Fumbling)
         clumsy = TRUE;
 
-    else if (uarm && objects[uarm->otyp].oc_bulky && ACURR(A_DEX) < rnd(25))
+    else if (uarm && oc_get(&objects[uarm->otyp])->oc_bulky && ACURR(A_DEX) < rnd(25))
         clumsy = TRUE;
  doit:
     You("kick %s.", mon_nam(mon));
@@ -304,7 +304,7 @@ register struct obj *gold;
             msg_given = TRUE;
         }
     } else {
-        long umoney, value = gold->quan * objects[gold->otyp].oc_cost;
+        long umoney, value = gold->quan * oc_get(&objects[gold->otyp])->oc_cost;
 
         mtmp->msleeping = 0;
         finish_meating(mtmp);
@@ -416,7 +416,7 @@ xchar x, y; /* coordinates where object was before the impact, not after */
         const char *result = (char *) 0;
 
         otmp2 = otmp->nobj;
-        if (objects[otmp->otyp].oc_material == GLASS
+        if (oc_get(&objects[otmp->otyp])->oc_material == GLASS
             && otmp->oclass != GEM_CLASS && !obj_resists(otmp, 33, 100)) {
             result = "shatter";
         } else if (otmp->otyp == EGG && !rn2(3)) {
@@ -1579,7 +1579,7 @@ boolean shop_floor_obj;
     if (breaktest(otmp)) {
         const char *result;
 
-        if (objects[otmp->otyp].oc_material == GLASS
+        if (oc_get(&objects[otmp->otyp])->oc_material == GLASS
             || otmp->otyp == EXPENSIVE_CAMERA) {
             if (otmp->otyp == MIRROR)
                 change_luck(-2);

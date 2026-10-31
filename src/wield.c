@@ -205,7 +205,7 @@ struct obj *wep;
 #if 0
         /* we'll get back to this someday, but it's not balanced yet */
         if (Race_if(PM_ELF) && !wep->oartifact
-            && objects[wep->otyp].oc_material == IRON) {
+            && oc_get(&objects[wep->otyp])->oc_material == IRON) {
             /* Elves are averse to wielding cold iron */
             You("have an uneasy feeling about wielding cold iron.");
             change_luck(-1);
@@ -370,7 +370,7 @@ dowieldquiver()
        or secondary weapon is a sling.) */
     quivee_types = (uslinging()
                     || (uswapwep
-                        && objects[uswapwep->otyp].oc_skill == P_SLING))
+                        && oc_get(&objects[uswapwep->otyp])->oc_skill == P_SLING))
                    ? bullets
                    : ready_objs;
     newquiver = getobj(quivee_types, "ready");

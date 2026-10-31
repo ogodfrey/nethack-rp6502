@@ -1688,8 +1688,8 @@ struct mkroom *croom;
 
             case M_AP_OBJECT:
                 for (i = 0; i < NUM_OBJECTS; i++)
-                    if (OBJ_NAME(objects[i])
-                        && !strcmp(OBJ_NAME(objects[i]), m->appear_as.str))
+                    if (OBJ_NAME(*oc_get(&objects[i]))
+                        && !strcmp(OBJ_NAME(*oc_get(&objects[i])), m->appear_as.str))
                         break;
                 if (i == NUM_OBJECTS) {
                     impossible("create_monster: can't find object \"%s\"",
@@ -1932,7 +1932,7 @@ struct mkroom *croom;
         otmp->oinvis = 1;
 #endif
 
-    if (o->quan > 0 && objects[otmp->otyp].oc_merge) {
+    if (o->quan > 0 && oc_get(&objects[otmp->otyp])->oc_merge) {
         otmp->quan = o->quan;
         otmp->owt = weight(otmp);
     }
@@ -3259,7 +3259,7 @@ struct sp_coder *coder;
         create_object(&tmpobj, coder->croom);
         quancnt--;
     } while ((quancnt > 0) && ((tmpobj.id > STRANGE_OBJECT)
-                               && !objects[tmpobj.id].oc_merge));
+                               && !oc_get(&objects[tmpobj.id])->oc_merge));
 
     Free(tmpobj.name.str);
     opvar_free(varparam);

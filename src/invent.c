@@ -71,7 +71,7 @@ struct obj *obj;
     const char *classorder;
     char *p;
     int k, otyp = obj->otyp, oclass = obj->oclass;
-    boolean seen, discovered = objects[otyp].oc_name_known ? TRUE : FALSE;
+    boolean seen, discovered = oc_get(&objects[otyp])->oc_name_known ? TRUE : FALSE;
 
     /*
      * For the value types assigned by this classification, sortloot()
@@ -104,7 +104,7 @@ struct obj *obj;
             armcat[ARM_SUIT]   = 7; /* [0] */
             armcat[7]          = 8; /* sanity protection */
         }
-        k = objects[otyp].oc_armcat;
+        k = oc_get(&objects[otyp])->oc_armcat;
         /* oc_armcat overloads oc_subtyp which is an 'schar' so guard
            against somebody assigning something unexpected to it */
         if (k < 0 || k >= 7)
@@ -115,7 +115,7 @@ struct obj *obj;
         /* for weapons, group by ammo (arrows, bolts), launcher (bows),
            missile (darts, boomerangs), stackable (daggers, knives, spears),
            'other' (swords, axes, &c), polearms */
-        k = objects[otyp].oc_skill;
+        k = oc_get(&objects[otyp])->oc_skill;
         k = (k < 0) ? ((k >= -P_CROSSBOW && k <= -P_BOW) ? 1 : 3)
                     : ((k >= P_BOW && k <= P_CROSSBOW) ? 2
                        : (k == P_SPEAR || k == P_DAGGER || k == P_KNIFE) ? 4
@@ -185,7 +185,7 @@ struct obj *obj;
          *  7) discovered gray stones ("touchstone"),
          *  8) seen rocks ("rock").
          */
-        switch (objects[obj->otyp].oc_material) {
+        switch (oc_get(&objects[obj->otyp])->oc_material) {
         case GEMSTONE:
             k = !seen ? 1 : !discovered ? 2 : 3;
             break;
@@ -206,8 +206,8 @@ struct obj *obj;
     sort_item->subclass = (xchar) k;
     /* discovery status */
     k = !seen ? 1 /* unseen */
-        : (discovered || !OBJ_DESCR(objects[otyp])) ? 4
-          : (objects[otyp].oc_uname) ? 3 /* named (partially discovered) */
+        : (discovered || !OBJ_DESCR(*oc_get(&objects[otyp]))) ? 4
+          : (oc_get(&objects[otyp])->oc_uname) ? 3 /* named (partially discovered) */
             : 2; /* undiscovered */
     sort_item->disco = (xchar) k;
 }
@@ -419,7 +419,7 @@ const genericptr vptr2;
        below the range of obj->spe.  oc_uses_known means that obj->known
        matters, which usually indirectly means that obj->spe is relevant.
        Lots of objects use obj->spe for some other purpose (see obj.h). */
-    if (objects[obj1->otyp].oc_uses_known
+    if (oc_get(&objects[obj1->otyp])->oc_uses_known
         /* exclude eggs (laid by you) and tins (homemade, pureed, &c) */
         && obj1->oclass != FOOD_CLASS) {
         val1 = obj1->known ? obj1->spe : -1000;
@@ -1563,13 +1563,13 @@ register const char *let, *word;
                          /* only applicable potion is oil, and it will only
                             be offered as a choice when already discovered */
                          && (otyp != POT_OIL || !otmp->dknown
-                             || !objects[POT_OIL].oc_name_known))
+                             || !oc_get(&objects[POT_OIL])->oc_name_known))
                      || (otmp->oclass == FOOD_CLASS
                          && otyp != CREAM_PIE && otyp != EUCALYPTUS_LEAF)
                      || (otmp->oclass == GEM_CLASS && !is_graystone(otmp))))
              || (!strcmp(word, "invoke")
                  && !otmp->oartifact
-                 && !objects[otyp].oc_unique
+                 && !oc_get(&objects[otyp])->oc_unique
                  && (otyp != FAKE_AMULET_OF_YENDOR || otmp->known)
                  && otyp != CRYSTAL_BALL /* synonym for apply */
                  /* note: presenting the possibility of invoking non-artifact
@@ -1577,18 +1577,18 @@ register const char *let, *word;
                  && otyp != MIRROR
                  && otyp != MAGIC_LAMP
                  && (otyp != OIL_LAMP /* don't list known oil lamp */
-                     || (otmp->dknown && objects[OIL_LAMP].oc_name_known)))
+                     || (otmp->dknown && oc_get(&objects[OIL_LAMP])->oc_name_known)))
              || (!strcmp(word, "untrap with")
                  && ((otmp->oclass == TOOL_CLASS && otyp != CAN_OF_GREASE)
                      || (otmp->oclass == POTION_CLASS
                          /* only applicable potion is oil, and it will only
                             be offered as a choice when already discovered */
                          && (otyp != POT_OIL || !otmp->dknown
-                             || !objects[POT_OIL].oc_name_known))))
+                             || !oc_get(&objects[POT_OIL])->oc_name_known))))
              || (!strcmp(word, "tip") && !Is_container(otmp)
                  /* include horn of plenty if sufficiently discovered */
                  && (otmp->otyp != HORN_OF_PLENTY || !otmp->dknown
-                     || !objects[HORN_OF_PLENTY].oc_name_known))
+                     || !oc_get(&objects[HORN_OF_PLENTY])->oc_name_known))
              || (!strcmp(word, "charge") && !is_chargeable(otmp))
              || (!strcmp(word, "open") && otyp != TIN)
              || (!strcmp(word, "call") && !objtyp_is_callable(otyp))
@@ -1611,7 +1611,7 @@ register const char *let, *word;
              /* or unsuitable items rubbed on known touchstone */
              || (!strncmp(word, "rub on the stone", 16)
                  && *let == GEM_CLASS && otmp->dknown
-                 && objects[otyp].oc_name_known)
+                 && oc_get(&objects[otyp])->oc_name_known)
              /* suppress corpses on astral, amulets elsewhere */
              || (!strcmp(word, "sacrifice")
                  /* (!astral && amulet) || (astral && !amulet) */
@@ -1625,7 +1625,7 @@ register const char *let, *word;
                                       (boolean) (otmp->oclass == RING_CLASS)))
              || (!strcmp(word, "write on")
                  && (!(otyp == SCR_BLANK_PAPER || otyp == SPE_BLANK_PAPER)
-                     || !otmp->dknown || !objects[otyp].oc_name_known))
+                     || !otmp->dknown || !oc_get(&objects[otyp])->oc_name_known))
              ) {
                 /* acceptable but not listed as likely candidate */
                 foo--;
@@ -3651,7 +3651,7 @@ register struct obj *otmp, *obj;
     /* fail if already the same object, if different types, if either is
        explicitly marked to prevent merge, or if not mergable in general */
     if (obj == otmp || obj->otyp != otmp->otyp
-        || obj->nomerge || otmp->nomerge || !objects[obj->otyp].oc_merge)
+        || obj->nomerge || otmp->nomerge || !oc_get(&objects[obj->otyp])->oc_merge)
         return FALSE;
 
     /* coins of the same kind will always merge */
@@ -3729,8 +3729,8 @@ register struct obj *otmp, *obj;
     if (obj->oartifact != otmp->oartifact)
         return FALSE;
 
-    if (obj->known == otmp->known || !objects[otmp->otyp].oc_uses_known) {
-        return (boolean) objects[obj->otyp].oc_merge;
+    if (obj->known == otmp->known || !oc_get(&objects[otmp->otyp])->oc_uses_known) {
+        return (boolean) oc_get(&objects[obj->otyp])->oc_merge;
     } else
         return FALSE;
 }

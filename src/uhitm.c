@@ -743,7 +743,7 @@ int dieroll;
                     tmp = 0;
                 else
                     tmp = rnd(2);
-                if (objects[obj->otyp].oc_material == SILVER
+                    if (oc_get(&objects[obj->otyp])->oc_material == SILVER
                     && mon_hates_silver(mon)) {
                     silvermsg = TRUE;
                     silverobj = TRUE;
@@ -824,7 +824,7 @@ int dieroll;
                         return TRUE;
                     hittxt = TRUE;
                 }
-                if (objects[obj->otyp].oc_material == SILVER
+                if (oc_get(&objects[obj->otyp])->oc_material == SILVER
                     && mon_hates_silver(mon)) {
                     silvermsg = TRUE;
                     silverobj = TRUE;
@@ -1082,7 +1082,7 @@ int dieroll;
                      * Things like silver wands can arrive here so
                      * so we need another silver check.
                      */
-                    if (objects[obj->otyp].oc_material == SILVER
+                    if (oc_get(&objects[obj->otyp])->oc_material == SILVER
                         && mon_hates_silver(mon)) {
                         tmp += rnd(20);
                         silvermsg = TRUE;
@@ -1214,9 +1214,9 @@ int dieroll;
         /* iron weapon using melee or polearm hit [3.6.1: metal weapon too;
            also allow either or both weapons to cause split when twoweap] */
         && obj && (obj == uwep || (u.twoweap && obj == uswapwep))
-        && ((objects[obj->otyp].oc_material == IRON
+        && ((oc_get(&objects[obj->otyp])->oc_material == IRON
              /* allow scalpel and tsurugi to split puddings */
-             || objects[obj->otyp].oc_material == METAL)
+             || oc_get(&objects[obj->otyp])->oc_material == METAL)
             /* but not bashing with darts, arrows or ya */
             && !(is_ammo(obj) || is_missile(obj)))
         && hand_to_hand) {
@@ -1355,7 +1355,7 @@ struct obj *obj;
         || obj->otyp == IRON_CHAIN      /* dmgval handles those first three */
         || obj->otyp == MIRROR          /* silver in the reflective surface */
         || obj->otyp == CLOVE_OF_GARLIC /* causes shades to flee */
-        || objects[obj->otyp].oc_material == SILVER)
+        || oc_get(&objects[obj->otyp])->oc_material == SILVER)
         return TRUE;
     return FALSE;
 }
@@ -1429,7 +1429,7 @@ struct attack *mattk;
             s_suffix(mon_nam(mdef)), obj->greased ? "greased" : "slippery",
             /* avoid "slippery slippery cloak"
                for undiscovered oilskin cloak */
-            (obj->greased || objects[obj->otyp].oc_name_known)
+            (obj->greased || oc_get(&objects[obj->otyp])->oc_name_known)
                 ? xname(obj)
                 : cloak_simple_name(obj));
 
@@ -2417,7 +2417,7 @@ register struct monst *mon;
                      || is_missile(uswapwep)) /* dart, shuriken, boomerang */
                 /* and not two-handed and not incapable of being wielded */
                 && !bimanual(uswapwep)
-                && !(objects[uswapwep->otyp].oc_material == SILVER
+                && !(oc_get(&objects[uswapwep->otyp])->oc_material == SILVER
                      && Hate_silver))
                 altwep = !altwep; /* toggle for next attack */
             weapon = *originalweapon;

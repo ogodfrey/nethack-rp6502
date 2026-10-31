@@ -911,7 +911,7 @@ register struct monst *mtmp;
                 mtmp->meating = otmp->owt / 2 + 1;
                 /* Heal up to the object's weight in hp */
                 if (mtmp->mhp < mtmp->mhpmax) {
-                    mtmp->mhp += objects[otmp->otyp].oc_weight;
+                    mtmp->mhp += oc_get(&objects[otmp->otyp])->oc_weight;
                     if (mtmp->mhp > mtmp->mhpmax)
                         mtmp->mhp = mtmp->mhpmax;
                 }
@@ -1035,7 +1035,7 @@ struct monst *mtmp;
                           distant_name(otmp, doname));
                 /* give this one even if !verbose */
                 if (otmp->oclass == SCROLL_CLASS
-                    && !strcmpi(OBJ_DESCR(objects[otmp->otyp]), "YUM YUM"))
+                    && !strcmpi(OBJ_DESCR(*oc_get(&objects[otmp->otyp])), "YUM YUM"))
                     pline("Yum%c", otmp->blessed ? '!' : '.');
             } else {
                 if (flags.verbose)
@@ -1043,7 +1043,7 @@ struct monst *mtmp;
             }
             /* Heal up to the object's weight in hp */
             if (mtmp->mhp < mtmp->mhpmax) {
-                mtmp->mhp += objects[otmp->otyp].oc_weight;
+                mtmp->mhp += oc_get(&objects[otmp->otyp])->oc_weight;
                 if (mtmp->mhp > mtmp->mhpmax)
                     mtmp->mhp = mtmp->mhpmax;
             }
@@ -1105,7 +1105,7 @@ register struct monst *mtmp;
     int mat_idx;
 
     if ((gold = g_at(mtmp->mx, mtmp->my)) != 0) {
-        mat_idx = objects[gold->otyp].oc_material;
+        mat_idx = oc_get(&objects[gold->otyp])->oc_material;
         obj_extract_self(gold);
         add_to_minv(mtmp, gold);
         if (cansee(mtmp->mx, mtmp->my)) {
@@ -1243,7 +1243,7 @@ struct obj *otmp;
         return 0;
     if (otyp == CORPSE && is_rider(&mons[otmp->corpsenm]))
         return 0;
-    if (objects[otyp].oc_material == SILVER && mon_hates_silver(mtmp)
+    if (oc_get(&objects[otyp])->oc_material == SILVER && mon_hates_silver(mtmp)
         && (otyp != BELL_OF_OPENING || !is_covetous(mdat)))
         return 0;
 
@@ -2434,7 +2434,7 @@ int xkill_flags; /* 1: suppress message, 2: suppress corpse, 4: pacifist */
             otyp = otmp->otyp;
             if (pm_get(mdat)->msize < MZ_HUMAN && otyp != FIGURINE
                 /* oc_big is also oc_bimanual and oc_bulky */
-                && (otmp->owt > 30 || objects[otyp].oc_big)) {
+                && (otmp->owt > 30 || oc_get(&objects[otyp])->oc_big)) {
                 delobj(otmp);
             } else if (!flooreffects(otmp, x, y, nomsg ? "" : "fall")) {
                 place_object(otmp, x, y);
@@ -4137,7 +4137,7 @@ short otyp;
         if (otyp == SPE_HEALING || otyp == SPE_EXTRA_HEALING) {
             pline("%s seems a more vivid %s than before.",
                   The(simple_typename(ap)),
-                  c_obj_colors[objects[ap].oc_color]);
+                  c_obj_colors[oc_get(&objects[ap])->oc_color]);
         }
         break;
     }

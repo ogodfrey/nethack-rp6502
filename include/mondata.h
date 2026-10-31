@@ -235,7 +235,7 @@
      ? (obj)->otyp == BANANA                                             \
      : (is_domestic(ptr) && (obj)->oclass == FOOD_CLASS                  \
         && (pm_get(ptr)->mlet != S_UNICORN                               \
-            || objects[(obj)->otyp].oc_material == VEGGY                 \
+            || oc_get(&objects[(obj)->otyp])->oc_material == VEGGY                 \
             || ((obj)->otyp == CORPSE && (obj)->corpsenm == PM_LICHEN))))
 
 #endif /* MONDATA_H */

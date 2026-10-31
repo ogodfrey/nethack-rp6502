@@ -2285,7 +2285,7 @@ int *seencount;  /* secondary output */
         /* if tipping known empty bag, give normal empty container message */
         pline1((tipping && bag->cknown) ? "It's empty." : nothing_happens);
         /* now known to be empty if sufficiently discovered */
-        if (bag->dknown && objects[bag->otyp].oc_name_known)
+        if (bag->dknown && oc_get(&objects[bag->otyp])->oc_name_known)
             bag->cknown = 1;
     } else {
         struct monst *mtmp;

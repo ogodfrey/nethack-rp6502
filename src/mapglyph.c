@@ -26,7 +26,7 @@ static const int explcolors[] = {
 
 #define zap_color(n) color = iflags.use_color ? zapcolors[n] : NO_COLOR
 #define cmap_color(n) color = iflags.use_color ? defsyms[n].color : NO_COLOR
-#define obj_color(n) color = iflags.use_color ? objects[n].oc_color : NO_COLOR
+#define obj_color(n) color = iflags.use_color ? oc_get(&objects[n])->oc_color : NO_COLOR
 #define mon_color(n) color = iflags.use_color ? pm_get(&mons[n])->mcolor : NO_COLOR
 #define invis_color(n) color = NO_COLOR
 #define pet_color(n) color = iflags.use_color ? pm_get(&mons[n])->mcolor : NO_COLOR
@@ -144,11 +144,11 @@ unsigned mgflags;
             cmap_color(offset);
         }
     } else if ((offset = (glyph - GLYPH_OBJ_OFF)) >= 0) { /* object */
-        idx = objects[offset].oc_class + SYM_OFF_O;
+        idx = oc_get(&objects[offset])->oc_class + SYM_OFF_O;
         if (offset == BOULDER)
             idx = SYM_BOULDER + SYM_OFF_X;
         if (has_rogue_color && iflags.use_color) {
-            switch (objects[offset].oc_class) {
+            switch (oc_get(&objects[offset])->oc_class) {
             case COIN_CLASS:
                 color = CLR_YELLOW;
                 break;
@@ -174,7 +174,7 @@ unsigned mgflags;
             mon_color(offset);
         special |= MG_RIDDEN;
     } else if ((offset = (glyph - GLYPH_BODY_OFF)) >= 0) { /* a corpse */
-        idx = objects[CORPSE].oc_class + SYM_OFF_O;
+        idx = oc_get(&objects[CORPSE])->oc_class + SYM_OFF_O;
         if (has_rogue_color && iflags.use_color)
             color = CLR_RED;
         else

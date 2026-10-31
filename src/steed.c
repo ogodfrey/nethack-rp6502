@@ -114,11 +114,11 @@ struct obj *otmp;
     }
     if (Confusion || Fumbling || Glib)
         chance -= 20;
-    else if (uarmg && (s = OBJ_DESCR(objects[uarmg->otyp])) != (char *) 0
+    else if (uarmg && (s = OBJ_DESCR(*oc_get(&objects[uarmg->otyp]))) != (char *) 0
              && !strncmp(s, "riding ", 7))
         /* Bonus for wearing "riding" (but not fumbling) gloves */
         chance += 10;
-    else if (uarmf && (s = OBJ_DESCR(objects[uarmf->otyp])) != (char *) 0
+    else if (uarmf && (s = OBJ_DESCR(*oc_get(&objects[uarmf->otyp]))) != (char *) 0
              && !strncmp(s, "riding ", 7))
         /* ... or for "riding boots" */
         chance += 10;

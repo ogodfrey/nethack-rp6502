@@ -480,7 +480,7 @@ struct obj *instr;
 
     /* if won't yield special effect, make sound of mundane counterpart */
     if (!do_spec || instr->spe <= 0)
-        while (objects[itmp.otyp].oc_magic) {
+        while (oc_get(&objects[itmp.otyp])->oc_magic) {
             itmp.otyp -= 1;
             mundane = TRUE;
         }

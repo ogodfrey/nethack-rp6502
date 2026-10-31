@@ -1348,9 +1348,9 @@ boolean
 objtyp_is_callable(i)
 int i;
 {
-    return (boolean) (objects[i].oc_uname
-                      || (OBJ_DESCR(objects[i])
-                          && index(callable, objects[i].oc_class)));
+    return (boolean) (oc_get(&objects[i])->oc_uname
+                      || (OBJ_DESCR(*oc_get(&objects[i]))
+                          && index(callable, oc_get(&objects[i])->oc_class)));
 }
 
 /* C and #name commands - player can name monster or object or type of obj */
@@ -1470,7 +1470,7 @@ struct obj *obj;
     else if (otemp.otyp == FIGURINE)
         otemp.corpsenm = NON_PM; /* suppress mon type */
     else if (otemp.otyp == HEAVY_IRON_BALL)
-        otemp.owt = objects[HEAVY_IRON_BALL].oc_weight; /* not "very heavy" */
+        otemp.owt = oc_get(&objects[HEAVY_IRON_BALL])->oc_weight; /* not "very heavy" */
     else if (otemp.oclass == FOOD_CLASS && otemp.globby)
         otemp.owt = 120; /* 6*20, neither a small glob nor a large one */
 
@@ -1482,7 +1482,7 @@ docall(obj)
 struct obj *obj;
 {
     char buf[BUFSZ], qbuf[QBUFSZ];
-    char **str1;
+    char *old_uname;
 
     if (!obj->dknown)
         return; /* probably blind */
@@ -1491,31 +1491,30 @@ struct obj *obj;
     if (obj->oclass == POTION_CLASS && obj->fromsink)
         /* kludge, meaning it's sink water */
         Sprintf(qbuf, "Call a stream of %s fluid:",
-                OBJ_DESCR(objects[obj->otyp]));
+                OBJ_DESCR(*oc_get(&objects[obj->otyp])));
     else
         (void) safe_qbuf(qbuf, "Call ", ":", obj,
                          docall_xname, simpleonames, "thing");
-    /* pointer to old name */
-    str1 = &(objects[obj->otyp].oc_uname);
+    old_uname = oc_get(&objects[obj->otyp])->oc_uname;
     /* use getlin() to get a name string from the player */
-    if (!name_from_player(buf, qbuf, *str1))
+    if (!name_from_player(buf, qbuf, old_uname))
         return;
 
     /* clear old name */
-    if (*str1)
-        free((genericptr_t) *str1);
+    if (old_uname)
+        free((genericptr_t) old_uname);
 
     /* strip leading and trailing spaces; uncalls item if all spaces */
     (void) mungspaces(buf);
     if (!*buf) {
-        if (*str1) { /* had name, so possibly remove from disco[] */
+        if (old_uname) { /* had name, so possibly remove from disco[] */
             /* strip name first, for the update_inventory() call
                from undiscover_object() */
-            *str1 = (char *) 0;
+            oc_set(&objects[obj->otyp], oc_uname, (char *) 0);
             undiscover_object(obj->otyp);
         }
     } else {
-        *str1 = dupstr(buf);
+        oc_set(&objects[obj->otyp], oc_uname, dupstr(buf));
         discover_object(obj->otyp, FALSE, TRUE); /* possibly add to disco[] */
     }
 }

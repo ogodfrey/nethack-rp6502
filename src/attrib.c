@@ -860,7 +860,7 @@ int propidx; /* special cases can have negative values */
                 Sprintf(buf, because_of,
                         ((HFast & TIMEOUT) != 0L) ? "a potion or spell"
                           : ((EFast & W_ARMF) != 0L && uarmf->dknown
-                             && objects[uarmf->otyp].oc_name_known)
+                             && oc_get(&objects[uarmf->otyp])->oc_name_known)
                               ? ysimple_name(uarmf) /* speed boots */
                                 : EFast ? "worn equipment"
                                   : something);

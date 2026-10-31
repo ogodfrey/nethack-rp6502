@@ -143,7 +143,7 @@ struct monst *mon;
         slotmask |= W_SWAPWEP;
     for (; o; o = o->nobj)
         if (((o->owornmask & slotmask) != 0L
-             && objects[o->otyp].oc_oprop == ANTIMAGIC)
+             && oc_get(&objects[o->otyp])->oc_oprop == ANTIMAGIC)
             || (o->oartifact && defends_when_carried(AD_MAGM, o)))
             return TRUE;
     return FALSE;
@@ -181,7 +181,7 @@ struct monst *mon;
         slotmask |= W_SWAPWEP;
     for (; o; o = o->nobj)
         if (((o->owornmask & slotmask) != 0L
-             && objects[o->otyp].oc_oprop == BLINDED)
+             && oc_get(&objects[o->otyp])->oc_oprop == BLINDED)
             || (o->oartifact && defends_when_carried(AD_BLND, o)))
             return TRUE;
     return FALSE;
@@ -268,7 +268,7 @@ struct obj *obj; /* aatyp == AT_WEAP, AT_SPIT */
         o = (mdef == &youmonst) ? invent : mdef->minvent;
         for (; o; o = o->nobj)
             if ((o->owornmask & W_ARMH)
-                && (s = OBJ_DESCR(objects[o->otyp])) != (char *) 0
+                && (s = OBJ_DESCR(*oc_get(&objects[o->otyp]))) != (char *) 0
                 && !strcmp(s, "visored helmet"))
                 return FALSE;
     }

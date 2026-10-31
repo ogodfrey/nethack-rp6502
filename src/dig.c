@@ -1049,7 +1049,7 @@ struct obj *obj;
         if (dam <= 0)
             dam = 1;
         You("hit yourself with %s.", yname(uwep));
-        Sprintf(buf, "%s own %s", uhis(), OBJ_NAME(objects[obj->otyp]));
+        Sprintf(buf, "%s own %s", uhis(), OBJ_NAME(*oc_get(&objects[obj->otyp])));
         losehp(Maybe_Half_Phys(dam), buf, KILLED_BY);
         context.botl = 1;
         return 1;

@@ -133,7 +133,7 @@ aligntyp alignment; /* target alignment, or A_NONE */
     int m, n, altn;
     boolean by_align = (alignment != A_NONE);
     short o_typ = (by_align || !otmp) ? 0 : otmp->otyp;
-    boolean unique = !by_align && otmp && objects[o_typ].oc_unique;
+    boolean unique = !by_align && otmp && oc_get(&objects[o_typ])->oc_unique;
     short eligible[NROFARTIFACTS];
 
     n = altn = 0;    /* no candidates found yet */
@@ -363,7 +363,7 @@ struct obj *obj;
     const struct artifact *arti;
 
     /* any silver object is effective */
-    if (objects[obj->otyp].oc_material == SILVER)
+    if (oc_get(&objects[obj->otyp])->oc_material == SILVER)
         return TRUE;
     /* non-silver artifacts with bonus against undead also are effective */
     arti = get_artifact(obj);
@@ -384,7 +384,7 @@ const char *name;
     register const struct artifact *a;
     const char *aname, *odesc, *other;
     boolean sametype[NUM_OBJECTS];
-    int i, lo, hi, otyp = otmp->otyp, ocls = objects[otyp].oc_class;
+    int i, lo, hi, otyp = otmp->otyp, ocls = oc_get(&objects[otyp])->oc_class;
 
     if (!*name)
         return FALSE;
@@ -398,14 +398,14 @@ const char *name;
        or share the same pool of shuffled descriptions */
     (void) memset((genericptr_t) sametype, 0, sizeof sametype); /* FALSE */
     sametype[otyp] = TRUE;
-    if (!objects[otyp].oc_name_known
-        && (odesc = OBJ_DESCR(objects[otyp])) != 0) {
+    if (!oc_get(&objects[otyp])->oc_name_known
+        && (odesc = OBJ_DESCR(*oc_get(&objects[otyp]))) != 0) {
         obj_shuffle_range(otyp, &lo, &hi);
         for (i = bases[ocls]; i < NUM_OBJECTS; i++) {
-            if (objects[i].oc_class != ocls)
+            if (oc_get(&objects[i])->oc_class != ocls)
                 break;
-            if (!objects[i].oc_name_known
-                && (other = OBJ_DESCR(objects[i])) != 0
+            if (!oc_get(&objects[i])->oc_name_known
+                && (other = OBJ_DESCR(*oc_get(&objects[i]))) != 0
                 && (!strcmp(odesc, other) || (i >= lo && i <= hi)))
                 sametype[i] = TRUE;
         }
@@ -474,7 +474,7 @@ boolean being_worn;
 {
     const struct artifact *arti;
 
-    if (being_worn && objects[otmp->otyp].oc_oprop == PROTECTION)
+    if (being_worn && oc_get(&objects[otmp->otyp])->oc_oprop == PROTECTION)
         return TRUE;
     arti = get_artifact(otmp);
     if (!arti)
@@ -719,7 +719,7 @@ struct monst *mon;
         touch_blasted = TRUE;
         dmg = d((Antimagic ? 2 : 4), (self_willed ? 10 : 4));
         /* add half (maybe quarter) of the usual silver damage bonus */
-        if (objects[obj->otyp].oc_material == SILVER && Hate_silver)
+        if (oc_get(&objects[obj->otyp])->oc_material == SILVER && Hate_silver)
             tmp = rnd(10), dmg += Maybe_Half_Phys(tmp);
         Sprintf(buf, "touching %s", oart->name);
         losehp(dmg, buf, KILLED_BY); /* magic damage, not physical */
@@ -1757,11 +1757,11 @@ arti_cost(otmp)
 struct obj *otmp;
 {
     if (!otmp->oartifact)
-        return (long) objects[otmp->otyp].oc_cost;
+        return (long) oc_get(&objects[otmp->otyp])->oc_cost;
     else if (artilist[(int) otmp->oartifact].cost)
         return artilist[(int) otmp->oartifact].cost;
     else
-        return (100L * (long) objects[otmp->otyp].oc_cost);
+        return (100L * (long) oc_get(&objects[otmp->otyp])->oc_cost);
 }
 
 STATIC_OVL uchar
@@ -1959,7 +1959,7 @@ boolean loseit;    /* whether to drop it if hero can longer touch it */
     if (touch_artifact(obj, &youmonst)) {
         char buf[BUFSZ];
         int dmg = 0, tmp;
-        boolean ag = (objects[obj->otyp].oc_material == SILVER && Hate_silver),
+        boolean ag = (oc_get(&objects[obj->otyp])->oc_material == SILVER && Hate_silver),
                 bane = bane_applies(get_artifact(obj), &youmonst);
 
         /* nothing else to do if hero can successfully handle this object */

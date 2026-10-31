@@ -540,7 +540,7 @@ dodrink()
     }
     otmp->in_use = TRUE; /* you've opened the stopper */
 
-    potion_descr = OBJ_DESCR(objects[otmp->otyp]);
+    potion_descr = OBJ_DESCR(*oc_get(&objects[otmp->otyp]));
     if (potion_descr) {
         if (!strcmp(potion_descr, "milky")
             && !(mvitals[PM_GHOST].mvflags & G_GONE)
@@ -575,11 +575,11 @@ register struct obj *otmp;
         You("have a %s feeling for a moment, then it passes.",
             Hallucination ? "normal" : "peculiar");
     }
-    if (otmp->dknown && !objects[otmp->otyp].oc_name_known) {
+    if (otmp->dknown && !oc_get(&objects[otmp->otyp])->oc_name_known) {
         if (!unkn) {
             makeknown(otmp->otyp);
             more_experienced(0, 10);
-        } else if (!objects[otmp->otyp].oc_uname)
+        } else if (!oc_get(&objects[otmp->otyp])->oc_uname)
             docall(otmp);
     }
     useup(otmp);
@@ -1204,8 +1204,8 @@ const char *txt;
     if (!obj) /* e.g., crystal ball finds no traps */
         return;
 
-    if (obj->dknown && !objects[obj->otyp].oc_name_known
-        && !objects[obj->otyp].oc_uname)
+    if (obj->dknown && !oc_get(&objects[obj->otyp])->oc_name_known
+        && !oc_get(&objects[obj->otyp])->oc_uname)
         docall(obj);
 
     useup(obj);
@@ -1587,8 +1587,8 @@ int how;
     if ((distance == 0 || (distance < 3 && rn2(5)))
         && (!breathless(youmonst.data) || haseyes(youmonst.data)))
         potionbreathe(obj);
-    else if (obj->dknown && !objects[obj->otyp].oc_name_known
-             && !objects[obj->otyp].oc_uname && cansee(tx, ty))
+    else if (obj->dknown && !oc_get(&objects[obj->otyp])->oc_name_known
+             && !oc_get(&objects[obj->otyp])->oc_uname && cansee(tx, ty))
         docall(obj);
 
     if (*u.ushops && obj->unpaid) {
@@ -1778,8 +1778,8 @@ register struct obj *obj;
     if (obj->dknown) {
         if (kn)
             makeknown(obj->otyp);
-        else if (!objects[obj->otyp].oc_name_known
-                 && !objects[obj->otyp].oc_uname)
+        else if (!oc_get(&objects[obj->otyp])->oc_name_known
+                 && !oc_get(&objects[obj->otyp])->oc_uname)
             docall(obj);
     }
 }
@@ -1999,8 +1999,8 @@ dodip()
 
         mixture = mixtype(obj, potion);
 
-        magic = (mixture != STRANGE_OBJECT) ? objects[mixture].oc_magic
-            : (objects[obj->otyp].oc_magic || objects[potion->otyp].oc_magic);
+        magic = (mixture != STRANGE_OBJECT) ? oc_get(&objects[mixture])->oc_magic
+            : (oc_get(&objects[obj->otyp])->oc_magic || oc_get(&objects[potion->otyp])->oc_magic);
         Strcpy(qbuf, "The"); /* assume full stack */
         if (amt > (magic ? 3 : 7)) {
             /* trying to dip multiple potions will usually affect only a
@@ -2076,7 +2076,7 @@ dodip()
             pline_The("mixture bubbles%s.", Blind ? "" : ", then clears");
         } else if (!Blind) {
             pline_The("mixture looks %s.",
-                      hcolor(OBJ_DESCR(objects[obj->otyp])));
+                      hcolor(OBJ_DESCR(*oc_get(&objects[obj->otyp]))));
         }
 
         /* this is required when 'obj' was split off from a bigger stack,
@@ -2099,8 +2099,8 @@ dodip()
                                      : hcolor(NH_RED));
         potion->in_use = FALSE; /* didn't go poof */
         if (potion->dknown
-            && !objects[potion->otyp].oc_name_known
-            && !objects[potion->otyp].oc_uname)
+            && !oc_get(&objects[potion->otyp])->oc_name_known
+            && !oc_get(&objects[potion->otyp])->oc_uname)
             docall(potion);
         return 1;
     }
@@ -2228,7 +2228,7 @@ dodip()
         oldbuf[0] = '\0';
         if (potion->dknown) {
             old_dknown = TRUE;
-            Sprintf(oldbuf, "%s ", hcolor(OBJ_DESCR(objects[potion->otyp])));
+            Sprintf(oldbuf, "%s ", hcolor(OBJ_DESCR(*oc_get(&objects[potion->otyp]))));
         }
         /* with multiple merged potions, split off one and
            just clear it */
@@ -2254,7 +2254,7 @@ dodip()
                 Sprintf(newbuf, "clears");
             else if (!Blind)
                 Sprintf(newbuf, "turns %s",
-                        hcolor(OBJ_DESCR(objects[mixture])));
+                        hcolor(OBJ_DESCR(*oc_get(&objects[mixture]))));
             if (*newbuf)
                 pline_The("%spotion%s %s.", oldbuf,
                           more_than_one ? " that you dipped into" : "",
@@ -2263,8 +2263,8 @@ dodip()
                 pline("Something happens.");
 
             if (old_dknown
-                && !objects[old_otyp].oc_name_known
-                && !objects[old_otyp].oc_uname) {
+                && !oc_get(&objects[old_otyp])->oc_name_known
+                && !oc_get(&objects[old_otyp])->oc_uname) {
                 struct obj fakeobj;
 
                 fakeobj = zeroobj;
@@ -2289,8 +2289,8 @@ dodip()
 
  poof:
     if (potion->dknown
-        && !objects[potion->otyp].oc_name_known
-        && !objects[potion->otyp].oc_uname)
+        && !oc_get(&objects[potion->otyp])->oc_name_known
+        && !oc_get(&objects[potion->otyp])->oc_uname)
         docall(potion);
     useup(potion);
     return 1;

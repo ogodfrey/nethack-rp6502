@@ -85,7 +85,7 @@ register struct obj *obj;
 {
     /* protect invocation tools but not Rider corpses (handled elsewhere)*/
     /* if (obj->oclass != FOOD_CLASS && obj_resists(obj, 0, 0)) */
-    if (objects[obj->otyp].oc_unique)
+    if (oc_get(&objects[obj->otyp])->oc_unique)
         return FALSE;
     /* above also prevents the Amulet from being eaten, so we must never
        allow fake amulets to be eaten either [which is already the case] */
@@ -318,7 +318,7 @@ struct obj *otmp;
 {
     unsigned nut = (otmp->otyp == CORPSE) ? pm_get(&mons[otmp->corpsenm])->cnutrit
                       : otmp->globby ? otmp->owt
-                         : (unsigned) objects[otmp->otyp].oc_nutrition;
+                         : (unsigned) oc_get(&objects[otmp->otyp])->oc_nutrition;
 
     if (otmp->otyp == LEMBAS_WAFER) {
         if (maybe_polyd(is_elf(youmonst.data), Race_if(PM_ELF)))
@@ -328,7 +328,7 @@ struct obj *otmp;
         /* prevent polymorph making a partly eaten wafer
            become more nutritious than an untouched one */
         if (otmp->oeaten >= nut)
-            otmp->oeaten = (otmp->oeaten < objects[LEMBAS_WAFER].oc_nutrition)
+            otmp->oeaten = (otmp->oeaten < oc_get(&objects[LEMBAS_WAFER])->oc_nutrition)
                               ? (nut - 1) : nut;
     } else if (otmp->otyp == CRAM_RATION) {
         if (maybe_polyd(is_dwarf(youmonst.data), Race_if(PM_DWARF)))
@@ -1738,7 +1738,7 @@ boolean already_partly_eaten;
                 fmt_ptr((genericptr_t) otmp),
                 fmt_ptr((genericptr_t) context.victual.piece));
     debugpline1("reqtime = %d", context.victual.reqtime);
-    debugpline1("(original reqtime = %d)", objects[otmp->otyp].oc_delay);
+    debugpline1("(original reqtime = %d)", oc_get(&objects[otmp->otyp])->oc_delay);
     debugpline1("nmod = %d", context.victual.nmod);
     debugpline1("oeaten = %d", otmp->oeaten);
     context.victual.fullwarn = context.victual.doreset = FALSE;
@@ -1949,7 +1949,7 @@ struct obj *otmp;
 
     /* Note: rings are not so common that this is unbalancing. */
     /* (How often do you even _find_ 3 rings of polymorph in a game?) */
-    oldprop = u.uprops[objects[typ].oc_oprop].intrinsic;
+    oldprop = u.uprops[oc_get(&objects[typ])->oc_oprop].intrinsic;
     if (otmp == uleft || otmp == uright) {
         Ring_gone(otmp);
         if (u.uhp <= 0)
@@ -1959,13 +1959,13 @@ struct obj *otmp;
     if (!rn2(otmp->oclass == RING_CLASS ? 3 : 5)) {
         switch (otmp->otyp) {
         default:
-            if (!objects[typ].oc_oprop)
+            if (!oc_get(&objects[typ])->oc_oprop)
                 break; /* should never happen */
 
-            if (!(u.uprops[objects[typ].oc_oprop].intrinsic & FROMOUTSIDE))
+            if (!(u.uprops[oc_get(&objects[typ])->oc_oprop].intrinsic & FROMOUTSIDE))
                 accessory_has_effect(otmp);
 
-            u.uprops[objects[typ].oc_oprop].intrinsic |= FROMOUTSIDE;
+            u.uprops[oc_get(&objects[typ])->oc_oprop].intrinsic |= FROMOUTSIDE;
 
             switch (typ) {
             case RIN_SEE_INVISIBLE:
@@ -2105,7 +2105,7 @@ eatspecial()
         vault_gd_watching(GD_EATGOLD);
         return;
     }
-    if (objects[otmp->otyp].oc_material == PAPER) {
+    if (oc_get(&objects[otmp->otyp])->oc_material == PAPER) {
 #ifdef MAIL
         if (otmp->otyp == SCR_MAIL)
             /* no nutrition */
@@ -2117,7 +2117,7 @@ eatspecial()
             pline("Yuck%c", otmp->blessed ? '!' : '.');
         else if (otmp->oclass == SCROLL_CLASS
                  /* check description after checking for specific scrolls */
-                 && !strcmpi(OBJ_DESCR(objects[otmp->otyp]), "YUM YUM"))
+                 && !strcmpi(OBJ_DESCR(*oc_get(&objects[otmp->otyp])), "YUM YUM"))
             pline("Yum%c", otmp->blessed ? '!' : '.');
         else
             pline("Needs salt...");
@@ -2176,10 +2176,10 @@ struct obj *otmp;
 {
     if (otmp->oclass == FOOD_CLASS)
         return "food";
-    if (otmp->oclass == GEM_CLASS && objects[otmp->otyp].oc_material == GLASS
+    if (otmp->oclass == GEM_CLASS && oc_get(&objects[otmp->otyp])->oc_material == GLASS
         && otmp->dknown)
         makeknown(otmp->otyp);
-    return foodwords[objects[otmp->otyp].oc_material];
+    return foodwords[oc_get(&objects[otmp->otyp])->oc_material];
 }
 
 /* called after consuming (non-corpse) food */
@@ -2277,7 +2277,7 @@ STATIC_OVL boolean
 leather_cover(otmp)
 struct obj *otmp;
 {
-    const char *odesc = OBJ_DESCR(objects[otmp->otyp]);
+    const char *odesc = OBJ_DESCR(*oc_get(&objects[otmp->otyp]));
 
     if (odesc && (otmp->oclass == SPBOOK_CLASS)) {
         if (!strcmp(odesc, "leather"))
@@ -2304,7 +2304,7 @@ struct obj *otmp;
          it_or_they[QBUFSZ], eat_it_anyway[QBUFSZ];
     boolean cadaver = (otmp->otyp == CORPSE || otmp->globby),
             stoneorslime = FALSE;
-    int material = objects[otmp->otyp].oc_material, mnum = otmp->corpsenm;
+    int material = oc_get(&objects[otmp->otyp])->oc_material, mnum = otmp->corpsenm;
     long rotted = 0L;
 
     Strcpy(foodsmell, Tobjnam(otmp, "smell"));
@@ -2527,8 +2527,8 @@ doeat()
     if (otmp->otyp == RIN_SLOW_DIGESTION) {
         pline("This ring is indigestible!");
         (void) rottenfood(otmp);
-        if (otmp->dknown && !objects[otmp->otyp].oc_name_known
-            && !objects[otmp->otyp].oc_uname)
+        if (otmp->dknown && !oc_get(&objects[otmp->otyp])->oc_name_known
+            && !oc_get(&objects[otmp->otyp])->oc_uname)
             docall(otmp);
         return 1;
     }
@@ -2551,7 +2551,7 @@ doeat()
             basenutrit = weight(otmp);
         /* oc_nutrition is usually weight anyway */
         else
-            basenutrit = objects[otmp->otyp].oc_nutrition;
+            basenutrit = oc_get(&objects[otmp->otyp])->oc_nutrition;
 #ifdef MAIL
         if (otmp->otyp == SCR_MAIL) {
             basenutrit = 0;
@@ -2561,7 +2561,7 @@ doeat()
         context.victual.nmod = basenutrit;
         context.victual.eating = TRUE; /* needed for lesshungry() */
 
-        material = objects[otmp->otyp].oc_material;
+        material = oc_get(&objects[otmp->otyp])->oc_material;
         if (material == LEATHER || material == BONE
             || material == DRAGON_HIDE) {
             u.uconduct.unvegan++;
@@ -2573,7 +2573,7 @@ doeat()
         if (otmp->cursed) {
             (void) rottenfood(otmp);
             nodelicious = TRUE;
-        } else if (objects[otmp->otyp].oc_material == PAPER)
+        } else if (oc_get(&objects[otmp->otyp])->oc_material == PAPER)
             nodelicious = TRUE;
 
         if (otmp->oclass == WEAPON_CLASS && otmp->opoisoned) {
@@ -2654,7 +2654,7 @@ doeat()
         /* No checks for WAX, LEATHER, BONE, DRAGON_HIDE.  These are
          * all handled in the != FOOD_CLASS case, above.
          */
-        switch (objects[otmp->otyp].oc_material) {
+        switch (oc_get(&objects[otmp->otyp])->oc_material) {
         case FLESH:
             u.uconduct.unvegan++;
             if (otmp->otyp != EGG) {
@@ -2670,7 +2670,7 @@ doeat()
             break;
         }
 
-        context.victual.reqtime = objects[otmp->otyp].oc_delay;
+        context.victual.reqtime = oc_get(&objects[otmp->otyp])->oc_delay;
         if (otmp->otyp != FORTUNE_COOKIE
             && (otmp->cursed || (!nonrotting_food(otmp->otyp)
                                  && (monstermoves - otmp->age)
@@ -2820,7 +2820,7 @@ gethungry()
            Slow digestion cancels move hunger but still causes ring hunger. */
         switch ((int) (moves % 20)) { /* note: use even cases only */
         case 4:
-            if (uleft && (uleft->spe || !objects[uleft->otyp].oc_charged))
+            if (uleft && (uleft->spe || !oc_get(&objects[uleft->otyp])->oc_charged))
                 u.uhunger--;
             break;
         case 8:
@@ -2828,7 +2828,7 @@ gethungry()
                 u.uhunger--;
             break;
         case 12:
-            if (uright && (uright->spe || !objects[uright->otyp].oc_charged))
+            if (uright && (uright->spe || !oc_get(&objects[uright->otyp])->oc_charged))
                 u.uhunger--;
             break;
         case 16:
