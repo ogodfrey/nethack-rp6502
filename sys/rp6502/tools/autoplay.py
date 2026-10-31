@@ -75,12 +75,15 @@ def main():
     tail = b''
     sent = 0
     while True:
+        idle = False
         try:
             data = child.read_nonblocking(65536, timeout=0.3)
             tail = (tail + ANSI.sub(b'', data))[-600:]
             continue
         except pexpect.TIMEOUT:
-            pass
+            # No output for a while: the game is waiting for a key, so a
+            # prompt in the tail should be answered even if text follows it.
+            idle = True
         except pexpect.EOF:
             break
         reply = None
@@ -88,7 +91,7 @@ def main():
             m = None
             for m in re.finditer(pat, tail):
                 pass
-            if m and not tail[m.end():].strip(b' \r\n'):
+            if m and (idle or not tail[m.end():].strip(b' \r\n')):
                 if ans is None:
                     ans = rnd.choice(MOVES + ('y' if b'[y' in pat else ''))
                     if b'[yn' in m.group(0):

@@ -223,10 +223,12 @@ instrumented host game. The profiler currently uses Linux/glibc facilities;
 then run
 `python3 ../../sys/rp6502/tools/cgreport.py ./nethack game.cgprof > callgraph.tsv`.
 Repeat with varied seeds and play styles. The profiler appends and writes at
-normal exit; use fresh output for each rebuilt executable. Autoplay can stall,
-so check its exit status and the resulting profile rather than assuming a
-timed-out run succeeded. Raw keyboard polling dominated the earlier call
-counts, so account for that when using the graph to choose overlays.
+normal exit; use fresh output for each rebuilt executable. Autoplay used to
+stall when the game sat at a prompt whose text had output after it; it now
+answers a prompt once output has been idle, so check its exit status and the
+resulting profile rather than assuming a timed-out run succeeded. Raw keyboard
+polling dominated the earlier call counts, so account for that when using the
+graph to choose overlays.
 
 The prior machine's `build/hostprof/callgraph.tsv`, raw `cgprof.out`,
 `build/mos/` assembly, statistics and helper scripts, and `/tmp/ot/` test
