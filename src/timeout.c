@@ -282,7 +282,7 @@ levitation_dialogue()
     if (ELevitation)
         return;
 
-    if (!ACCESSIBLE(levl[u.ux][u.uy].typ)
+    if (!ACCESSIBLE(lev_get(u.ux, u.uy).typ)
         && !is_pool_or_lava(u.ux,u.uy))
         return;
 
@@ -1596,7 +1596,7 @@ do_storms()
         do {
             x = rnd(COLNO - 1);
             y = rn2(ROWNO);
-        } while (++count < 100 && levl[x][y].typ != CLOUD);
+        } while (++count < 100 && lev_get(x, y).typ != CLOUD);
 
         if (count < 100) {
             dirx = rn2(3) - 1;
@@ -1607,7 +1607,7 @@ do_storms()
         }
     }
 
-    if (levl[u.ux][u.uy].typ == CLOUD) {
+    if (lev_get(u.ux, u.uy).typ == CLOUD) {
         /* Inside a cloud during a thunder storm is deafening. */
         /* Even if already deaf, we sense the thunder's vibrations. */
         pline("Kaboom!!!  Boom!!  Boom!!");

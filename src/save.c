@@ -583,26 +583,26 @@ int fd;
 boolean rlecomp;
 {
 #ifdef RLECOMP
-    struct rm *prm, *rgrm;
+    struct rm prm, rgrm;
     int x, y;
     uchar match;
 
     if (rlecomp) {
         /* perform run-length encoding of rm structs */
 
-        rgrm = &levl[0][0]; /* start matching at first rm */
+        rgrm = lev_get(0, 0); /* start matching at first rm */
         match = 0;
 
         for (y = 0; y < ROWNO; y++) {
             for (x = 0; x < COLNO; x++) {
-                prm = &levl[x][y];
-                if (prm->glyph == rgrm->glyph && prm->typ == rgrm->typ
-                    && prm->seenv == rgrm->seenv
-                    && prm->horizontal == rgrm->horizontal
-                    && prm->flags == rgrm->flags && prm->lit == rgrm->lit
-                    && prm->waslit == rgrm->waslit
-                    && prm->roomno == rgrm->roomno && prm->edge == rgrm->edge
-                    && prm->candig == rgrm->candig) {
+                prm = lev_get(x, y);
+                if (prm.glyph == rgrm.glyph && prm.typ == rgrm.typ
+                    && prm.seenv == rgrm.seenv
+                    && prm.horizontal == rgrm.horizontal
+                    && prm.flags == rgrm.flags && prm.lit == rgrm.lit
+                    && prm.waslit == rgrm.waslit
+                    && prm.roomno == rgrm.roomno && prm.edge == rgrm.edge
+                    && prm.candig == rgrm.candig) {
                     match++;
                     if (match > 254) {
                         match = 254; /* undo this match */
@@ -612,7 +612,7 @@ boolean rlecomp;
                     /* run has been broken, write out run-length encoding */
  writeout:
                     bwrite(fd, (genericptr_t) &match, sizeof (uchar));
-                    bwrite(fd, (genericptr_t) rgrm, sizeof (struct rm));
+                    bwrite(fd, (genericptr_t) &rgrm, sizeof (struct rm));
                     /* start encoding again. we have at least 1 rm
                        in the next run, viz. this one. */
                     match = 1;
@@ -622,14 +622,24 @@ boolean rlecomp;
         }
         if (match > 0) {
             bwrite(fd, (genericptr_t) &match, sizeof (uchar));
-            bwrite(fd, (genericptr_t) rgrm, sizeof (struct rm));
+            bwrite(fd, (genericptr_t) &rgrm, sizeof (struct rm));
         }
         return;
     }
 #else /* !RLECOMP */
     nhUse(rlecomp);
 #endif /* ?RLECOMP */
-    bwrite(fd, (genericptr_t) levl, sizeof levl);
+    {
+        /* one column at a time: the same bytes as the whole array */
+        struct rm col[ROWNO];
+        int x, y;
+
+        for (x = 0; x < COLNO; x++) {
+            for (y = 0; y < ROWNO; y++)
+                col[y] = lev_get(x, y);
+            bwrite(fd, (genericptr_t) col, sizeof col);
+        }
+    }
 }
 
 /*ARGSUSED*/

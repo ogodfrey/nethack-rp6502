@@ -33,7 +33,7 @@ schar bg_typ;
 
     for (i = 1; i < COLNO; i++)
         for (j = 0; j < ROWNO; j++)
-            levl[i][j].typ = bg_typ;
+            ({ int _lv = (bg_typ); int _lx = (i), _ly = (j); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
 }
 
 STATIC_OVL void
@@ -48,8 +48,8 @@ schar bg_typ, fg_typ;
     while (count < limit) {
         i = rn1(WIDTH - 1, 2);
         j = rnd(HEIGHT - 1);
-        if (levl[i][j].typ == bg_typ) {
-            levl[i][j].typ = fg_typ;
+        if (lev_get(i, j).typ == bg_typ) {
+            ({ int _lv = (fg_typ); int _lx = (i), _ly = (j); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
             count++;
         }
     }
@@ -62,7 +62,7 @@ schar bg_typ;
 {
     if (col <= 0 || row < 0 || col > WIDTH || row >= HEIGHT)
         return bg_typ;
-    return levl[col][row].typ;
+    return lev_get(col, row).typ;
 }
 
 static int dirs[16] = { -1, -1 /**/, -1, 0 /**/,  -1, 1 /**/, 0, -1 /**/,
@@ -86,13 +86,13 @@ schar bg_typ, fg_typ;
             case 0: /* death */
             case 1:
             case 2:
-                levl[i][j].typ = bg_typ;
+                ({ int _lv = (bg_typ); int _lx = (i), _ly = (j); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
                 break;
             case 5:
             case 6:
             case 7:
             case 8:
-                levl[i][j].typ = fg_typ;
+                ({ int _lv = (fg_typ); int _lx = (i), _ly = (j); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
                 break;
             default:
                 break;
@@ -123,7 +123,7 @@ schar bg_typ, fg_typ;
 
     for (i = 2; i <= WIDTH; i++)
         for (j = 1; j < HEIGHT; j++)
-            levl[i][j].typ = new_loc(i, j);
+            ({ int _lv = (new_loc(i, j)); int _lx = (i), _ly = (j); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
 }
 
 STATIC_OVL void
@@ -147,7 +147,7 @@ schar bg_typ, fg_typ;
 
     for (i = 2; i <= WIDTH; i++)
         for (j = 1; j < HEIGHT; j++)
-            levl[i][j].typ = new_loc(i, j);
+            ({ int _lv = (new_loc(i, j)); int _lx = (i), _ly = (j); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
 }
 
 /*
@@ -166,12 +166,12 @@ boolean anyroom;
 {
     register int i;
     int nx;
-    schar fg_typ = levl[sx][sy].typ;
+    schar fg_typ = lev_get(sx, sy).typ;
 
     /* back up to find leftmost uninitialized location */
-    while (sx > 0 && (anyroom ? IS_ROOM(levl[sx][sy].typ)
-                              : levl[sx][sy].typ == fg_typ)
-           && (int) levl[sx][sy].roomno != rmno)
+    while (sx > 0 && (anyroom ? IS_ROOM(lev_get(sx, sy).typ)
+                              : lev_get(sx, sy).typ == fg_typ)
+           && (int) lev_get(sx, sy).roomno != rmno)
         sx--;
     sx++; /* compensate for extra decrement */
 
@@ -181,22 +181,22 @@ boolean anyroom;
     if (sy < min_ry)
         min_ry = sy;
 
-    for (i = sx; i <= WIDTH && levl[i][sy].typ == fg_typ; i++) {
-        levl[i][sy].roomno = rmno;
-        levl[i][sy].lit = lit;
+    for (i = sx; i <= WIDTH && lev_get(i, sy).typ == fg_typ; i++) {
+        ({ int _lv = (rmno); int _lx = (i), _ly = (sy); struct rm _lr = lev_get(_lx, _ly); _lr.roomno = _lv; lev_put(_lx, _ly, _lr); _lr.roomno; });
+        ({ int _lv = (lit); int _lx = (i), _ly = (sy); struct rm _lr = lev_get(_lx, _ly); _lr.lit = _lv; lev_put(_lx, _ly, _lr); _lr.lit; });
         if (anyroom) {
             /* add walls to room as well */
             register int ii, jj;
             for (ii = (i == sx ? i - 1 : i); ii <= i + 1; ii++)
                 for (jj = sy - 1; jj <= sy + 1; jj++)
-                    if (isok(ii, jj) && (IS_WALL(levl[ii][jj].typ)
-                                         || IS_DOOR(levl[ii][jj].typ)
-                                         || levl[ii][jj].typ == SDOOR)) {
-                        levl[ii][jj].edge = 1;
+                    if (isok(ii, jj) && (IS_WALL(lev_get(ii, jj).typ)
+                                         || IS_DOOR(lev_get(ii, jj).typ)
+                                         || lev_get(ii, jj).typ == SDOOR)) {
+                        ({ int _lv = (1); int _lx = (ii), _ly = (jj); struct rm _lr = lev_get(_lx, _ly); _lr.edge = _lv; lev_put(_lx, _ly, _lr); _lr.edge; });
                         if (lit)
-                            levl[ii][jj].lit = lit;
-                        if ((int) levl[ii][jj].roomno != rmno)
-                            levl[ii][jj].roomno = SHARED;
+                            ({ int _lv = (lit); int _lx = (ii), _ly = (jj); struct rm _lr = lev_get(_lx, _ly); _lr.lit = _lv; lev_put(_lx, _ly, _lr); _lr.lit; });
+                        if ((int) lev_get(ii, jj).roomno != rmno)
+                            ({ int _lv = (SHARED); int _lx = (ii), _ly = (jj); struct rm _lr = lev_get(_lx, _ly); _lr.roomno = _lv; lev_put(_lx, _ly, _lr); _lr.roomno; });
                     }
         }
         n_loc_filled++;
@@ -205,36 +205,36 @@ boolean anyroom;
 
     if (isok(sx, sy - 1)) {
         for (i = sx; i < nx; i++)
-            if (levl[i][sy - 1].typ == fg_typ) {
-                if ((int) levl[i][sy - 1].roomno != rmno)
+            if (lev_get(i, sy - 1).typ == fg_typ) {
+                if ((int) lev_get(i, sy - 1).roomno != rmno)
                     flood_fill_rm(i, sy - 1, rmno, lit, anyroom);
             } else {
                 if ((i > sx || isok(i - 1, sy - 1))
-                    && levl[i - 1][sy - 1].typ == fg_typ) {
-                    if ((int) levl[i - 1][sy - 1].roomno != rmno)
+                    && lev_get(i - 1, sy - 1).typ == fg_typ) {
+                    if ((int) lev_get(i - 1, sy - 1).roomno != rmno)
                         flood_fill_rm(i - 1, sy - 1, rmno, lit, anyroom);
                 }
                 if ((i < nx - 1 || isok(i + 1, sy - 1))
-                    && levl[i + 1][sy - 1].typ == fg_typ) {
-                    if ((int) levl[i + 1][sy - 1].roomno != rmno)
+                    && lev_get(i + 1, sy - 1).typ == fg_typ) {
+                    if ((int) lev_get(i + 1, sy - 1).roomno != rmno)
                         flood_fill_rm(i + 1, sy - 1, rmno, lit, anyroom);
                 }
             }
     }
     if (isok(sx, sy + 1)) {
         for (i = sx; i < nx; i++)
-            if (levl[i][sy + 1].typ == fg_typ) {
-                if ((int) levl[i][sy + 1].roomno != rmno)
+            if (lev_get(i, sy + 1).typ == fg_typ) {
+                if ((int) lev_get(i, sy + 1).roomno != rmno)
                     flood_fill_rm(i, sy + 1, rmno, lit, anyroom);
             } else {
                 if ((i > sx || isok(i - 1, sy + 1))
-                    && levl[i - 1][sy + 1].typ == fg_typ) {
-                    if ((int) levl[i - 1][sy + 1].roomno != rmno)
+                    && lev_get(i - 1, sy + 1).typ == fg_typ) {
+                    if ((int) lev_get(i - 1, sy + 1).roomno != rmno)
                         flood_fill_rm(i - 1, sy + 1, rmno, lit, anyroom);
                 }
                 if ((i < nx - 1 || isok(i + 1, sy + 1))
-                    && levl[i + 1][sy + 1].typ == fg_typ) {
-                    if ((int) levl[i + 1][sy + 1].roomno != rmno)
+                    && lev_get(i + 1, sy + 1).typ == fg_typ) {
+                    if ((int) lev_get(i + 1, sy + 1).roomno != rmno)
                         flood_fill_rm(i + 1, sy + 1, rmno, lit, anyroom);
                 }
             }
@@ -257,14 +257,14 @@ wallify_map()
 
     for (x = 1; x < COLNO; x++)
         for (y = 0; y < ROWNO; y++)
-            if (levl[x][y].typ == STONE) {
+            if (lev_get(x, y).typ == STONE) {
                 for (yy = y - 1; yy <= y + 1; yy++)
                     for (xx = x - 1; xx <= x + 1; xx++)
-                        if (isok(xx, yy) && levl[xx][yy].typ == ROOM) {
+                        if (isok(xx, yy) && lev_get(xx, yy).typ == ROOM) {
                             if (yy != y)
-                                levl[x][y].typ = HWALL;
+                                ({ int _lv = (HWALL); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
                             else
-                                levl[x][y].typ = VWALL;
+                                ({ int _lv = (VWALL); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
                         }
             }
 }
@@ -283,7 +283,7 @@ schar bg_typ, fg_typ;
      */
     for (i = 2; i <= WIDTH; i++)
         for (j = 1; j < HEIGHT; j++) {
-            if (levl[i][j].typ == fg_typ && levl[i][j].roomno == NO_ROOM) {
+            if (lev_get(i, j).typ == fg_typ && lev_get(i, j).roomno == NO_ROOM) {
                 min_rx = max_rx = i;
                 min_ry = max_ry = j;
                 n_loc_filled = 0;
@@ -301,10 +301,10 @@ schar bg_typ, fg_typ;
                      */
                     for (sx = min_rx; sx <= max_rx; sx++)
                         for (sy = min_ry; sy <= max_ry; sy++)
-                            if ((int) levl[sx][sy].roomno
+                            if ((int) lev_get(sx, sy).roomno
                                 == nroom + ROOMOFFSET) {
-                                levl[sx][sy].typ = bg_typ;
-                                levl[sx][sy].roomno = NO_ROOM;
+                                ({ int _lv = (bg_typ); int _lx = (sx), _ly = (sy); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
+                                ({ int _lv = (NO_ROOM); int _lx = (sx), _ly = (sy); struct rm _lr = lev_get(_lx, _ly); _lr.roomno = _lv; lev_put(_lx, _ly, _lr); _lr.roomno; });
                             }
                 }
             }
@@ -355,11 +355,11 @@ boolean lit, walled, icedpools;
     if (lit) {
         for (i = 1; i < COLNO; i++)
             for (j = 0; j < ROWNO; j++)
-                if ((!IS_ROCK(fg_typ) && levl[i][j].typ == fg_typ)
-                    || (!IS_ROCK(bg_typ) && levl[i][j].typ == bg_typ)
-                    || (bg_typ == TREE && levl[i][j].typ == bg_typ)
-                    || (walled && IS_WALL(levl[i][j].typ)))
-                    levl[i][j].lit = TRUE;
+                if ((!IS_ROCK(fg_typ) && lev_get(i, j).typ == fg_typ)
+                    || (!IS_ROCK(bg_typ) && lev_get(i, j).typ == bg_typ)
+                    || (bg_typ == TREE && lev_get(i, j).typ == bg_typ)
+                    || (walled && IS_WALL(lev_get(i, j).typ)))
+                    ({ int _lv = (TRUE); int _lx = (i), _ly = (j); struct rm _lr = lev_get(_lx, _ly); _lr.lit = _lv; lev_put(_lx, _ly, _lr); _lr.lit; });
         for (i = 0; i < nroom; i++)
             rooms[i].rlit = 1;
     }
@@ -367,10 +367,10 @@ boolean lit, walled, icedpools;
        ice might be frozen pool rather than frozen moat */
     for (i = 1; i < COLNO; i++)
         for (j = 0; j < ROWNO; j++) {
-            if (levl[i][j].typ == LAVAPOOL)
-                levl[i][j].lit = TRUE;
-            else if (levl[i][j].typ == ICE)
-                levl[i][j].icedpool = icedpools ? ICED_POOL : ICED_MOAT;
+            if (lev_get(i, j).typ == LAVAPOOL)
+                ({ int _lv = (TRUE); int _lx = (i), _ly = (j); struct rm _lr = lev_get(_lx, _ly); _lr.lit = _lv; lev_put(_lx, _ly, _lr); _lr.lit; });
+            else if (lev_get(i, j).typ == ICE)
+                ({ int _lv = (icedpools ? ICED_POOL : ICED_MOAT); int _lx = (i), _ly = (j); struct rm _lr = lev_get(_lx, _ly); _lr.icedpool = _lv; lev_put(_lx, _ly, _lr); _lr.icedpool; });
         }
 }
 
@@ -436,8 +436,8 @@ unsigned roomno;
         roomno += ROOMOFFSET;
         for (i = croom->lx; i <= croom->hx; ++i)
             for (j = croom->ly; j <= croom->hy; ++j) {
-                if (levl[i][j].roomno == oroomno)
-                    levl[i][j].roomno = roomno;
+                if (lev_get(i, j).roomno == oroomno)
+                    ({ int _lv = (roomno); int _lx = (i), _ly = (j); struct rm _lr = lev_get(_lx, _ly); _lr.roomno = _lv; lev_put(_lx, _ly, _lr); _lr.roomno; });
             }
     }
 

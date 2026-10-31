@@ -70,10 +70,10 @@ int x, y, dir;
             fromy = r[x][y].rly + r[x][y].dy;
             fromx += 1 + 26 * x;
             fromy += 7 * y;
-            if (!IS_WALL(levl[fromx][fromy].typ))
+            if (!IS_WALL(lev_get(fromx, fromy).typ))
                 impossible("down: no wall at %d,%d?", fromx, fromy);
             dodoor(fromx, fromy, &rooms[r[x][y].nroom]);
-            levl[fromx][fromy].doormask = D_NODOOR;
+            ({ int _lv = (D_NODOOR); int _lx = (fromx), _ly = (fromy); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
             fromy++;
         }
         if (y >= 2) {
@@ -92,10 +92,10 @@ int x, y, dir;
             toy = r[x][y].rly - 1;
             tox += 1 + 26 * x;
             toy += 7 * y;
-            if (!IS_WALL(levl[tox][toy].typ))
+            if (!IS_WALL(lev_get(tox, toy).typ))
                 impossible("up: no wall at %d,%d?", tox, toy);
             dodoor(tox, toy, &rooms[r[x][y].nroom]);
-            levl[tox][toy].doormask = D_NODOOR;
+            ({ int _lv = (D_NODOOR); int _lx = (tox), _ly = (toy); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
             toy--;
         }
         roguejoin(fromx, fromy, tox, toy, FALSE);
@@ -112,10 +112,10 @@ int x, y, dir;
             fromy = r[x][y].rly + rn2(r[x][y].dy);
             fromx += 1 + 26 * x;
             fromy += 7 * y;
-            if (!IS_WALL(levl[fromx][fromy].typ))
+            if (!IS_WALL(lev_get(fromx, fromy).typ))
                 impossible("down: no wall at %d,%d?", fromx, fromy);
             dodoor(fromx, fromy, &rooms[r[x][y].nroom]);
-            levl[fromx][fromy].doormask = D_NODOOR;
+            ({ int _lv = (D_NODOOR); int _lx = (fromx), _ly = (fromy); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
             fromx++;
         }
         if (x >= 2) {
@@ -134,10 +134,10 @@ int x, y, dir;
             toy = r[x][y].rly + rn2(r[x][y].dy);
             tox += 1 + 26 * x;
             toy += 7 * y;
-            if (!IS_WALL(levl[tox][toy].typ))
+            if (!IS_WALL(lev_get(tox, toy).typ))
                 impossible("left: no wall at %d,%d?", tox, toy);
             dodoor(tox, toy, &rooms[r[x][y].nroom]);
-            levl[tox][toy].doormask = D_NODOOR;
+            ({ int _lv = (D_NODOOR); int _lx = (tox), _ly = (toy); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
             tox--;
         }
         roguejoin(fromx, fromy, tox, toy, TRUE);
@@ -291,9 +291,9 @@ corr(x, y)
 int x, y;
 {
     if (rn2(50)) {
-        levl[x][y].typ = CORR;
+        ({ int _lv = (CORR); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
     } else {
-        levl[x][y].typ = SCORR;
+        ({ int _lv = (SCORR); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
     }
 }
 

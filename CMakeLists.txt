@@ -8,7 +8,7 @@ project(NETHACK-RP6502 C ASM)
 
 # Build the game with mons[] and objects[] in XRAM (see include/rp6502xram.h).
 # The game does not link yet; this compiles the modules with the accessors.
-option(RP6502_XRAM_TABLES "Compile the game with mons[] and objects[] in XRAM" OFF)
+option(RP6502_XRAM_TABLES "Compile the game with mons[], objects[] and the level map in XRAM" OFF)
 
 # Milestone 1: console/DECgraphics/keyboard test ROM.
 add_executable(dectest)
@@ -102,7 +102,8 @@ if(DEFINED LLVM_MOS_PLATFORM)
             "RP6502_MONS_RAM;mons=rp6502_ram_mons")
         set_source_files_properties(src/objects.c PROPERTIES COMPILE_DEFINITIONS
             "RP6502_MONS_RAM;objects=rp6502_ram_objects")
-        target_compile_definitions(nethack_objs PRIVATE RP6502_MONS_XRAM)
+        target_compile_definitions(nethack_objs PRIVATE RP6502_MONS_XRAM
+            RP6502_LEV_XRAM)
     endif()
 
     # Prototype: mons[] copied to XRAM and read back through the fetch cache.
@@ -188,8 +189,10 @@ if(DEFINED LLVM_MOS_PLATFORM)
         -ffunction-sections -fdata-sections)
     rp6502_executable(nethack DATA default RESET default)
     if(RP6502_XRAM_TABLES)
-        target_sources(nethack PRIVATE sys/rp6502/rp6502xram.c)
-        target_compile_definitions(nethack PRIVATE RP6502_MONS_XRAM)
+        target_sources(nethack PRIVATE sys/rp6502/rp6502xram.c
+            sys/rp6502/rp6502lev.c)
+        target_compile_definitions(nethack PRIVATE RP6502_MONS_XRAM
+            RP6502_LEV_XRAM)
         target_link_options(nethack PRIVATE -Wl,--defsym,objects=${OBJS_XRAM_ADDR})
     endif()
 

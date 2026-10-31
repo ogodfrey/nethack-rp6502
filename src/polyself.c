@@ -1287,7 +1287,7 @@ dospinweb()
     } else if (On_stairs(u.ux, u.uy)) {
         /* cop out: don't let them hide the stairs */
         Your("web fails to impede access to the %s.",
-             (levl[u.ux][u.uy].typ == STAIRS) ? "stairs" : "ladder");
+             (lev_get(u.ux, u.uy).typ == STAIRS) ? "stairs" : "ladder");
         return 1;
     }
     ttmp = maketrap(u.ux, u.uy, WEB);
@@ -1478,7 +1478,7 @@ dohide()
     /* note: the eel and hides_under cases are hypothetical;
        such critters aren't offered the option of hiding via #monster */
     if (pm_get(youmonst.data)->mlet == S_EEL && !is_pool(u.ux, u.uy)) {
-        if (IS_FOUNTAIN(levl[u.ux][u.uy].typ))
+        if (IS_FOUNTAIN(lev_get(u.ux, u.uy).typ))
             The("fountain is not deep enough to hide in.");
         else
             There("is no %s to hide in here.", hliquid("water"));

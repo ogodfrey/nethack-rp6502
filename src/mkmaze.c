@@ -50,7 +50,7 @@ int x, y;
 
     if (!isok(x, y))
         return 0;
-    type = levl[x][y].typ;
+    type = lev_get(x, y).typ;
     return (IS_WALL(type) || IS_DOOR(type)
             || type == SDOOR || type == IRONBARS);
 }
@@ -63,7 +63,7 @@ int x, y;
     if (!isok(x, y))
         return 1;
 
-    return (levl[x][y].typ == STONE || iswall(x, y));
+    return (lev_get(x, y).typ == STONE || iswall(x, y));
 }
 
 /* return TRUE if out of bounds, wall or rock */
@@ -71,7 +71,7 @@ STATIC_OVL boolean
 is_solid(x, y)
 int x, y;
 {
-    return (boolean) (!isok(x, y) || IS_STWALL(levl[x][y].typ));
+    return (boolean) (!isok(x, y) || IS_STWALL(lev_get(x, y).typ));
 }
 
 /*
@@ -132,7 +132,7 @@ int x1, y1, x2, y2;
 {
     uchar type;
     int x, y;
-    struct rm *lev;
+    
 
     /* sanity check on incoming variables */
     if (x1 < 0 || x2 >= COLNO || x1 > x2 || y1 < 0 || y2 >= ROWNO || y1 > y2)
@@ -145,14 +145,14 @@ int x1, y1, x2, y2;
                                     bughack.inarea.x1, bughack.inarea.y1,
                                     bughack.inarea.x2, bughack.inarea.y2))
                 continue;
-            lev = &levl[x][y];
-            type = lev->typ;
+            
+            type = lev_get(x, y).typ;
             if (IS_WALL(type) && type != DBWALL) {
                 if (is_solid(x - 1, y - 1) && is_solid(x - 1, y)
                     && is_solid(x - 1, y + 1) && is_solid(x, y - 1)
                     && is_solid(x, y + 1) && is_solid(x + 1, y - 1)
                     && is_solid(x + 1, y) && is_solid(x + 1, y + 1))
-                    lev->typ = STONE;
+                    ({ int _lv = (STONE); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
             }
         }
 }
@@ -164,7 +164,7 @@ int x1, y1, x2, y2;
 {
     uchar type;
     int x, y;
-    struct rm *lev;
+    
     int FDECL((*loc_f), (int, int));
     int bits;
     int locale[3][3]; /* rock or wall status surrounding positions */
@@ -186,8 +186,8 @@ int x1, y1, x2, y2;
     /* set the correct wall type. */
     for (x = x1; x <= x2; x++)
         for (y = y1; y <= y2; y++) {
-            lev = &levl[x][y];
-            type = lev->typ;
+            
+            type = lev_get(x, y).typ;
             if (!(IS_WALL(type) && type != DBWALL))
                 continue;
 
@@ -216,7 +216,7 @@ int x1, y1, x2, y2;
 
             /* don't change typ if wall is free-standing */
             if (bits)
-                lev->typ = spine_array[bits];
+                ({ int _lv = (spine_array[bits]); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
         }
 }
 
@@ -236,7 +236,7 @@ int dir;
     mz_move(x, y, dir);
     mz_move(x, y, dir);
     if (x < 3 || y < 3 || x > x_maze_max || y > y_maze_max
-        || levl[x][y].typ != STONE)
+        || lev_get(x, y).typ != STONE)
         return FALSE;
     return TRUE;
 }
@@ -264,9 +264,9 @@ xchar lx, ly, hx, hy;
 {
     return (boolean) (occupied(x, y)
                       || within_bounded_area(x, y, lx, ly, hx, hy)
-                      || !((levl[x][y].typ == CORR && level.flags.is_maze_lev)
-                           || levl[x][y].typ == ROOM
-                           || levl[x][y].typ == AIR));
+                      || !((lev_get(x, y).typ == CORR && level.flags.is_maze_lev)
+                           || lev_get(x, y).typ == ROOM
+                           || lev_get(x, y).typ == AIR));
 }
 
 /* pick a location in area (lx, ly, hx, hy) but not in (nlx, nly, nhx, nhy)
@@ -395,7 +395,7 @@ baalz_fixup()
     /* find low and high x for to-be-wallified portion of level */
     y = ROWNO / 2;
     for (lastx = x = 0; x < COLNO; ++x)
-        if ((levl[x][y].wall_info & W_NONDIGGABLE) != 0) {
+        if ((lev_get(x, y).wall_info & W_NONDIGGABLE) != 0) {
             if (!lastx)
                 bughack.inarea.x1 = x + 1;
             lastx = x;
@@ -404,7 +404,7 @@ baalz_fixup()
     /* find low and high y for to-be-wallified portion of level */
     x = bughack.inarea.x1;
     for (lasty = y = 0; y < ROWNO; ++y)
-        if ((levl[x][y].wall_info & W_NONDIGGABLE) != 0) {
+        if ((lev_get(x, y).wall_info & W_NONDIGGABLE) != 0) {
             if (!lasty)
                 bughack.inarea.y1 = y + 1;
             lasty = y;
@@ -413,17 +413,17 @@ baalz_fixup()
     /* two pools mark where special post-wallify fix-ups are needed */
     for (x = bughack.inarea.x1; x <= bughack.inarea.x2; ++x)
         for (y = bughack.inarea.y1; y <= bughack.inarea.y2; ++y)
-            if (levl[x][y].typ == POOL) {
-                levl[x][y].typ = HWALL;
+            if (lev_get(x, y).typ == POOL) {
+                ({ int _lv = (HWALL); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
                 if (bughack.delarea.x1 == COLNO)
                     bughack.delarea.x1 = x, bughack.delarea.y1 = y;
                 else
                     bughack.delarea.x2 = x, bughack.delarea.y2 = y;
-            } else if (levl[x][y].typ == IRONBARS) {
+            } else if (lev_get(x, y).typ == IRONBARS) {
                 /* novelty effect; allowing digging in front of 'eyes' */
-                levl[x - 1][y].wall_info &= ~W_NONDIGGABLE;
+                ({ int _lv = (~W_NONDIGGABLE); int _lx = (x - 1), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.wall_info &= _lv; lev_put(_lx, _ly, _lr); _lr.wall_info; });
                 if (isok(x - 2, y))
-                    levl[x - 2][y].wall_info &= ~W_NONDIGGABLE;
+                    ({ int _lv = (~W_NONDIGGABLE); int _lx = (x - 2), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.wall_info &= _lv; lev_put(_lx, _ly, _lr); _lr.wall_info; });
             }
 
     wallification(max(bughack.inarea.x1 - 2, 1),
@@ -435,18 +435,18 @@ baalz_fixup()
        both top and bottom gets a bogus extra connection to room area,
        producing unwanted rectangles; change back to separated legs */
     x = bughack.delarea.x1, y = bughack.delarea.y1;
-    if (isok(x, y) && levl[x][y].typ == TLWALL
-        && isok(x, y + 1) && levl[x][y + 1].typ == TUWALL) {
-        levl[x][y].typ = BRCORNER;
-        levl[x][y + 1].typ = HWALL;
+    if (isok(x, y) && lev_get(x, y).typ == TLWALL
+        && isok(x, y + 1) && lev_get(x, y + 1).typ == TUWALL) {
+        ({ int _lv = (BRCORNER); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
+        ({ int _lv = (HWALL); int _lx = (x), _ly = (y + 1); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
         if ((mtmp = m_at(x, y)) != 0) /* something at temporary pool... */
             (void) rloc(mtmp, FALSE);
     }
     x = bughack.delarea.x2, y = bughack.delarea.y2;
-    if (isok(x, y) && levl[x][y].typ == TLWALL
-        && isok(x, y - 1) && levl[x][y - 1].typ == TDWALL) {
-        levl[x][y].typ = TRCORNER;
-        levl[x][y - 1].typ = HWALL;
+    if (isok(x, y) && lev_get(x, y).typ == TLWALL
+        && isok(x, y - 1) && lev_get(x, y - 1).typ == TDWALL) {
+        ({ int _lv = (TRCORNER); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
+        ({ int _lv = (HWALL); int _lx = (x), _ly = (y - 1); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
         if ((mtmp = m_at(x, y)) != 0) /* something at temporary pool... */
             (void) rloc(mtmp, FALSE);
     }
@@ -824,7 +824,7 @@ xchar typ;
     dirok[0] = 0; /* lint suppression */
     for (x = 2; x < x_maze_max; x++)
         for (y = 2; y < y_maze_max; y++)
-            if (ACCESSIBLE(levl[x][y].typ) && (x % 2) && (y % 2)) {
+            if (ACCESSIBLE(lev_get(x, y).typ) && (x % 2) && (y % 2)) {
                 idx = idx2 = 0;
                 for (dir = 0; dir < 4; dir++) {
                     /* note: mz_move() is a macro which modifies
@@ -842,8 +842,8 @@ xchar typ;
                         idx2++;
                         continue;
                     }
-                    if (!ACCESSIBLE(levl[dx][dy].typ)
-                        && ACCESSIBLE(levl[dx2][dy2].typ)) {
+                    if (!ACCESSIBLE(lev_get(dx, dy).typ)
+                        && ACCESSIBLE(lev_get(dx2, dy2).typ)) {
                         dirok[idx++] = dir;
                         idx2++;
                     }
@@ -853,7 +853,7 @@ xchar typ;
                     dy = y;
                     dir = dirok[rn2(idx)];
                     mz_move(dx, dy, dir);
-                    levl[dx][dy].typ = typ;
+                    ({ int _lv = (typ); int _lx = (dx), _ly = (dy); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
                 }
             }
 }
@@ -891,11 +891,11 @@ int wallthick;
     if (level.flags.corrmaze)
         for (x = 2; x < (rdx * 2); x++)
             for (y = 2; y < (rdy * 2); y++)
-                levl[x][y].typ = STONE;
+                ({ int _lv = (STONE); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
     else
         for (x = 2; x <= (rdx * 2); x++)
             for (y = 2; y <= (rdy * 2); y++)
-                levl[x][y].typ = ((x % 2) && (y % 2)) ? STONE : HWALL;
+                ({ int _lv = (((x % 2) && (y % 2)) ? STONE : HWALL); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
 
     /* set upper bounds for maze0xy and walkfrom */
     x_maze_max = (rdx * 2);
@@ -920,7 +920,7 @@ int wallthick;
         /* back up the existing smaller maze */
         for (x = 1; x < x_maze_max; x++)
             for (y = 1; y < y_maze_max; y++) {
-                tmpmap[x][y] = levl[x][y].typ;
+                tmpmap[x][y] = lev_get(x, y).typ;
             }
 
         /* do the scaling */
@@ -940,7 +940,7 @@ int wallthick;
                         if (rx+dx >= x_maze_max
                             || ry+dy >= y_maze_max)
                             break;
-                        levl[rx + dx][ry + dy].typ = tmpmap[x][y];
+                        ({ int _lv = (tmpmap[x][y]); int _lx = (rx + dx), _ly = (ry + dy); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
                     }
                 ry += my;
                 y++;
@@ -1070,7 +1070,7 @@ const char *s;
         } while (x == xupstair || y == yupstair /*(direct line)*/
                  || abs(x - xupstair) == abs(y - yupstair)
                  || distmin(x, y, xupstair, yupstair) <= INVPOS_DISTANCE
-                 || !SPACE_POS(levl[x][y].typ) || occupied(x, y));
+                 || !SPACE_POS(lev_get(x, y).typ) || occupied(x, y));
         inv_pos.x = x;
         inv_pos.y = y;
         maketrap(inv_pos.x, inv_pos.y, VIBRATING_SQUARE);
@@ -1137,10 +1137,10 @@ schar typ;
     while (pos) {
         x = (int) mazex[pos];
         y = (int) mazey[pos];
-        if (!IS_DOOR(levl[x][y].typ)) {
+        if (!IS_DOOR(lev_get(x, y).typ)) {
             /* might still be on edge of MAP, so don't overwrite */
-            levl[x][y].typ = typ;
-            levl[x][y].flags = 0;
+            ({ int _lv = (typ); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
+            ({ int _lv = (0); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.flags = _lv; lev_put(_lx, _ly, _lr); _lr.flags; });
         }
         q = 0;
         for (a = 0; a < 4; a++)
@@ -1151,7 +1151,7 @@ schar typ;
         else {
             dir = dirs[rn2(q)];
             mz_move(x, y, dir);
-            levl[x][y].typ = typ;
+            ({ int _lv = (typ); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
             mz_move(x, y, dir);
             pos++;
             if (pos > CELLS)
@@ -1178,10 +1178,10 @@ schar typ;
             typ = ROOM;
     }
 
-    if (!IS_DOOR(levl[x][y].typ)) {
+    if (!IS_DOOR(lev_get(x, y).typ)) {
         /* might still be on edge of MAP, so don't overwrite */
-        levl[x][y].typ = typ;
-        levl[x][y].flags = 0;
+        ({ int _lv = (typ); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
+        ({ int _lv = (0); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.flags = _lv; lev_put(_lx, _ly, _lr); _lr.flags; });
     }
 
     while (1) {
@@ -1193,7 +1193,7 @@ schar typ;
             return;
         dir = dirs[rn2(q)];
         mz_move(x, y, dir);
-        levl[x][y].typ = typ;
+        ({ int _lv = (typ); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
         mz_move(x, y, dir);
         walkfrom(x, y, typ);
     }
@@ -1213,7 +1213,7 @@ coord *cc;
         cc->y = 1 + rn2(y_maze_max);
         cpt++;
     } while (cpt < 100
-             && levl[cc->x][cc->y].typ
+             && lev_get(cc->x, cc->y).typ
                     != (level.flags.corrmaze ? CORR : ROOM));
     if (cpt >= 100) {
         int x, y;
@@ -1223,7 +1223,7 @@ coord *cc;
             for (y = 1; y < y_maze_max; y++) {
                 cc->x = x;
                 cc->y = y;
-                if (levl[cc->x][cc->y].typ
+                if (lev_get(cc->x, cc->y).typ
                     == (level.flags.corrmaze ? CORR : ROOM))
                     return;
             }
@@ -1247,7 +1247,6 @@ bound_digging()
 {
     int x, y;
     unsigned typ;
-    struct rm *lev;
     boolean found, nonwall;
     int xmin, xmax, ymin, ymax;
 
@@ -1256,9 +1255,8 @@ bound_digging()
 
     found = nonwall = FALSE;
     for (xmin = 0; !found && xmin <= COLNO; xmin++) {
-        lev = &levl[xmin][0];
-        for (y = 0; y <= ROWNO - 1; y++, lev++) {
-            typ = lev->typ;
+        for (y = 0; y <= ROWNO - 1; y++) {
+            typ = lev_get(xmin, y).typ;
             if (typ != STONE) {
                 found = TRUE;
                 if (!IS_WALL(typ))
@@ -1272,9 +1270,8 @@ bound_digging()
 
     found = nonwall = FALSE;
     for (xmax = COLNO - 1; !found && xmax >= 0; xmax--) {
-        lev = &levl[xmax][0];
-        for (y = 0; y <= ROWNO - 1; y++, lev++) {
-            typ = lev->typ;
+        for (y = 0; y <= ROWNO - 1; y++) {
+            typ = lev_get(xmax, y).typ;
             if (typ != STONE) {
                 found = TRUE;
                 if (!IS_WALL(typ))
@@ -1288,9 +1285,8 @@ bound_digging()
 
     found = nonwall = FALSE;
     for (ymin = 0; !found && ymin <= ROWNO; ymin++) {
-        lev = &levl[xmin][ymin];
-        for (x = xmin; x <= xmax; x++, lev += ROWNO) {
-            typ = lev->typ;
+        for (x = xmin; x <= xmax; x++) {
+            typ = lev_get(x, ymin).typ;
             if (typ != STONE) {
                 found = TRUE;
                 if (!IS_WALL(typ))
@@ -1302,9 +1298,8 @@ bound_digging()
 
     found = nonwall = FALSE;
     for (ymax = ROWNO - 1; !found && ymax >= 0; ymax--) {
-        lev = &levl[xmin][ymax];
-        for (x = xmin; x <= xmax; x++, lev += ROWNO) {
-            typ = lev->typ;
+        for (x = xmin; x <= xmax; x++) {
+            typ = lev_get(x, ymax).typ;
             if (typ != STONE) {
                 found = TRUE;
                 if (!IS_WALL(typ))
@@ -1317,12 +1312,7 @@ bound_digging()
     for (x = 0; x < COLNO; x++)
         for (y = 0; y < ROWNO; y++)
             if (y <= ymin || y >= ymax || x <= xmin || x >= xmax) {
-#ifdef DCC30_BUG
-                lev = &levl[x][y];
-                lev->wall_info |= W_NONDIGGABLE;
-#else
-                levl[x][y].wall_info |= W_NONDIGGABLE;
-#endif
+                ({ int _lv = (W_NONDIGGABLE); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.wall_info |= _lv; lev_put(_lx, _ly, _lr); _lr.wall_info; });
             }
 }
 
@@ -1355,7 +1345,7 @@ fumaroles()
         xchar x = rn1(COLNO - 4, 3);
         xchar y = rn1(ROWNO - 4, 3);
 
-        if (levl[x][y].typ == LAVAPOOL) {
+        if (lev_get(x, y).typ == LAVAPOOL) {
             NhRegion *r = create_gas_cloud(x, y, 4 + rn2(5), rn1(10, 5));
 
             clear_heros_fault(r);
@@ -1489,7 +1479,7 @@ movebubbles()
                             b->cons = cons;
                         }
 
-                        levl[x][y] = water_pos;
+                        ({ __auto_type _lv = (water_pos); lev_put(x, y, _lv); });
                         block_point(x, y);
                     }
         }
@@ -1498,7 +1488,7 @@ movebubbles()
 
         for (x = 1; x <= (COLNO - 1); x++)
             for (y = 0; y <= (ROWNO - 1); y++) {
-                levl[x][y] = air_pos;
+                ({ __auto_type _lv = (air_pos); lev_put(x, y, _lv); });
                 unblock_point(x, y);
                 /* all air or all cloud around the perimeter of the Air
                    level tends to look strange; break up the pattern */
@@ -1506,7 +1496,7 @@ movebubbles()
                 yedge = (boolean) (y < bymin || y > bymax);
                 if (xedge || yedge) {
                     if (!rn2(xedge ? 3 : 5)) {
-                        levl[x][y].typ = CLOUD;
+                        ({ int _lv = (CLOUD); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
                         block_point(x, y);
                     }
                 }
@@ -1637,15 +1627,15 @@ const char *
 waterbody_name(x, y)
 xchar x, y;
 {
-    struct rm *lev;
+    
     schar ltyp;
 
     if (!isok(x, y))
         return "drink"; /* should never happen */
-    lev = &levl[x][y];
-    ltyp = lev->typ;
+    
+    ltyp = lev_get(x, y).typ;
     if (ltyp == DRAWBRIDGE_UP)
-        ltyp = db_under_typ(lev->drawbridgemask);
+        ltyp = db_under_typ(lev_get(x, y).drawbridgemask);
 
     if (ltyp == LAVAPOOL)
         return hliquid("lava");
@@ -1701,9 +1691,9 @@ setup_waterlevel()
     /* set unspecified terrain (stone) and hero's memory to water or air */
     for (x = 1; x <= COLNO - 1; x++)
         for (y = 0; y <= ROWNO - 1; y++) {
-            levl[x][y].glyph = glyph;
-            if (levl[x][y].typ == STONE)
-                levl[x][y].typ = typ;
+            ({ int _lv = (glyph); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.glyph = _lv; lev_put(_lx, _ly, _lr); _lr.glyph; });
+            if (lev_get(x, y).typ == STONE)
+                ({ int _lv = (typ); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
         }
 
     /* make bubbles */
@@ -1866,12 +1856,12 @@ boolean ini;
         for (j = 0, y = b->y; j < (int) b->bm[1]; j++, y++)
             if (b->bm[j + 2] & (1 << i)) {
                 if (Is_waterlevel(&u.uz)) {
-                    levl[x][y].typ = AIR;
-                    levl[x][y].lit = 1;
+                    ({ int _lv = (AIR); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
+                    ({ int _lv = (1); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.lit = _lv; lev_put(_lx, _ly, _lr); _lr.lit; });
                     unblock_point(x, y);
                 } else if (Is_airlevel(&u.uz)) {
-                    levl[x][y].typ = CLOUD;
-                    levl[x][y].lit = 1;
+                    ({ int _lv = (CLOUD); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
+                    ({ int _lv = (1); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.lit = _lv; lev_put(_lx, _ly, _lr); _lr.lit; });
                     block_point(x, y);
                 }
             }

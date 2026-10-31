@@ -783,7 +783,7 @@ boolean by_hero;
             x = xy.x, y = xy.y;
     }
 
-    if ((pm_get(&mons[montype])->mlet == S_EEL && !IS_POOL(levl[x][y].typ))
+    if ((pm_get(&mons[montype])->mlet == S_EEL && !IS_POOL(lev_get(x, y).typ))
         || (pm_get(&mons[montype])->mlet == S_TROLL
             && uwep && uwep->oartifact == ART_TROLLSBANE)) {
         if (by_hero && cansee(x, y))
@@ -1654,7 +1654,7 @@ int id;
         } /* old_wornmask */
     } else if (obj_location == OBJ_FLOOR) {
         if (obj->otyp == BOULDER && otmp->otyp != BOULDER
-            && !does_block(ox, oy, &levl[ox][oy]))
+            && !does_block(ox, oy))
             unblock_point(ox, oy);
         else if (obj->otyp != BOULDER && otmp->otyp == BOULDER)
             /* (checking does_block() here would be redundant) */
@@ -2864,7 +2864,7 @@ struct obj *obj; /* wand or spell */
     case WAN_LOCKING:
     case SPE_WIZARD_LOCK:
         /* down at open bridge or up or down at open portcullis */
-        if (((levl[x][y].typ == DRAWBRIDGE_DOWN)
+        if (((lev_get(x, y).typ == DRAWBRIDGE_DOWN)
                  ? (u.dz > 0)
                  : (is_drawbridge_wall(x, y) >= 0 && !is_db_wall(x, y)))
             && find_drawbridge(&xx, &yy)) {
@@ -3276,7 +3276,7 @@ struct obj **pobj; /* object tossed/used, set to NULL
             goto bhit_done;
         }
 
-        typ = levl[bhitpos.x][bhitpos.y].typ;
+        typ = lev_get(bhitpos.x, bhitpos.y).typ;
 
         /* iron bars will block anything big enough and break some things */
         if (weapon == THROWN_WEAPON || weapon == KICKED_WEAPON) {
@@ -3308,7 +3308,7 @@ struct obj **pobj; /* object tossed/used, set to NULL
             case WAN_LOCKING:
             case SPE_WIZARD_LOCK:
                 if ((cansee(x, y) || cansee(bhitpos.x, bhitpos.y))
-                    && levl[x][y].typ == DRAWBRIDGE_DOWN)
+                    && lev_get(x, y).typ == DRAWBRIDGE_DOWN)
                     learn_it = TRUE;
                 close_drawbridge(x, y);
                 break;
@@ -3407,7 +3407,7 @@ struct obj **pobj; /* object tossed/used, set to NULL
             }
         } else {
             if (weapon == ZAPPED_WAND && obj->otyp == WAN_PROBING
-                && glyph_is_invisible(levl[bhitpos.x][bhitpos.y].glyph)) {
+                && glyph_is_invisible(lev_get(bhitpos.x, bhitpos.y).glyph)) {
                 unmap_object(bhitpos.x, bhitpos.y);
                 newsym(x, y);
             }
@@ -3437,7 +3437,7 @@ struct obj **pobj; /* object tossed/used, set to NULL
                     if (cansee(bhitpos.x, bhitpos.y)
                         || (obj->otyp == WAN_STRIKING && !Deaf))
                         learnwand(obj);
-                    if (levl[bhitpos.x][bhitpos.y].doormask == D_BROKEN
+                    if (lev_get(bhitpos.x, bhitpos.y).doormask == D_BROKEN
                         && *in_rooms(bhitpos.x, bhitpos.y, SHOPBASE)) {
                         shopdoor = TRUE;
                         add_damage(bhitpos.x, bhitpos.y, SHOP_DOOR_COST);
@@ -3454,7 +3454,7 @@ struct obj **pobj; /* object tossed/used, set to NULL
         if (weapon != ZAPPED_WAND && weapon != INVIS_BEAM) {
             /* 'I' present but no monster: erase */
             /* do this before the tmp_at() */
-            if (glyph_is_invisible(levl[bhitpos.x][bhitpos.y].glyph)
+            if (glyph_is_invisible(lev_get(bhitpos.x, bhitpos.y).glyph)
                 && cansee(x, y)) {
                 unmap_object(bhitpos.x, bhitpos.y);
                 newsym(x, y);
@@ -3561,7 +3561,7 @@ int dx, dy;
             tmp_at(DISP_END, 0);
             return mtmp;
         }
-        if (!ZAP_POS(levl[bhitpos.x][bhitpos.y].typ)
+        if (!ZAP_POS(lev_get(bhitpos.x, bhitpos.y).typ)
             || closed_door(bhitpos.x, bhitpos.y)) {
             bhitpos.x -= dx;
             bhitpos.y -= dy;
@@ -3582,7 +3582,7 @@ int dx, dy;
         }
         tmp_at(bhitpos.x, bhitpos.y);
         delay_output();
-        if (IS_SINK(levl[bhitpos.x][bhitpos.y].typ)) {
+        if (IS_SINK(lev_get(bhitpos.x, bhitpos.y).typ)) {
             if (!Deaf)
                 pline("Klonk!");
             break; /* boomerang falls on sink */
@@ -4091,7 +4091,7 @@ boolean say; /* Announce out of sight hit/miss events if true */
         sx += dx;
         lsy = sy;
         sy += dy;
-        if (!isok(sx, sy) || levl[sx][sy].typ == STONE)
+        if (!isok(sx, sy) || lev_get(sx, sy).typ == STONE)
             goto make_bounce;
 
         mon = m_at(sx, sy);
@@ -4101,7 +4101,7 @@ boolean say; /* Announce out of sight hit/miss events if true */
                 map_invisible(sx, sy);
             else if (!mon)
                 (void) unmap_invisible(sx, sy);
-            if (ZAP_POS(levl[sx][sy].typ)
+            if (ZAP_POS(lev_get(sx, sy).typ)
                 || (isok(lsx, lsy) && cansee(lsx, lsy)))
                 tmp_at(sx, sy);
             delay_output(); /* wait a little */
@@ -4236,15 +4236,15 @@ boolean say; /* Announce out of sight hit/miss events if true */
             nomul(0);
         }
 
-        if (!ZAP_POS(levl[sx][sy].typ)
+        if (!ZAP_POS(lev_get(sx, sy).typ)
             || (closed_door(sx, sy) && range >= 0)) {
             int bounce, bchance;
             uchar rmn;
             boolean fireball;
 
  make_bounce:
-            bchance = (levl[sx][sy].typ == STONE) ? 10
-                : (In_mines(&u.uz) && IS_WALL(levl[sx][sy].typ)) ? 20
+            bchance = (lev_get(sx, sy).typ == STONE) ? 10
+                : (In_mines(&u.uz) && IS_WALL(lev_get(sx, sy).typ)) ? 20
                 : 75;
             bounce = 0;
             fireball = (type == ZT_SPELL(ZT_FIRE));
@@ -4266,15 +4266,15 @@ boolean say; /* Announce out of sight hit/miss events if true */
                 dx = -dx;
                 dy = -dy;
             } else {
-                if (isok(sx, lsy) && ZAP_POS(rmn = levl[sx][lsy].typ)
+                if (isok(sx, lsy) && ZAP_POS(rmn = lev_get(sx, lsy).typ)
                     && !closed_door(sx, lsy)
                     && (IS_ROOM(rmn) || (isok(sx + dx, lsy)
-                                         && ZAP_POS(levl[sx + dx][lsy].typ))))
+                                         && ZAP_POS(lev_get(sx + dx, lsy).typ))))
                     bounce = 1;
-                if (isok(lsx, sy) && ZAP_POS(rmn = levl[lsx][sy].typ)
+                if (isok(lsx, sy) && ZAP_POS(rmn = lev_get(lsx, sy).typ)
                     && !closed_door(lsx, sy)
                     && (IS_ROOM(rmn) || (isok(lsx, sy + dy)
-                                         && ZAP_POS(levl[lsx][sy + dy].typ))))
+                                         && ZAP_POS(lev_get(lsx, sy + dy).typ))))
                     if (!bounce || rn2(2))
                         bounce = 2;
 
@@ -4316,24 +4316,24 @@ melt_ice(x, y, msg)
 xchar x, y;
 const char *msg;
 {
-    struct rm *lev = &levl[x][y];
+    
     struct obj *otmp;
     struct monst *mtmp;
 
     if (!msg)
         msg = "The ice crackles and melts.";
-    if (lev->typ == DRAWBRIDGE_UP || lev->typ == DRAWBRIDGE_DOWN) {
-        lev->drawbridgemask &= ~DB_ICE; /* revert to DB_MOAT */
+    if (lev_get(x, y).typ == DRAWBRIDGE_UP || lev_get(x, y).typ == DRAWBRIDGE_DOWN) {
+        ({ int _lv = (~DB_ICE); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.drawbridgemask &= _lv; lev_put(_lx, _ly, _lr); _lr.drawbridgemask; }); /* revert to DB_MOAT */
     } else { /* lev->typ == ICE */
 #ifdef STUPID
-        if (lev->icedpool == ICED_POOL)
-            lev->typ = POOL;
+        if (lev_get(x, y).icedpool == ICED_POOL)
+            ({ int _lv = (POOL); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
         else
-            lev->typ = MOAT;
+            ({ int _lv = (MOAT); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
 #else
-        lev->typ = (lev->icedpool == ICED_POOL ? POOL : MOAT);
+        ({ int _lv = ((lev_get(x, y).icedpool == ICED_POOL ? POOL : MOAT)); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
 #endif
-        lev->icedpool = 0;
+        ({ int _lv = (0); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.icedpool = _lv; lev_put(_lx, _ly, _lr); _lr.icedpool; });
     }
     spot_stop_timers(x, y, MELT_ICE_AWAY); /* no more ice to melt away */
     obj_ice_effects(x, y, FALSE);
@@ -4430,7 +4430,7 @@ short exploding_wand_typ;
     const char *zapverb;
     struct monst *mon;
     struct trap *t;
-    struct rm *lev = &levl[x][y];
+    
     boolean see_it = cansee(x, y), yourzap;
     int rangemod = 0, abstype = abs(type) % 10;
 
@@ -4454,12 +4454,12 @@ short exploding_wand_typ;
                                          ? "That seemed remarkably uneventful."
                                          : (const char *) 0;
 
-            if (lev->typ != POOL) { /* MOAT or DRAWBRIDGE_UP */
+            if (lev_get(x, y).typ != POOL) { /* MOAT or DRAWBRIDGE_UP */
                 if (see_it)
                     msgtxt = "Some water evaporates.";
             } else {
                 rangemod -= 3;
-                lev->typ = ROOM, lev->flags = 0;
+                ({ int _lv = (ROOM); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; }), ({ int _lv = (0); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.flags = _lv; lev_put(_lx, _ly, _lr); _lr.flags; });
                 t = maketrap(x, y, PIT);
                 if (t)
                     t->tseen = 1;
@@ -4468,9 +4468,9 @@ short exploding_wand_typ;
             }
             if (msgtxt)
                 Norep("%s", msgtxt);
-            if (lev->typ == ROOM)
+            if (lev_get(x, y).typ == ROOM)
                 newsym(x, y);
-        } else if (IS_FOUNTAIN(lev->typ)) {
+        } else if (IS_FOUNTAIN(lev_get(x, y).typ)) {
             if (see_it)
                 pline("Steam billows from the fountain.");
             rangemod -= 1;
@@ -4483,7 +4483,7 @@ short exploding_wand_typ;
             boolean lava = is_lava(x, y),
                     moat = is_moat(x, y);
 
-            if (lev->typ == WATER) {
+            if (lev_get(x, y).typ == WATER) {
                 /* For now, don't let WATER freeze. */
                 if (see_it)
                     pline_The("%s freezes for a moment.", hliquid("water"));
@@ -4495,14 +4495,14 @@ short exploding_wand_typ;
 
                 Strcpy(buf, waterbody_name(x, y)); /* for MOAT */
                 rangemod -= 3;
-                if (lev->typ == DRAWBRIDGE_UP) {
-                    lev->drawbridgemask &= ~DB_UNDER; /* clear lava */
-                    lev->drawbridgemask |= (lava ? DB_FLOOR : DB_ICE);
+                if (lev_get(x, y).typ == DRAWBRIDGE_UP) {
+                    ({ int _lv = (~DB_UNDER); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.drawbridgemask &= _lv; lev_put(_lx, _ly, _lr); _lr.drawbridgemask; }); /* clear lava */
+                    ({ int _lv = ((lava ? DB_FLOOR : DB_ICE)); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.drawbridgemask |= _lv; lev_put(_lx, _ly, _lr); _lr.drawbridgemask; });
                 } else {
-                    lev->icedpool = lava ? 0
-                                         : (lev->typ == POOL) ? ICED_POOL
-                                                              : ICED_MOAT;
-                    lev->typ = lava ? ROOM : ICE;
+                    ({ int _lv = (lava ? 0
+                                         : (lev_get(x, y).typ == POOL) ? ICED_POOL
+                                                              : ICED_MOAT); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.icedpool = _lv; lev_put(_lx, _ly, _lr); _lr.icedpool; });
+                    ({ int _lv = (lava ? ROOM : ICE); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
                 }
                 bury_objs(x, y);
                 if (see_it) {
@@ -4564,8 +4564,8 @@ short exploding_wand_typ;
         break;
 
     case ZT_ACID:
-        if (lev->typ == IRONBARS) {
-            if ((lev->wall_info & W_NONDIGGABLE) != 0) {
+        if (lev_get(x, y).typ == IRONBARS) {
+            if ((lev_get(x, y).wall_info & W_NONDIGGABLE) != 0) {
                 if (see_it)
                     Norep("The %s corrode somewhat but remain intact.",
                           defsyms[S_bars].explanation);
@@ -4576,14 +4576,14 @@ short exploding_wand_typ;
                     Norep("The %s melt.", defsyms[S_bars].explanation);
                 if (*in_rooms(x, y, SHOPBASE)) {
                     /* in case we ever have a shop bounded by bars */
-                    lev->typ = ROOM, lev->flags = 0;
+                    ({ int _lv = (ROOM); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; }), ({ int _lv = (0); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.flags = _lv; lev_put(_lx, _ly, _lr); _lr.flags; });
                     if (see_it)
                         newsym(x, y);
                     add_damage(x, y, (type >= 0) ? SHOP_BARS_COST : 0L);
                     if (type >= 0)
                         *shopdamage = TRUE;
                 } else {
-                    lev->typ = DOOR, lev->doormask = D_NODOOR;
+                    ({ int _lv = (DOOR); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; }), ({ int _lv = (D_NODOOR); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
                     if (see_it)
                         newsym(x, y);
                 }
@@ -4607,8 +4607,8 @@ short exploding_wand_typ;
     }
 
     /* secret door gets revealed, converted into regular door */
-    if (levl[x][y].typ == SDOOR) {
-        cvt_sdoor_to_door(&levl[x][y]); /* .typ = DOOR */
+    if (lev_get(x, y).typ == SDOOR) {
+        cvt_sdoor_to_door(x, y); /* .typ = DOOR */
         /* target spot will now pass closed_door() test below
            (except on rogue level) */
         newsym(x, y);
@@ -4681,7 +4681,7 @@ short exploding_wand_typ;
                 } else /* caused by monster */
                     add_damage(x, y, 0L);
             }
-            lev->doormask = new_doormask;
+            ({ int _lv = (new_doormask); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
             unblock_point(x, y); /* vision */
             if (see_it) {
                 pline1(see_txt);
@@ -4748,7 +4748,7 @@ register struct obj *obj; /* no texts here! */
     if (obj->where == OBJ_FLOOR) {
         obj_extract_self(obj); /* move rocks back on top */
         place_object(obj, obj->ox, obj->oy);
-        if (!does_block(obj->ox, obj->oy, &levl[obj->ox][obj->oy]))
+        if (!does_block(obj->ox, obj->oy))
             unblock_point(obj->ox, obj->oy);
         if (cansee(obj->ox, obj->oy))
             newsym(obj->ox, obj->oy);
@@ -5338,8 +5338,8 @@ makewish()
             *oops_msg = (u.uswallow
                          ? "Oops!  %s out of your reach!"
                          : (Is_airlevel(&u.uz) || Is_waterlevel(&u.uz)
-                            || levl[u.ux][u.uy].typ < IRONBARS
-                            || levl[u.ux][u.uy].typ >= ICE)
+                            || lev_get(u.ux, u.uy).typ < IRONBARS
+                            || lev_get(u.ux, u.uy).typ >= ICE)
                             ? "Oops!  %s away from you!"
                             : "Oops!  %s to the floor!");
 

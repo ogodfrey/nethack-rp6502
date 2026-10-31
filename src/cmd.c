@@ -705,7 +705,7 @@ domonability(VOID_ARGS)
     else if (is_mind_flayer(youmonst.data))
         return domindblast();
     else if (u.umonnum == PM_GREMLIN) {
-        if (IS_FOUNTAIN(levl[u.ux][u.uy].typ)) {
+        if (IS_FOUNTAIN(lev_get(u.ux, u.uy).typ)) {
             if (split_mon(&youmonst, (struct monst *) 0))
                 dryup(u.ux, u.uy, TRUE);
         } else
@@ -1040,7 +1040,7 @@ wiz_show_seenv(VOID_ARGS)
             if (x == u.ux && y == u.uy) {
                 row[curx] = row[curx + 1] = '@';
             } else {
-                v = levl[x][y].seenv & 0xff;
+                v = lev_get(x, y).seenv & 0xff;
                 if (v == 0)
                     row[curx] = row[curx + 1] = ' ';
                 else
@@ -1105,7 +1105,7 @@ wiz_show_wmodes(VOID_ARGS)
     winid win;
     int x, y;
     char row[COLNO + 1];
-    struct rm *lev;
+    
     boolean istty = WINDOWPORT("tty");
 
     win = create_nhwindow(NHW_TEXT);
@@ -1113,14 +1113,14 @@ wiz_show_wmodes(VOID_ARGS)
         putstr(win, 0, ""); /* tty only: blank top line */
     for (y = 0; y < ROWNO; y++) {
         for (x = 0; x < COLNO; x++) {
-            lev = &levl[x][y];
+            
             if (x == u.ux && y == u.uy)
                 row[x] = '@';
-            else if (IS_WALL(lev->typ) || lev->typ == SDOOR)
-                row[x] = '0' + (lev->wall_info & WM_MASK);
-            else if (lev->typ == CORR)
+            else if (IS_WALL(lev_get(x, y).typ) || lev_get(x, y).typ == SDOOR)
+                row[x] = '0' + (lev_get(x, y).wall_info & WM_MASK);
+            else if (lev_get(x, y).typ == CORR)
                 row[x] = '#';
-            else if (IS_ROOM(lev->typ) || IS_DOOR(lev->typ))
+            else if (IS_ROOM(lev_get(x, y).typ) || IS_DOOR(lev_get(x, y).typ))
                 row[x] = '.';
             else
                 row[x] = 'x';
@@ -1151,7 +1151,7 @@ wiz_map_levltyp(VOID_ARGS)
         /* map column 0, levl[0][], is off the left edge of the screen;
            it should always have terrain type "undiggable stone" */
         for (x = 1; x < COLNO; x++) {
-            terrain = levl[x][y].typ;
+            terrain = lev_get(x, y).typ;
             /* assumes there aren't more than 10+26+26 terrain types */
             row[x - 1] = (char) ((terrain == STONE && !may_dig(x, y))
                                     ? '*'
@@ -1162,7 +1162,7 @@ wiz_map_levltyp(VOID_ARGS)
                                           : 'A' + terrain - 36);
         }
         x--;
-        if (levl[0][y].typ != STONE || may_dig(0, y))
+        if (lev_get(0, y).typ != STONE || may_dig(0, y))
             row[x++] = '!';
         row[x] = '\0';
         putstr(win, 0, row);
@@ -5368,7 +5368,7 @@ int x, y;
     winid win;
     char ch;
     char buf[BUFSZ];
-    schar typ = levl[x][y].typ;
+    schar typ = lev_get(x, y).typ;
     int npick, K = 0;
     menu_item *picks = (menu_item *) 0;
     struct trap *ttmp;
@@ -5379,7 +5379,7 @@ int x, y;
 
     if (IS_DOOR(typ)) {
         boolean key_or_pick, card;
-        int dm = levl[x][y].doormask;
+        int dm = lev_get(x, y).doormask;
 
         if ((dm & (D_CLOSED | D_LOCKED))) {
             add_herecmd_menuitem(win, doopen, "Open the door"), ++K;
@@ -5470,7 +5470,7 @@ boolean doit;
     winid win;
     char ch;
     char buf[BUFSZ];
-    schar typ = levl[u.ux][u.uy].typ;
+    schar typ = lev_get(u.ux, u.uy).typ;
     int npick;
     menu_item *picks = (menu_item *) 0;
 
@@ -5603,11 +5603,11 @@ int x, y, mod;
             }
 
             /* here */
-            if (IS_FOUNTAIN(levl[u.ux][u.uy].typ)
-                || IS_SINK(levl[u.ux][u.uy].typ)) {
+            if (IS_FOUNTAIN(lev_get(u.ux, u.uy).typ)
+                || IS_SINK(lev_get(u.ux, u.uy).typ)) {
                 cmd[0] = cmd_from_func(mod == CLICK_1 ? dodrink : dodip);
                 return cmd;
-            } else if (IS_THRONE(levl[u.ux][u.uy].typ)) {
+            } else if (IS_THRONE(lev_get(u.ux, u.uy).typ)) {
                 cmd[0] = cmd_from_func(dosit);
                 return cmd;
             } else if ((u.ux == xupstair && u.uy == yupstair)
@@ -5647,19 +5647,19 @@ int x, y, mod;
                 return cmd;
             }
 
-            if (IS_DOOR(levl[u.ux + x][u.uy + y].typ)) {
+            if (IS_DOOR(lev_get(u.ux + x, u.uy + y).typ)) {
                 /* slight assistance to the player: choose kick/open for them
                  */
-                if (levl[u.ux + x][u.uy + y].doormask & D_LOCKED) {
+                if (lev_get(u.ux + x, u.uy + y).doormask & D_LOCKED) {
                     cmd[0] = cmd_from_func(dokick);
                     return cmd;
                 }
-                if (levl[u.ux + x][u.uy + y].doormask & D_CLOSED) {
+                if (lev_get(u.ux + x, u.uy + y).doormask & D_CLOSED) {
                     cmd[0] = cmd_from_func(doopen);
                     return cmd;
                 }
             }
-            if (levl[u.ux + x][u.uy + y].typ <= SCORR) {
+            if (lev_get(u.ux + x, u.uy + y).typ <= SCORR) {
                 cmd[0] = cmd_from_func(dosearch);
                 cmd[1] = 0;
                 return cmd;

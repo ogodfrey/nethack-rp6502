@@ -41,7 +41,7 @@ int x, y;
 
     if (!isok(x, y))
         return FALSE;
-    ltyp = levl[x][y].typ;
+    ltyp = lev_get(x, y).typ;
     /* The ltyp == MOAT is not redundant with is_moat, because the
      * Juiblex level does not have moats, although it has MOATs. There
      * is probably a better way to express this. */
@@ -58,10 +58,10 @@ int x, y;
 
     if (!isok(x, y))
         return FALSE;
-    ltyp = levl[x][y].typ;
+    ltyp = lev_get(x, y).typ;
     if (ltyp == LAVAPOOL
         || (ltyp == DRAWBRIDGE_UP
-            && (levl[x][y].drawbridgemask & DB_UNDER) == DB_LAVA))
+            && (lev_get(x, y).drawbridgemask & DB_UNDER) == DB_LAVA))
         return TRUE;
     return FALSE;
 }
@@ -84,9 +84,9 @@ int x, y;
 
     if (!isok(x, y))
         return FALSE;
-    ltyp = levl[x][y].typ;
+    ltyp = lev_get(x, y).typ;
     if (ltyp == ICE || (ltyp == DRAWBRIDGE_UP
-                        && (levl[x][y].drawbridgemask & DB_UNDER) == DB_ICE))
+                        && (lev_get(x, y).drawbridgemask & DB_UNDER) == DB_ICE))
         return TRUE;
     return FALSE;
 }
@@ -99,11 +99,11 @@ int x, y;
 
     if (!isok(x, y))
         return FALSE;
-    ltyp = levl[x][y].typ;
+    ltyp = lev_get(x, y).typ;
     if (!Is_juiblex_level(&u.uz)
         && (ltyp == MOAT
             || (ltyp == DRAWBRIDGE_UP
-                && (levl[x][y].drawbridgemask & DB_UNDER) == DB_MOAT)))
+                && (lev_get(x, y).drawbridgemask & DB_UNDER) == DB_MOAT)))
         return TRUE;
     return FALSE;
 }
@@ -135,23 +135,23 @@ int
 is_drawbridge_wall(x, y)
 int x, y;
 {
-    struct rm *lev;
+    
 
-    lev = &levl[x][y];
-    if (lev->typ != DOOR && lev->typ != DBWALL)
+    
+    if (lev_get(x, y).typ != DOOR && lev_get(x, y).typ != DBWALL)
         return -1;
 
-    if (IS_DRAWBRIDGE(levl[x + 1][y].typ)
-        && (levl[x + 1][y].drawbridgemask & DB_DIR) == DB_WEST)
+    if (IS_DRAWBRIDGE(lev_get(x + 1, y).typ)
+        && (lev_get(x + 1, y).drawbridgemask & DB_DIR) == DB_WEST)
         return DB_WEST;
-    if (IS_DRAWBRIDGE(levl[x - 1][y].typ)
-        && (levl[x - 1][y].drawbridgemask & DB_DIR) == DB_EAST)
+    if (IS_DRAWBRIDGE(lev_get(x - 1, y).typ)
+        && (lev_get(x - 1, y).drawbridgemask & DB_DIR) == DB_EAST)
         return DB_EAST;
-    if (IS_DRAWBRIDGE(levl[x][y - 1].typ)
-        && (levl[x][y - 1].drawbridgemask & DB_DIR) == DB_SOUTH)
+    if (IS_DRAWBRIDGE(lev_get(x, y - 1).typ)
+        && (lev_get(x, y - 1).drawbridgemask & DB_DIR) == DB_SOUTH)
         return DB_SOUTH;
-    if (IS_DRAWBRIDGE(levl[x][y + 1].typ)
-        && (levl[x][y + 1].drawbridgemask & DB_DIR) == DB_NORTH)
+    if (IS_DRAWBRIDGE(lev_get(x, y + 1).typ)
+        && (lev_get(x, y + 1).drawbridgemask & DB_DIR) == DB_NORTH)
         return DB_NORTH;
 
     return -1;
@@ -166,7 +166,7 @@ boolean
 is_db_wall(x, y)
 int x, y;
 {
-    return (boolean) (levl[x][y].typ == DBWALL);
+    return (boolean) (lev_get(x, y).typ == DBWALL);
 }
 
 /*
@@ -179,7 +179,7 @@ int *x, *y;
 {
     int dir;
 
-    if (IS_DRAWBRIDGE(levl[*x][*y].typ))
+    if (IS_DRAWBRIDGE(lev_get(*x, *y).typ))
         return TRUE;
     dir = is_drawbridge_wall(*x, *y);
     if (dir >= 0) {
@@ -209,7 +209,7 @@ STATIC_OVL void
 get_wall_for_db(x, y)
 int *x, *y;
 {
-    switch (levl[*x][*y].drawbridgemask & DB_DIR) {
+    switch (lev_get(*x, *y).drawbridgemask & DB_DIR) {
     case DB_NORTH:
         (*y)--;
         break;
@@ -237,7 +237,7 @@ boolean flag;
 {
     int x2, y2;
     boolean horiz;
-    boolean lava = levl[x][y].typ == LAVAPOOL; /* assume initialized map */
+    boolean lava = lev_get(x, y).typ == LAVAPOOL; /* assume initialized map */
 
     x2 = x;
     y2 = y;
@@ -262,23 +262,23 @@ boolean flag;
         x2--;
         break;
     }
-    if (!IS_WALL(levl[x2][y2].typ))
+    if (!IS_WALL(lev_get(x2, y2).typ))
         return FALSE;
     if (flag) { /* We want the bridge open */
-        levl[x][y].typ = DRAWBRIDGE_DOWN;
-        levl[x2][y2].typ = DOOR;
-        levl[x2][y2].doormask = D_NODOOR;
+        ({ int _lv = (DRAWBRIDGE_DOWN); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
+        ({ int _lv = (DOOR); int _lx = (x2), _ly = (y2); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
+        ({ int _lv = (D_NODOOR); int _lx = (x2), _ly = (y2); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
     } else {
-        levl[x][y].typ = DRAWBRIDGE_UP;
-        levl[x2][y2].typ = DBWALL;
+        ({ int _lv = (DRAWBRIDGE_UP); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
+        ({ int _lv = (DBWALL); int _lx = (x2), _ly = (y2); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
         /* Drawbridges are non-diggable. */
-        levl[x2][y2].wall_info = W_NONDIGGABLE;
+        ({ int _lv = (W_NONDIGGABLE); int _lx = (x2), _ly = (y2); struct rm _lr = lev_get(_lx, _ly); _lr.wall_info = _lv; lev_put(_lx, _ly, _lr); _lr.wall_info; });
     }
-    levl[x][y].horizontal = !horiz;
-    levl[x2][y2].horizontal = horiz;
-    levl[x][y].drawbridgemask = dir;
+    ({ int _lv = (!horiz); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.horizontal = _lv; lev_put(_lx, _ly, _lr); _lr.horizontal; });
+    ({ int _lv = (horiz); int _lx = (x2), _ly = (y2); struct rm _lr = lev_get(_lx, _ly); _lr.horizontal = _lv; lev_put(_lx, _ly, _lr); _lr.horizontal; });
+    ({ int _lv = (dir); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.drawbridgemask = _lv; lev_put(_lx, _ly, _lr); _lr.drawbridgemask; });
     if (lava)
-        levl[x][y].drawbridgemask |= DB_LAVA;
+        ({ int _lv = (DB_LAVA); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.drawbridgemask |= _lv; lev_put(_lx, _ly, _lr); _lr.drawbridgemask; });
     return  TRUE;
 }
 
@@ -561,7 +561,7 @@ struct entity *etmp;
 {
     int newx, newy, at_portcullis, oldx, oldy;
     boolean must_jump = FALSE, relocates = FALSE, e_inview;
-    struct rm *crm;
+    
 
     if (!etmp->edata)
         return;
@@ -570,10 +570,10 @@ struct entity *etmp;
     oldx = etmp->ex;
     oldy = etmp->ey;
     at_portcullis = is_db_wall(oldx, oldy);
-    crm = &levl[oldx][oldy];
+    
 
     if (automiss(etmp) && e_survives_at(etmp, oldx, oldy)) {
-        if (e_inview && (at_portcullis || IS_DRAWBRIDGE(crm->typ)))
+        if (e_inview && (at_portcullis || IS_DRAWBRIDGE(lev_get(oldx, oldy).typ)))
             pline_The("%s passes through %s!",
                       at_portcullis ? "portcullis" : "drawbridge",
                       e_nam(etmp));
@@ -597,7 +597,7 @@ struct entity *etmp;
                 relocates = TRUE; /* just ride drawbridge in */
         }
     } else {
-        if (crm->typ == DRAWBRIDGE_DOWN) {
+        if (lev_get(oldx, oldy).typ == DRAWBRIDGE_DOWN) {
             if (is_u(etmp)) {
                 killer.format = NO_KILLER_PREFIX;
                 Strcpy(killer.name,
@@ -769,12 +769,11 @@ void
 close_drawbridge(x, y)
 int x, y;
 {
-    register struct rm *lev1, *lev2;
     struct trap *t;
     int x2, y2;
 
-    lev1 = &levl[x][y];
-    if (lev1->typ != DRAWBRIDGE_DOWN)
+    
+    if (lev_get(x, y).typ != DRAWBRIDGE_DOWN)
         return;
     x2 = x;
     y2 = y;
@@ -787,20 +786,19 @@ int x, y;
                     : "going");
     else /* "5 gears turn" for castle drawbridge tune */
         You_hear("chains rattling and gears turning.");
-    lev1->typ = DRAWBRIDGE_UP;
-    lev2 = &levl[x2][y2];
-    lev2->typ = DBWALL;
-    switch (lev1->drawbridgemask & DB_DIR) {
+    ({ int _lv = (DRAWBRIDGE_UP); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
+    ({ int _lv = (DBWALL); int _lx = (x2), _ly = (y2); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
+    switch (lev_get(x, y).drawbridgemask & DB_DIR) {
     case DB_NORTH:
     case DB_SOUTH:
-        lev2->horizontal = TRUE;
+        ({ int _lv = (TRUE); int _lx = (x2), _ly = (y2); struct rm _lr = lev_get(_lx, _ly); _lr.horizontal = _lv; lev_put(_lx, _ly, _lr); _lr.horizontal; });
         break;
     case DB_WEST:
     case DB_EAST:
-        lev2->horizontal = FALSE;
+        ({ int _lv = (FALSE); int _lx = (x2), _ly = (y2); struct rm _lr = lev_get(_lx, _ly); _lr.horizontal = _lv; lev_put(_lx, _ly, _lr); _lr.horizontal; });
         break;
     }
-    lev2->wall_info = W_NONDIGGABLE;
+    ({ int _lv = (W_NONDIGGABLE); int _lx = (x2), _ly = (y2); struct rm _lr = lev_get(_lx, _ly); _lr.wall_info = _lv; lev_put(_lx, _ly, _lr); _lr.wall_info; });
     set_entity(x, y, &(occupants[0]));
     set_entity(x2, y2, &(occupants[1]));
     do_entity(&(occupants[0]));          /* Do set_entity after first */
@@ -831,12 +829,11 @@ void
 open_drawbridge(x, y)
 int x, y;
 {
-    register struct rm *lev1, *lev2;
     struct trap *t;
     int x2, y2;
 
-    lev1 = &levl[x][y];
-    if (lev1->typ != DRAWBRIDGE_UP)
+    
+    if (lev_get(x, y).typ != DRAWBRIDGE_UP)
         return;
     x2 = x;
     y2 = y;
@@ -846,10 +843,9 @@ int x, y;
                 (distu(x2, y2) < distu(x, y)) ? "going" : "coming");
     else /* "5 gears turn" for castle drawbridge tune */
         You_hear("gears turning and chains rattling.");
-    lev1->typ = DRAWBRIDGE_DOWN;
-    lev2 = &levl[x2][y2];
-    lev2->typ = DOOR;
-    lev2->doormask = D_NODOOR;
+    ({ int _lv = (DRAWBRIDGE_DOWN); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
+    ({ int _lv = (DOOR); int _lx = (x2), _ly = (y2); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
+    ({ int _lv = (D_NODOOR); int _lx = (x2), _ly = (y2); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
     set_entity(x, y, &(occupants[0]));
     set_entity(x2, y2, &(occupants[1]));
     do_entity(&(occupants[0]));          /* do set_entity after first */
@@ -878,26 +874,24 @@ void
 destroy_drawbridge(x, y)
 int x, y;
 {
-    register struct rm *lev1, *lev2;
     struct trap *t;
     struct obj *otmp;
     int x2, y2, i;
     boolean e_inview;
     struct entity *etmp1 = &(occupants[0]), *etmp2 = &(occupants[1]);
 
-    lev1 = &levl[x][y];
-    if (!IS_DRAWBRIDGE(lev1->typ))
+    
+    if (!IS_DRAWBRIDGE(lev_get(x, y).typ))
         return;
     x2 = x;
     y2 = y;
     get_wall_for_db(&x2, &y2);
-    lev2 = &levl[x2][y2];
-    if ((lev1->drawbridgemask & DB_UNDER) == DB_MOAT
-        || (lev1->drawbridgemask & DB_UNDER) == DB_LAVA) {
+    if ((lev_get(x, y).drawbridgemask & DB_UNDER) == DB_MOAT
+        || (lev_get(x, y).drawbridgemask & DB_UNDER) == DB_LAVA) {
         struct obj *otmp2;
-        boolean lava = (lev1->drawbridgemask & DB_UNDER) == DB_LAVA;
+        boolean lava = (lev_get(x, y).drawbridgemask & DB_UNDER) == DB_LAVA;
 
-        if (lev1->typ == DRAWBRIDGE_UP) {
+        if (lev_get(x, y).typ == DRAWBRIDGE_UP) {
             if (cansee(x2, y2))
                 pline_The("portcullis of the drawbridge falls into the %s!",
                           lava ? hliquid("lava") : "moat");
@@ -910,8 +904,8 @@ int x, y;
             else if (!Deaf)
                 You_hear("a loud *SPLASH*!");
         }
-        lev1->typ = lava ? LAVAPOOL : MOAT;
-        lev1->drawbridgemask = 0;
+        ({ int _lv = (lava ? LAVAPOOL : MOAT); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
+        ({ int _lv = (0); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.drawbridgemask = _lv; lev_put(_lx, _ly, _lr); _lr.drawbridgemask; });
         if ((otmp2 = sobj_at(BOULDER, x, y)) != 0) {
             obj_extract_self(otmp2);
             (void) flooreffects(otmp2, x, y, "fall");
@@ -921,12 +915,12 @@ int x, y;
             pline_The("drawbridge disintegrates!");
         else
             You_hear("a loud *CRASH*!");
-        lev1->typ = ((lev1->drawbridgemask & DB_ICE) ? ICE : ROOM);
-        lev1->icedpool = ((lev1->drawbridgemask & DB_ICE) ? ICED_MOAT : 0);
+        ({ int _lv = (((lev_get(x, y).drawbridgemask & DB_ICE) ? ICE : ROOM)); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
+        ({ int _lv = (((lev_get(x, y).drawbridgemask & DB_ICE) ? ICED_MOAT : 0)); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.icedpool = _lv; lev_put(_lx, _ly, _lr); _lr.icedpool; });
     }
     wake_nearto(x, y, 500);
-    lev2->typ = DOOR;
-    lev2->doormask = D_NODOOR;
+    ({ int _lv = (DOOR); int _lx = (x2), _ly = (y2); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
+    ({ int _lv = (D_NODOOR); int _lx = (x2), _ly = (y2); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
     if ((t = t_at(x, y)) != 0)
         deltrap(t);
     if ((t = t_at(x2, y2)) != 0)
@@ -945,7 +939,7 @@ int x, y;
     }
     newsym(x, y);
     newsym(x2, y2);
-    if (!does_block(x2, y2, lev2))
+    if (!does_block(x2, y2))
         unblock_point(x2, y2); /* vision */
     if (Is_stronghold(&u.uz))
         u.uevent.uopened_dbridge = TRUE;
@@ -994,7 +988,7 @@ int x, y;
             e_died(etmp1,
                    XKILL_NOCORPSE | (e_inview ? XKILL_GIVEMSG : XKILL_NOMSG),
                    CRUSHING); /*no corpse*/
-            if (levl[etmp1->ex][etmp1->ey].typ == MOAT)
+            if (lev_get(etmp1->ex, etmp1->ey).typ == MOAT)
                 do_entity(etmp1);
         }
     }

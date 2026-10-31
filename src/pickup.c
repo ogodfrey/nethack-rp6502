@@ -1876,7 +1876,7 @@ doloot()
             if (anyfound)
                 c = 'y';
         }
-    } else if (IS_GRAVE(levl[cc.x][cc.y].typ)) {
+    } else if (IS_GRAVE(lev_get(cc.x, cc.y).typ)) {
         You("need to dig up the grave to effectively loot it...");
     }
 
@@ -1966,7 +1966,7 @@ reverse_loot()
     if (!goldob)
         return FALSE;
 
-    if (!IS_THRONE(levl[x][y].typ)) {
+    if (!IS_THRONE(lev_get(x, y).typ)) {
         dropx(goldob);
         /* the dropped gold might have fallen to lower level */
         if (g_at(x, y))
@@ -1996,13 +1996,13 @@ reverse_loot()
                 boxdummy = zeroobj, boxdummy.otyp = SPE_WIZARD_LOCK;
                 (void) boxlock(coffers, &boxdummy);
             }
-        } else if (levl[x][y].looted != T_LOOTED
+        } else if (lev_get(x, y).looted != T_LOOTED
                    && (mon = makemon(courtmon(), x, y, NO_MM_FLAGS)) != 0) {
             freeinv(goldob);
             add_to_minv(mon, goldob);
             pline("The exchequer accepts your contribution.");
             if (!rn2(10))
-                levl[x][y].looted = T_LOOTED;
+                ({ int _lv = (T_LOOTED); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.looted = _lv; lev_put(_lx, _ly, _lr); _lr.looted; });
         } else {
             You("drop %s.", doname(goldob));
             dropx(goldob);
@@ -3203,7 +3203,7 @@ struct obj *box; /* or bag */
     if (empty_it) {
         struct obj *otmp, *nobj;
         boolean terse, highdrop = !can_reach_floor(TRUE),
-                altarizing = IS_ALTAR(levl[ox][oy].typ),
+                altarizing = IS_ALTAR(lev_get(ox, oy).typ),
                 cursed_mbag = (Is_mbag(box) && box->cursed);
         int held = carried(box);
         long loss = 0L;

@@ -14,10 +14,10 @@ _Static_assert(MONS_XRAM_ADDR + (NUMMONS + 1) * sizeof(struct permonst)
                    <= OBJS_XRAM_ADDR,
                "mons[] overlaps objects[] in XRAM");
 _Static_assert(OBJS_XRAM_ADDR + (NUM_OBJECTS + 1) * sizeof(struct objclass)
-                   <= OVL_DESC_XRAM,
-               "objects[] overlaps the overlay descriptor in XRAM");
-_Static_assert(OVL_DESC_XRAM < OVL_DIR_XRAM,
-               "overlay descriptor overlaps the directory in XRAM");
+                   <= LEV_XRAM_ADDR,
+               "objects[] overlaps the level map in XRAM");
+_Static_assert(OVL_DIR_XRAM + 0x1000 <= MONS_XRAM_ADDR,
+               "the overlay directory must fit below mons[] in XRAM");
 
 #define PM_SLOTS 4
 

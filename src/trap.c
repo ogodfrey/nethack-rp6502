@@ -318,7 +318,7 @@ int x, y, typ;
     static union vlaunchinfo zero_vl;
     boolean oldplace;
     struct trap *ttmp;
-    struct rm *lev = &levl[x][y];
+    
 
     if ((ttmp = t_at(x, y)) != 0) {
         if (ttmp->ttyp == MAGIC_PORTAL || ttmp->ttyp == VIBRATING_SQUARE)
@@ -330,8 +330,8 @@ int x, y, typ;
                 || (u.utraptype == TT_PIT && !is_pit(typ))))
             u.utrap = 0;
         /* old <tx,ty> remain valid */
-    } else if (IS_FURNITURE(lev->typ)
-               && (!IS_GRAVE(lev->typ) || (typ != PIT && typ != HOLE))) {
+    } else if (IS_FURNITURE(lev_get(x, y).typ)
+               && (!IS_GRAVE(lev_get(x, y).typ) || (typ != PIT && typ != HOLE))) {
         /* no trap on top of furniture (caller usually screens the
            location to inhibit this, but wizard mode wishing doesn't) */
         return (struct trap *) 0;
@@ -405,25 +405,25 @@ int x, y, typ;
     case HOLE:
     case TRAPDOOR:
         if (*in_rooms(x, y, SHOPBASE)
-            && (is_hole(typ) || IS_DOOR(lev->typ) || IS_WALL(lev->typ)))
+            && (is_hole(typ) || IS_DOOR(lev_get(x, y).typ) || IS_WALL(lev_get(x, y).typ)))
             add_damage(x, y, /* schedule repair */
-                       ((IS_DOOR(lev->typ) || IS_WALL(lev->typ))
+                       ((IS_DOOR(lev_get(x, y).typ) || IS_WALL(lev_get(x, y).typ))
                         && !context.mon_moving)
                            ? SHOP_HOLE_COST
                            : 0L);
-        lev->doormask = 0;     /* subsumes altarmask, icedpool... */
-        if (IS_ROOM(lev->typ)) /* && !IS_AIR(lev->typ) */
-            lev->typ = ROOM;
+        ({ int _lv = (0); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });     /* subsumes altarmask, icedpool... */
+        if (IS_ROOM(lev_get(x, y).typ)) /* && !IS_AIR(lev->typ) */
+            ({ int _lv = (ROOM); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
         /*
          * some cases which can happen when digging
          * down while phazing thru solid areas
          */
-        else if (lev->typ == STONE || lev->typ == SCORR)
-            lev->typ = CORR;
-        else if (IS_WALL(lev->typ) || lev->typ == SDOOR)
-            lev->typ = level.flags.is_maze_lev
+        else if (lev_get(x, y).typ == STONE || lev_get(x, y).typ == SCORR)
+            ({ int _lv = (CORR); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
+        else if (IS_WALL(lev_get(x, y).typ) || lev_get(x, y).typ == SDOOR)
+            ({ int _lv = (level.flags.is_maze_lev
                            ? ROOM
-                           : level.flags.is_cavernous_lev ? CORR : DOOR;
+                           : level.flags.is_cavernous_lev ? CORR : DOOR); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
 
         unearth_objs(x, y);
         break;
@@ -488,7 +488,7 @@ unsigned ftflags;
     if (Sokoban && Can_fall_thru(&u.uz))
         ; /* KMH -- You can't escape the Sokoban level traps */
     else if (Levitation || u.ustuck
-             || (!Can_fall_thru(&u.uz) && !levl[u.ux][u.uy].candig)
+             || (!Can_fall_thru(&u.uz) && !lev_get(u.ux, u.uy).candig)
              || ((Flying || is_clinger(youmonst.data)
                   || (ceiling_hider(youmonst.data) && u.uundetected))
                  && !(ftflags & TOOKPLUNGE))
@@ -1671,17 +1671,17 @@ blow_up_landmine(trap)
 struct trap *trap;
 {
     int x = trap->tx, y = trap->ty, dbx, dby;
-    struct rm *lev = &levl[x][y];
+    
 
     (void) scatter(x, y, 4,
                    MAY_DESTROY | MAY_HIT | MAY_FRACTURE | VIS_EFFECTS,
                    (struct obj *) 0);
     del_engr_at(x, y);
     wake_nearto(x, y, 400);
-    if (IS_DOOR(lev->typ))
-        lev->doormask = D_BROKEN;
+    if (IS_DOOR(lev_get(x, y).typ))
+        ({ int _lv = (D_BROKEN); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
     /* destroy drawbridge if present */
-    if (lev->typ == DRAWBRIDGE_DOWN || is_drawbridge_wall(x, y) >= 0) {
+    if (lev_get(x, y).typ == DRAWBRIDGE_DOWN || is_drawbridge_wall(x, y) >= 0) {
         dbx = x, dby = y;
         /* if under the portcullis, the bridge is adjacent */
         if (find_drawbridge(&dbx, &dby))
@@ -1967,7 +1967,7 @@ int style;
                 const char *bmsg = " as one boulder sets another in motion";
 
                 if (!isok(bhitpos.x + dx, bhitpos.y + dy) || !dist
-                    || IS_ROCK(levl[bhitpos.x + dx][bhitpos.y + dy].typ))
+                    || IS_ROCK(lev_get(bhitpos.x + dx, bhitpos.y + dy).typ))
                     bmsg = " as one boulder hits another";
 
                 You_hear("a loud crash%s!",
@@ -1985,14 +1985,14 @@ int style;
         if (otyp == BOULDER && closed_door(bhitpos.x, bhitpos.y)) {
             if (cansee(bhitpos.x, bhitpos.y))
                 pline_The("boulder crashes through a door.");
-            levl[bhitpos.x][bhitpos.y].doormask = D_BROKEN;
+            ({ int _lv = (D_BROKEN); int _lx = (bhitpos.x), _ly = (bhitpos.y); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
             if (dist)
                 unblock_point(bhitpos.x, bhitpos.y);
         }
 
         /* if about to hit iron bars, do so now */
         if (dist > 0 && isok(bhitpos.x + dx, bhitpos.y + dy)
-            && levl[bhitpos.x + dx][bhitpos.y + dy].typ == IRONBARS) {
+            && lev_get(bhitpos.x + dx, bhitpos.y + dy).typ == IRONBARS) {
             x2 = bhitpos.x, y2 = bhitpos.y; /* object stops here */
             if (hits_bars(&singleobj,
                           x2, y2, x2+dx, y2+dy,
@@ -2121,7 +2121,7 @@ schar dx, dy;
     while (distance-- > 0) {
         x += dx;
         y += dy;
-        typ = levl[x][y].typ;
+        typ = lev_get(x, y).typ;
         if (!isok(x, y) || !ZAP_POS(typ) || closed_door(x, y))
             return FALSE;
     }
@@ -2864,7 +2864,7 @@ float_up()
                above that floor but not from enhancing carrying capacity */
             You("feel lighter, but your %s is still chained to the %s.",
                 body_part(LEG),
-                IS_ROOM(levl[cc.x][cc.y].typ) ? "floor" : "ground");
+                IS_ROOM(lev_get(cc.x, cc.y).typ) ? "floor" : "ground");
         } else if (u.utraptype == WEB) {
             You("float up slightly, but you are still stuck in the web.");
         } else { /* bear trap */
@@ -4560,13 +4560,13 @@ boolean force;
     } /* deal_with_floor_trap */
     /* doors can be manipulated even while levitating/unskilled riding */
 
-    if (!IS_DOOR(levl[x][y].typ)) {
+    if (!IS_DOOR(lev_get(x, y).typ)) {
         if (!trap_skipped)
             You("know of no traps there.");
         return 0;
     }
 
-    switch (levl[x][y].doormask) {
+    switch (lev_get(x, y).doormask) {
     case D_NODOOR:
         You("%s no door there.", Blind ? "feel" : "see");
         return 0;
@@ -4578,21 +4578,21 @@ boolean force;
         return 0;
     }
 
-    if (((levl[x][y].doormask & D_TRAPPED) != 0
+    if (((lev_get(x, y).doormask & D_TRAPPED) != 0
          && (force || (!confused && rn2(MAXULEV - u.ulevel + 11) < 10)))
         || (!force && confused && !rn2(3))) {
         You("find a trap on the door!");
         exercise(A_WIS, TRUE);
         if (ynq("Disarm it?") != 'y')
             return 1;
-        if (levl[x][y].doormask & D_TRAPPED) {
+        if (lev_get(x, y).doormask & D_TRAPPED) {
             ch = 15 + (Role_if(PM_ROGUE) ? u.ulevel * 3 : u.ulevel);
             exercise(A_DEX, TRUE);
             if (!force && (confused || Fumbling
                            || rnd(75 + level_difficulty() / 2) > ch)) {
                 You("set it off!");
                 b_trapped("door", FINGER);
-                levl[x][y].doormask = D_NODOOR;
+                ({ int _lv = (D_NODOOR); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
                 unblock_point(x, y);
                 newsym(x, y);
                 /* (probably ought to charge for this damage...) */
@@ -4600,7 +4600,7 @@ boolean force;
                     add_damage(x, y, 0L);
             } else {
                 You("disarm it!");
-                levl[x][y].doormask &= ~D_TRAPPED;
+                ({ int _lv = (~D_TRAPPED); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.doormask &= _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
             }
         } else
             pline("This door was not trapped.");

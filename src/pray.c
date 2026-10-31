@@ -93,9 +93,10 @@ static int p_type; /* (-1)-3: (-1)=really naughty, 3=really good */
 
 
 #define ugod_is_angry() (u.ualign.record < 0)
-#define on_altar() IS_ALTAR(levl[u.ux][u.uy].typ)
-#define on_shrine() ((levl[u.ux][u.uy].altarmask & AM_SHRINE) != 0)
-#define a_align(x, y) ((aligntyp) Amask2align(levl[x][y].altarmask & AM_MASK))
+#define on_altar() IS_ALTAR(lev_get(u.ux, u.uy).typ)
+#define on_shrine() ((lev_get(u.ux, u.uy).altarmask & AM_SHRINE) != 0)
+#define a_align(x, y) \
+    ((aligntyp) Amask2align(lev_get(x, y).altarmask & AM_MASK))
 
 /* critically low hit points if hp <= 5 or hp <= maxhp/N for some N */
 boolean
@@ -156,8 +157,8 @@ stuck_in_wall()
                 continue;
             y = u.uy + j;
             if (!isok(x, y)
-                || (IS_ROCK(levl[x][y].typ)
-                    && (levl[x][y].typ != SDOOR && levl[x][y].typ != SCORR))
+                || (IS_ROCK(lev_get(x, y).typ)
+                    && (lev_get(x, y).typ != SDOOR && lev_get(x, y).typ != SCORR))
                 || (blocked_boulder(i, j) && !throws_rocks(youmonst.data)))
                 ++count;
         }
@@ -1338,7 +1339,7 @@ dosacrifice()
         return 0;
     }
     highaltar = ((Is_astralevel(&u.uz) || Is_sanctum(&u.uz))
-                 && (levl[u.ux][u.uy].altarmask & AM_SHRINE));
+                 && (lev_get(u.ux, u.uy).altarmask & AM_SHRINE));
 
     otmp = floorfood("sacrifice", 1);
     if (!otmp)
@@ -1389,7 +1390,7 @@ dosacrifice()
             } else if (altaralign != A_CHAOTIC && altaralign != A_NONE) {
                 /* curse the lawful/neutral altar */
                 pline_The("altar is stained with %s blood.", urace.adj);
-                levl[u.ux][u.uy].altarmask = AM_CHAOTIC;
+                ({ int _lv = (AM_CHAOTIC); int _lx = (u.ux), _ly = (u.uy); struct rm _lr = lev_get(_lx, _ly); _lr.altarmask = _lv; lev_put(_lx, _ly, _lr); _lr.altarmask; });
                 angry_priest();
             } else {
                 struct monst *dmon;
@@ -1401,8 +1402,8 @@ dosacrifice()
                     pline(
                     "The blood floods the altar, which vanishes in %s cloud!",
                           an(hcolor(NH_BLACK)));
-                    levl[u.ux][u.uy].typ = ROOM;
-                    levl[u.ux][u.uy].altarmask = 0;
+                    ({ int _lv = (ROOM); int _lx = (u.ux), _ly = (u.uy); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
+                    ({ int _lv = (0); int _lx = (u.ux), _ly = (u.uy); struct rm _lr = lev_get(_lx, _ly); _lr.altarmask = _lv; lev_put(_lx, _ly, _lr); _lr.altarmask; });
                     newsym(u.ux, u.uy);
                     angry_priest();
                     demonless_msg = "cloud dissipates";
@@ -1650,11 +1651,10 @@ dosacrifice()
                     exercise(A_WIS, TRUE);
                     change_luck(1);
                     /* Yes, this is supposed to be &=, not |= */
-                    levl[u.ux][u.uy].altarmask &= AM_SHRINE;
+                    ({ int _lv = (AM_SHRINE); int _lx = (u.ux), _ly = (u.uy); struct rm _lr = lev_get(_lx, _ly); _lr.altarmask &= _lv; lev_put(_lx, _ly, _lr); _lr.altarmask; });
                     /* the following accommodates stupid compilers */
-                    levl[u.ux][u.uy].altarmask =
-                        levl[u.ux][u.uy].altarmask
-                        | (Align2amask(u.ualign.type));
+                    ({ int _lv = (lev_get(u.ux, u.uy).altarmask
+                        | (Align2amask(u.ualign.type))); int _lx = (u.ux), _ly = (u.uy); struct rm _lr = lev_get(_lx, _ly); _lr.altarmask = _lv; lev_put(_lx, _ly, _lr); _lr.altarmask; });
                     if (!Blind)
                         pline_The("altar glows %s.",
                                   hcolor((u.ualign.type == A_LAWFUL)
@@ -2093,7 +2093,7 @@ const char *
 a_gname_at(x, y)
 xchar x, y;
 {
-    if (!IS_ALTAR(levl[x][y].typ))
+    if (!IS_ALTAR(lev_get(x, y).typ))
         return (char *) 0;
 
     return align_gname(a_align(x, y));
@@ -2293,7 +2293,7 @@ int dx, dy;
         return TRUE;
     if (!isok(nx, ny))
         return TRUE;
-    if (IS_ROCK(levl[nx][ny].typ))
+    if (IS_ROCK(lev_get(nx, ny).typ))
         return TRUE;
     if (sobj_at(BOULDER, nx, ny))
         return TRUE;

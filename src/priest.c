@@ -98,7 +98,7 @@ pick_move:
     for (i = 0; i < cnt; i++) {
         nx = poss[i].x;
         ny = poss[i].y;
-        if (IS_ROOM(levl[nx][ny].typ)
+        if (IS_ROOM(lev_get(nx, ny).typ)
             || (mtmp->isshk && (!in_his_shop || ESHK(mtmp)->following))) {
             if (avoid && (info[i] & NOTONL))
                 continue;
@@ -240,7 +240,7 @@ boolean sanctum; /* is it the seat of the high priest? */
                      sx + 1, sy, MM_EPRI);
     if (priest) {
         EPRI(priest)->shroom = (schar) ((sroom - rooms) + ROOMOFFSET);
-        EPRI(priest)->shralign = Amask2align(levl[sx][sy].altarmask);
+        EPRI(priest)->shralign = Amask2align(lev_get(sx, sy).altarmask);
         EPRI(priest)->shrpos.x = sx;
         EPRI(priest)->shrpos.y = sy;
         assign_level(&(EPRI(priest)->shrlevel), lvl);
@@ -355,17 +355,17 @@ STATIC_OVL boolean
 has_shrine(pri)
 struct monst *pri;
 {
-    struct rm *lev;
+    
     struct epri *epri_p;
 
     if (!pri || !pri->ispriest)
         return FALSE;
     epri_p = EPRI(pri);
-    lev = &levl[epri_p->shrpos.x][epri_p->shrpos.y];
-    if (!IS_ALTAR(lev->typ) || !(lev->altarmask & AM_SHRINE))
+    
+    if (!IS_ALTAR(lev_get(epri_p->shrpos.x, epri_p->shrpos.y).typ) || !(lev_get(epri_p->shrpos.x, epri_p->shrpos.y).altarmask & AM_SHRINE))
         return FALSE;
     return (boolean) (epri_p->shralign
-                      == (Amask2align(lev->altarmask & ~AM_SHRINE)));
+                      == (Amask2align(lev_get(epri_p->shrpos.x, epri_p->shrpos.y).altarmask & ~AM_SHRINE)));
 }
 
 struct monst *
@@ -734,7 +734,7 @@ struct monst *priest;
     troom = &rooms[roomno - ROOMOFFSET];
 
     if ((u.ux == x && u.uy == y) || !linedup(u.ux, u.uy, x, y, 1)) {
-        if (IS_DOOR(levl[u.ux][u.uy].typ)) {
+        if (IS_DOOR(lev_get(u.ux, u.uy).typ)) {
             if (u.ux == troom->lx - 1) {
                 x = troom->hx;
                 y = u.uy;
@@ -796,7 +796,7 @@ void
 angry_priest()
 {
     register struct monst *priest;
-    struct rm *lev;
+    
 
     if ((priest = findpriest(temple_occupied(u.urooms))) != 0) {
         struct epri *eprip = EPRI(priest);
@@ -810,9 +810,9 @@ angry_priest()
          * a fresh corpse nearby, the priest ought to have an
          * opportunity to try converting it back; maybe someday...)
          */
-        lev = &levl[eprip->shrpos.x][eprip->shrpos.y];
-        if (!IS_ALTAR(lev->typ)
-            || ((aligntyp) Amask2align(lev->altarmask & AM_MASK)
+        
+        if (!IS_ALTAR(lev_get(eprip->shrpos.x, eprip->shrpos.y).typ)
+            || ((aligntyp) Amask2align(lev_get(eprip->shrpos.x, eprip->shrpos.y).altarmask & AM_MASK)
                 != eprip->shralign)) {
             if (!EMIN(priest))
                 newemin(priest);

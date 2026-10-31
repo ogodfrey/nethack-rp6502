@@ -56,7 +56,7 @@ boolean pushing;
     } else if (!Is_waterlevel(&u.uz) && is_pool_or_lava(rx, ry)) {
         boolean lava = is_lava(rx, ry), fills_up;
         const char *what = waterbody_name(rx, ry);
-        schar ltyp = levl[rx][ry].typ;
+        schar ltyp = lev_get(rx, ry).typ;
         int chance = rn2(10); /* water: 90%; lava: 10% */
         fills_up = lava ? chance == 0 : chance != 0;
 
@@ -64,10 +64,10 @@ boolean pushing;
             struct trap *ttmp = t_at(rx, ry);
 
             if (ltyp == DRAWBRIDGE_UP) {
-                levl[rx][ry].drawbridgemask &= ~DB_UNDER; /* clear lava */
-                levl[rx][ry].drawbridgemask |= DB_FLOOR;
+                ({ int _lv = (~DB_UNDER); int _lx = (rx), _ly = (ry); struct rm _lr = lev_get(_lx, _ly); _lr.drawbridgemask &= _lv; lev_put(_lx, _ly, _lr); _lr.drawbridgemask; }); /* clear lava */
+                ({ int _lv = (DB_FLOOR); int _lx = (rx), _ly = (ry); struct rm _lr = lev_get(_lx, _ly); _lr.drawbridgemask |= _lv; lev_put(_lx, _ly, _lr); _lr.drawbridgemask; });
             } else
-                levl[rx][ry].typ = ROOM, levl[rx][ry].flags = 0;
+                ({ int _lv = (ROOM); int _lx = (rx), _ly = (ry); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; }), ({ int _lv = (0); int _lx = (rx), _ly = (ry); struct rm _lr = lev_get(_lx, _ly); _lr.flags = _lv; lev_put(_lx, _ly, _lr); _lr.flags; });
 
             if (ttmp)
                 (void) delfloortrap(ttmp);
@@ -312,48 +312,48 @@ polymorph_sink()
     boolean sinklooted;
     int algn;
 
-    if (levl[u.ux][u.uy].typ != SINK)
+    if (lev_get(u.ux, u.uy).typ != SINK)
         return;
 
-    sinklooted = levl[u.ux][u.uy].looted != 0;
+    sinklooted = lev_get(u.ux, u.uy).looted != 0;
     level.flags.nsinks--;
-    levl[u.ux][u.uy].doormask = 0; /* levl[][].flags */
+    ({ int _lv = (0); int _lx = (u.ux), _ly = (u.uy); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; }); /* levl[][].flags */
     switch (rn2(4)) {
     default:
     case 0:
         sym = S_fountain;
-        levl[u.ux][u.uy].typ = FOUNTAIN;
-        levl[u.ux][u.uy].blessedftn = 0;
+        ({ int _lv = (FOUNTAIN); int _lx = (u.ux), _ly = (u.uy); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
+        ({ int _lv = (0); int _lx = (u.ux), _ly = (u.uy); struct rm _lr = lev_get(_lx, _ly); _lr.blessedftn = _lv; lev_put(_lx, _ly, _lr); _lr.blessedftn; });
         if (sinklooted)
             SET_FOUNTAIN_LOOTED(u.ux, u.uy);
         level.flags.nfountains++;
         break;
     case 1:
         sym = S_throne;
-        levl[u.ux][u.uy].typ = THRONE;
+        ({ int _lv = (THRONE); int _lx = (u.ux), _ly = (u.uy); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
         if (sinklooted)
-            levl[u.ux][u.uy].looted = T_LOOTED;
+            ({ int _lv = (T_LOOTED); int _lx = (u.ux), _ly = (u.uy); struct rm _lr = lev_get(_lx, _ly); _lr.looted = _lv; lev_put(_lx, _ly, _lr); _lr.looted; });
         break;
     case 2:
         sym = S_altar;
-        levl[u.ux][u.uy].typ = ALTAR;
+        ({ int _lv = (ALTAR); int _lx = (u.ux), _ly = (u.uy); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
         /* 3.6.3: this used to pass 'rn2(A_LAWFUL + 2) - 1' to
            Align2amask() but that evaluates its argument more than once */
         algn = rn2(3) - 1; /* -1 (A_Cha) or 0 (A_Neu) or +1 (A_Law) */
-        levl[u.ux][u.uy].altarmask = ((Inhell && rn2(3)) ? AM_NONE
-                                      : Align2amask(algn));
+        ({ int _lv = (((Inhell && rn2(3)) ? AM_NONE
+                                      : Align2amask(algn))); int _lx = (u.ux), _ly = (u.uy); struct rm _lr = lev_get(_lx, _ly); _lr.altarmask = _lv; lev_put(_lx, _ly, _lr); _lr.altarmask; });
         break;
     case 3:
         sym = S_room;
-        levl[u.ux][u.uy].typ = ROOM;
+        ({ int _lv = (ROOM); int _lx = (u.ux), _ly = (u.uy); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
         make_grave(u.ux, u.uy, (char *) 0);
-        if (levl[u.ux][u.uy].typ == GRAVE)
+        if (lev_get(u.ux, u.uy).typ == GRAVE)
             sym = S_grave;
         break;
     }
     /* give message even if blind; we know we're not levitating,
        so can feel the outcome even if we can't directly see it */
-    if (levl[u.ux][u.uy].typ != ROOM)
+    if (lev_get(u.ux, u.uy).typ != ROOM)
         pline_The("sink transforms into %s!", an(defsyms[sym].explanation));
     else
         pline_The("sink vanishes.");
@@ -375,17 +375,17 @@ teleport_sink()
         cy = rn2(ROWNO);
         trp = t_at(cx, cy);
         eng = engr_at(cx, cy);
-    } while ((levl[cx][cy].typ != ROOM || trp || eng || cansee(cx, cy))
+    } while ((lev_get(cx, cy).typ != ROOM || trp || eng || cansee(cx, cy))
              && cnt++ < 200);
 
-    if (levl[cx][cy].typ == ROOM && !trp && !eng) {
+    if (lev_get(cx, cy).typ == ROOM && !trp && !eng) {
         /* create sink at new position */
-        levl[cx][cy].typ = SINK;
-        levl[cx][cy].looted = levl[u.ux][u.uy].looted;
+        ({ int _lv = (SINK); int _lx = (cx), _ly = (cy); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
+        ({ int _lv = (lev_get(u.ux, u.uy).looted); int _lx = (cx), _ly = (cy); struct rm _lr = lev_get(_lx, _ly); _lr.looted = _lv; lev_put(_lx, _ly, _lr); _lr.looted; });
         newsym(cx, cy);
         /* remove old sink */
-        levl[u.ux][u.uy].typ = ROOM;
-        levl[u.ux][u.uy].looted = 0;
+        ({ int _lv = (ROOM); int _lx = (u.ux), _ly = (u.uy); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
+        ({ int _lv = (0); int _lx = (u.ux), _ly = (u.uy); struct rm _lr = lev_get(_lx, _ly); _lr.looted = _lv; lev_put(_lx, _ly, _lr); _lr.looted; });
         newsym(u.ux, u.uy);
         return TRUE;
     }
@@ -482,7 +482,7 @@ register struct obj *obj;
         polymorph_sink();
         nosink = TRUE;
         /* for S_room case, same message as for teleportation is given */
-        ideed = (levl[u.ux][u.uy].typ != ROOM);
+        ideed = (lev_get(u.ux, u.uy).typ != ROOM);
         break;
     default:
         ideed = FALSE;
@@ -632,7 +632,7 @@ register struct obj *obj;
         }
     } else {
         if ((obj->oclass == RING_CLASS || obj->otyp == MEAT_RING)
-            && IS_SINK(levl[u.ux][u.uy].typ)) {
+            && IS_SINK(lev_get(u.ux, u.uy).typ)) {
             dosinkring(obj);
             return 1;
         }
@@ -655,7 +655,7 @@ register struct obj *obj;
                 float_down(I_SPECIAL | TIMEOUT, W_ARTI | W_ART);
             return 1;
         }
-        if (!IS_ALTAR(levl[u.ux][u.uy].typ) && flags.verbose)
+        if (!IS_ALTAR(lev_get(u.ux, u.uy).typ) && flags.verbose)
             You("drop %s.", doname(obj));
     }
     dropx(obj);
@@ -676,7 +676,7 @@ register struct obj *obj;
     if (!u.uswallow) {
         if (ship_object(obj, u.ux, u.uy, FALSE))
             return;
-        if (IS_ALTAR(levl[u.ux][u.uy].typ))
+        if (IS_ALTAR(lev_get(u.ux, u.uy).typ))
             doaltarobj(obj); /* set bknown */
     }
     dropy(obj);
@@ -984,10 +984,10 @@ dodown()
              */
             if (stairs_down)
                 stairs_down =
-                    (glyph_to_cmap(levl[u.ux][u.uy].glyph) == S_dnstair);
+                    (glyph_to_cmap(lev_get(u.ux, u.uy).glyph) == S_dnstair);
             else if (ladder_down)
                 ladder_down =
-                    (glyph_to_cmap(levl[u.ux][u.uy].glyph) == S_dnladder);
+                    (glyph_to_cmap(lev_get(u.ux, u.uy).glyph) == S_dnladder);
         }
         if (Is_airlevel(&u.uz))
             You("are floating in the %s.", surface(u.ux, u.uy));
@@ -1083,7 +1083,7 @@ dodown()
     if (trap && Is_stronghold(&u.uz)) {
         goto_hell(FALSE, TRUE);
     } else {
-        at_ladder = (boolean) (levl[u.ux][u.uy].typ == LADDER);
+        at_ladder = (boolean) (lev_get(u.ux, u.uy).typ == LADDER);
         next_level(!trap);
         at_ladder = FALSE;
     }
@@ -1123,7 +1123,7 @@ doup()
     if (near_capacity() > SLT_ENCUMBER) {
         /* No levitation check; inv_weight() already allows for it */
         Your("load is too heavy to climb the %s.",
-             levl[u.ux][u.uy].typ == STAIRS ? "stairs" : "ladder");
+             lev_get(u.ux, u.uy).typ == STAIRS ? "stairs" : "ladder");
         return 1;
     }
     if (ledger_no(&u.uz) == 1) {
@@ -1136,7 +1136,7 @@ doup()
         You("are held back by your pet!");
         return 0;
     }
-    at_ladder = (boolean) (levl[u.ux][u.uy].typ == LADDER);
+    at_ladder = (boolean) (lev_get(u.ux, u.uy).typ == LADDER);
     prev_level(TRUE);
     at_ladder = FALSE;
     return 1;

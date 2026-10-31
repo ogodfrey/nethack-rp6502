@@ -2005,7 +2005,7 @@ boolean loseit;    /* whether to drop it if hero can longer touch it */
             hitfloor(obj, TRUE);
         } else {
             /* dropx gives a message iff item lands on an altar */
-            if (!IS_ALTAR(levl[u.ux][u.uy].typ))
+            if (!IS_ALTAR(lev_get(u.ux, u.uy).typ))
                 pline("%s to the %s.", Tobjnam(obj, "fall"),
                       surface(u.ux, u.uy));
             dropx(obj);
@@ -2132,7 +2132,7 @@ STATIC_OVL int
 count_surround_traps(x, y)
 int x, y;
 {
-    struct rm *levp;
+    
     struct obj *otmp;
     struct trap *ttmp;
     int dx, dy, glyph, ret = 0;
@@ -2153,8 +2153,8 @@ int x, y;
                 ++ret;
                 continue;
             }
-            levp = &levl[dx][dy];
-            if (IS_DOOR(levp->typ) && (levp->doormask & D_TRAPPED) != 0) {
+            
+            if (IS_DOOR(lev_get(dx, dy).typ) && (lev_get(dx, dy).doormask & D_TRAPPED) != 0) {
                 ++ret;
                 continue;
             }

@@ -179,7 +179,7 @@ struct attack *mattk;
                 break;
             case 2:
                 pline("%s strikes at %s!", Monst_name,
-                      (levl[mtmp->mux][mtmp->muy].typ == WATER)
+                      (lev_get(mtmp->mux, mtmp->muy).typ == WATER)
                         ? "empty water"
                         : "thin air");
                 break;
@@ -1284,8 +1284,8 @@ register struct attack *mattk;
                 }
             } else if (u.ustuck == mtmp) {
                 if (is_pool(mtmp->mx, mtmp->my) && !Swimming && !Amphibious) {
-                    boolean moat = (levl[mtmp->mx][mtmp->my].typ != POOL)
-                                   && (levl[mtmp->mx][mtmp->my].typ != WATER)
+                    boolean moat = (lev_get(mtmp->mx, mtmp->my).typ != POOL)
+                                   && (lev_get(mtmp->mx, mtmp->my).typ != WATER)
                                    && !Is_medusa_level(&u.uz)
                                    && !Is_waterlevel(&u.uz);
 
@@ -2047,7 +2047,7 @@ boolean ufound;
     if (!ufound) {
         pline("%s explodes at a spot in %s!",
               canseemon(mtmp) ? Monnam(mtmp) : "It",
-              levl[mtmp->mux][mtmp->muy].typ == WATER ? "empty water"
+              lev_get(mtmp->mux, mtmp->muy).typ == WATER ? "empty water"
                                                       : "thin air");
     } else {
         int tmp = d((int) mattk->damn, (int) mattk->damd);

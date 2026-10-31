@@ -86,15 +86,15 @@ register struct monst *mtmp;
 
     if (mtmp->mpeaceful && in_town(u.ux + u.dx, u.uy + u.dy)
         && mtmp->mcansee && m_canseeu(mtmp) && !rn2(3)) {
-        if (picking_lock(&x, &y) && IS_DOOR(levl[x][y].typ)
-            && (levl[x][y].doormask & D_LOCKED)) {
+        if (picking_lock(&x, &y) && IS_DOOR(lev_get(x, y).typ)
+            && (lev_get(x, y).doormask & D_LOCKED)) {
             if (couldsee(mtmp->mx, mtmp->my)) {
-                if (levl[x][y].looted & D_WARNED) {
+                if (lev_get(x, y).looted & D_WARNED) {
                     mon_yells(mtmp, "Halt, thief!  You're under arrest!");
                     (void) angry_guards(!!Deaf);
                 } else {
                     mon_yells(mtmp, "Hey, stop picking that lock!");
-                    levl[x][y].looted |= D_WARNED;
+                    ({ int _lv = (D_WARNED); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.looted |= _lv; lev_put(_lx, _ly, _lr); _lr.looted; });
                 }
                 stop_occupation();
             }
@@ -151,7 +151,7 @@ struct monst *mtmp;
         return TRUE;
 
     /* should this still be true for defiled/molochian altars? */
-    if (IS_ALTAR(levl[x][y].typ)
+    if (IS_ALTAR(lev_get(x, y).typ)
         && (pm_get(mtmp->data)->mlet == S_VAMPIRE || is_vampshifter(mtmp)))
         return TRUE;
 
@@ -748,10 +748,10 @@ xchar nix,niy;
                 || !is_pick(mw_tmp)
                 || !is_axe(mw_tmp))
                 mtmp->weapon_check = NEED_PICK_OR_AXE;
-        } else if (IS_TREE(levl[nix][niy].typ)) {
+        } else if (IS_TREE(lev_get(nix, niy).typ)) {
             if (!(mw_tmp = MON_WEP(mtmp)) || !is_axe(mw_tmp))
                 mtmp->weapon_check = NEED_AXE;
-        } else if (IS_STWALL(levl[nix][niy].typ)) {
+        } else if (IS_STWALL(lev_get(nix, niy).typ)) {
             if (!(mw_tmp = MON_WEP(mtmp)) || !is_pick(mw_tmp))
                 mtmp->weapon_check = NEED_PICK_AXE;
         }
@@ -912,7 +912,7 @@ register int after;
     } else {
         struct obj *lepgold, *ygold;
         boolean should_see = (couldsee(omx, omy)
-                              && (levl[gx][gy].lit || !levl[omx][omy].lit)
+                              && (lev_get(gx, gy).lit || !lev_get(omx, omy).lit)
                               && (dist2(omx, omy, gx, gy) <= 36));
 
         if (!mtmp->mcansee
@@ -1278,8 +1278,8 @@ register int after;
                [if we did the shift above, before moving the monster,
                we would need to duplicate it in dog_move()...] */
             if (is_vampshifter(mtmp) && !amorphous(mtmp->data)
-                && IS_DOOR(levl[nix][niy].typ)
-                && ((levl[nix][niy].doormask & (D_LOCKED | D_CLOSED)) != 0)
+                && IS_DOOR(lev_get(nix, niy).typ)
+                && ((lev_get(nix, niy).doormask & (D_LOCKED | D_CLOSED)) != 0)
                 && can_fog(mtmp)) {
                 if (sawmon) {
                     remove_monster(nix, niy);
@@ -1305,11 +1305,11 @@ register int after;
             ptr = mtmp->data; /* in case mintrap() caused polymorph */
 
             /* open a door, or crash through it, if 'mtmp' can */
-            if (IS_DOOR(levl[mtmp->mx][mtmp->my].typ)
+            if (IS_DOOR(lev_get(mtmp->mx, mtmp->my).typ)
                 && !passes_walls(ptr) /* doesn't need to open doors */
                 && !can_tunnel) {     /* taken care of below */
-                struct rm *here = &levl[mtmp->mx][mtmp->my];
-                boolean btrapped = (here->doormask & D_TRAPPED) != 0,
+                
+                boolean btrapped = (lev_get(mtmp->mx, mtmp->my).doormask & D_TRAPPED) != 0,
                         observeit = canseeit && canspotmon(mtmp);
 
                 /* if mon has MKoT, disarm door trap; no message given */
@@ -1319,18 +1319,18 @@ register int after;
                        using that Key when squeezing under or smashing the
                        door.  Not significant enough to worry about; perhaps
                        the Key's magic is more powerful for monsters? */
-                    here->doormask &= ~D_TRAPPED;
+                    ({ int _lv = (~D_TRAPPED); int _lx = (mtmp->mx), _ly = (mtmp->my); struct rm _lr = lev_get(_lx, _ly); _lr.doormask &= _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
                     btrapped = FALSE;
                 }
-                if ((here->doormask & (D_LOCKED | D_CLOSED)) != 0
+                if ((lev_get(mtmp->mx, mtmp->my).doormask & (D_LOCKED | D_CLOSED)) != 0
                     && amorphous(ptr)) {
                     if (flags.verbose && canseemon(mtmp))
                         pline("%s %s under the door.", Monnam(mtmp),
                               (ptr == &mons[PM_FOG_CLOUD]
                                || pm_get(ptr)->mlet == S_LIGHT) ? "flows" : "oozes");
-                } else if (here->doormask & D_LOCKED && can_unlock) {
+                } else if (lev_get(mtmp->mx, mtmp->my).doormask & D_LOCKED && can_unlock) {
                     if (btrapped) {
-                        here->doormask = D_NODOOR;
+                        ({ int _lv = (D_NODOOR); int _lx = (mtmp->mx), _ly = (mtmp->my); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
                         newsym(mtmp->mx, mtmp->my);
                         unblock_point(mtmp->mx, mtmp->my); /* vision */
                         if (mb_trapped(mtmp))
@@ -1345,13 +1345,13 @@ register int after;
                             else if (!Deaf)
                                 You_hear("a door unlock and open.");
                         }
-                        here->doormask = D_ISOPEN;
+                        ({ int _lv = (D_ISOPEN); int _lx = (mtmp->mx), _ly = (mtmp->my); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
                         /* newsym(mtmp->mx, mtmp->my); */
                         unblock_point(mtmp->mx, mtmp->my); /* vision */
                     }
-                } else if (here->doormask == D_CLOSED && can_open) {
+                } else if (lev_get(mtmp->mx, mtmp->my).doormask == D_CLOSED && can_open) {
                     if (btrapped) {
-                        here->doormask = D_NODOOR;
+                        ({ int _lv = (D_NODOOR); int _lx = (mtmp->mx), _ly = (mtmp->my); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
                         newsym(mtmp->mx, mtmp->my);
                         unblock_point(mtmp->mx, mtmp->my); /* vision */
                         if (mb_trapped(mtmp))
@@ -1365,14 +1365,14 @@ register int after;
                             else if (!Deaf)
                                 You_hear("a door open.");
                         }
-                        here->doormask = D_ISOPEN;
+                        ({ int _lv = (D_ISOPEN); int _lx = (mtmp->mx), _ly = (mtmp->my); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
                         /* newsym(mtmp->mx, mtmp->my); */  /* done below */
                         unblock_point(mtmp->mx, mtmp->my); /* vision */
                     }
-                } else if (here->doormask & (D_LOCKED | D_CLOSED)) {
+                } else if (lev_get(mtmp->mx, mtmp->my).doormask & (D_LOCKED | D_CLOSED)) {
                     /* mfndpos guarantees this must be a doorbuster */
                     if (btrapped) {
-                        here->doormask = D_NODOOR;
+                        ({ int _lv = (D_NODOOR); int _lx = (mtmp->mx), _ly = (mtmp->my); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
                         newsym(mtmp->mx, mtmp->my);
                         unblock_point(mtmp->mx, mtmp->my); /* vision */
                         if (mb_trapped(mtmp))
@@ -1387,10 +1387,10 @@ register int after;
                             else if (!Deaf)
                                 You_hear("a door crash open.");
                         }
-                        if ((here->doormask & D_LOCKED) != 0 && !rn2(2))
-                            here->doormask = D_NODOOR;
+                        if ((lev_get(mtmp->mx, mtmp->my).doormask & D_LOCKED) != 0 && !rn2(2))
+                            ({ int _lv = (D_NODOOR); int _lx = (mtmp->mx), _ly = (mtmp->my); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
                         else
-                            here->doormask = D_BROKEN;
+                            ({ int _lv = (D_BROKEN); int _lx = (mtmp->mx), _ly = (mtmp->my); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
                         /* newsym(mtmp->mx, mtmp->my); */  /* done below */
                         unblock_point(mtmp->mx, mtmp->my); /* vision */
                     }
@@ -1398,9 +1398,9 @@ register int after;
                     if (*in_rooms(mtmp->mx, mtmp->my, SHOPBASE))
                         add_damage(mtmp->mx, mtmp->my, 0L);
                 }
-            } else if (levl[mtmp->mx][mtmp->my].typ == IRONBARS) {
+            } else if (lev_get(mtmp->mx, mtmp->my).typ == IRONBARS) {
                 /* As of 3.6.2: was using may_dig() but it doesn't handle bars */
-                if (!(levl[mtmp->mx][mtmp->my].wall_info & W_NONDIGGABLE)
+                if (!(lev_get(mtmp->mx, mtmp->my).wall_info & W_NONDIGGABLE)
                     && (dmgtype(ptr, AD_RUST) || dmgtype(ptr, AD_CORR))) {
                     if (canseemon(mtmp))
                         pline("%s eats through the iron bars.", Monnam(mtmp));
@@ -1505,8 +1505,8 @@ void
 dissolve_bars(x, y)
 register int x, y;
 {
-    levl[x][y].typ = (Is_special(&u.uz) || *in_rooms(x, y, 0)) ? ROOM : CORR;
-    levl[x][y].flags = 0;
+    ({ int _lv = ((Is_special(&u.uz) || *in_rooms(x, y, 0)) ? ROOM : CORR); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
+    ({ int _lv = (0); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.flags = _lv; lev_put(_lx, _ly, _lr); _lr.flags; });
     newsym(x, y);
 }
 
@@ -1514,19 +1514,19 @@ boolean
 closed_door(x, y)
 register int x, y;
 {
-    return (boolean) (IS_DOOR(levl[x][y].typ)
-                      && (levl[x][y].doormask & (D_LOCKED | D_CLOSED)));
+    return (boolean) (IS_DOOR(lev_get(x, y).typ)
+                      && (lev_get(x, y).doormask & (D_LOCKED | D_CLOSED)));
 }
 
 boolean
 accessible(x, y)
 register int x, y;
 {
-    int levtyp = levl[x][y].typ;
+    int levtyp = lev_get(x, y).typ;
 
     /* use underlying terrain in front of closed drawbridge */
     if (levtyp == DRAWBRIDGE_UP)
-        levtyp = db_under_typ(levl[x][y].drawbridgemask);
+        levtyp = db_under_typ(lev_get(x, y).drawbridgemask);
 
     return (boolean) (ACCESSIBLE(levtyp) && !closed_door(x, y));
 }

@@ -125,8 +125,8 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
    accesses, mutations, attack/name pointers, and save/restore. Do not rely
    on inaccessible RAM pointers without testing the compiler and ABI.
    Reserve a non-overlapping XRAM layout: the overlay manager uses RIA
-   portal 1 and its default descriptor/directory addresses are `$8000` and
-   `$C000`.
+   portal 1; its descriptor and directory addresses are set in
+   [xram.h](include/xram.h) and checked by the packer.
 
    Prototype status: `xramtest` ([xramtest.c](sys/rp6502/xramtest.c),
    [rp6502xram.c](sys/rp6502/rp6502xram.c), [rp6502xram.h](include/rp6502xram.h))
@@ -227,13 +227,34 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
    description-type tables the same way (the compiler lists each use once the
    type changes).
    XRAM map (defined in [xram.h](include/xram.h)): `mons[]` at $1000
-   (19864 bytes), `objects[]` at $6100 (11804 bytes, ending at $8F1B). The
-   overlay descriptor default was $8000, which overlapped `objects[]`; it is
-   now $A000 in `ovlpack.py`, with the directory at $C000. Compile-time checks
-   in [rp6502xram.c](sys/rp6502/rp6502xram.c) keep the tables apart. The SDK
+   (19864 bytes), `objects[]` at $6100 (11804 bytes, ending at $8F1B), the
+   level map at $9000 (10080 bytes), the overlay directory at $0000 and the
+   overlay descriptor at $D200. The earlier overlay defaults ($8000 for the
+   descriptor, $A000/$C000 for the directory and descriptor) overlapped the
+   tables, so they moved. Compile-time checks in
+   [rp6502xram.c](sys/rp6502/rp6502xram.c) and
+   [rp6502lev.c](sys/rp6502/rp6502lev.c) keep the regions apart. The SDK
    reserves no XRAM; device areas (keyboard, sound, video) must be added to
    the map before the program maps them.
-   Measured with the whole-game link (see priority 2): the game needs about
+   Level map (done): the map `levl[][]` (`level.locations`, 1680 cells of 6
+   bytes, 10080 bytes) lives in XRAM at $9000 with `RP6502_XRAM_TABLES`. All
+   uses go through `lev_get()`/`lev_put()` (rm.h), which are plain RAM in the
+   host build and XRAM accessors in [rp6502lev.c](sys/rp6502/rp6502lev.c)
+   (target) and [rp6502xram_host.c](sys/rp6502/rp6502xram_host.c) (host
+   harness, bounds-checked). Converted by
+   [levrw.py](sys/rp6502/tools/levrw.py) (accesses to `levl[x][y]` become
+   read calls or read-modify-write blocks), [levalias.py](sys/rp6502/tools/levalias.py)
+   (local `struct rm *` aliases of one cell), and by hand (pointer walks,
+   helpers that took a cell pointer: `does_block`, `cvt_sdoor_to_door`,
+   `set_seenv`, `unset_seenv`, `t_warn`, `wall_angle`, and the lock and kick
+   state). Verified: the host RAM build, the XRAM host harness (autoplay seeds
+   1, 2, 4, 5, 6 without aborts), and the target objects with the XRAM tables
+   (`nethack_objs`, `nethack` compile; link fails only on region overflow).
+   `.bss` for the XRAM tables is about 58 KB (was 67 KB). The `level` symbol is
+   now 6735 bytes: the per-cell object and monster list heads (3360 bytes each,
+   pointers to RAM structures) remain in RAM and need a separate design. The
+   overlay descriptor moved to $D200 and the directory to $0000 (ovlpack.py
+   checks both fit).
    2.6 MB of code and about 293 KB of rodata, mostly strings, and the XRAM
    tables remove 31668 bytes of linked data (`.bss` is about 67 KB in both).
 4. **Complete overlay packing and integration.** Implement a profile-guided

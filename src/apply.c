@@ -302,7 +302,7 @@ use_stethoscope(obj)
 register struct obj *obj;
 {
     struct monst *mtmp;
-    struct rm *lev;
+    
     int rx, ry, res;
     boolean interference = (u.uswallow && is_whirly(u.ustuck->data)
                             && !rn2(Role_if(PM_HEALER) ? 10 : 3));
@@ -429,16 +429,16 @@ register struct obj *obj;
     if (unmap_invisible(rx,ry))
         pline_The("invisible monster must have moved.");
 
-    lev = &levl[rx][ry];
-    switch (lev->typ) {
+    
+    switch (lev_get(rx, ry).typ) {
     case SDOOR:
         You_hear(hollow_str, "door");
-        cvt_sdoor_to_door(lev); /* ->typ = DOOR */
+        cvt_sdoor_to_door(rx, ry); /* ->typ = DOOR */
         feel_newsym(rx, ry);
         return res;
     case SCORR:
         You_hear(hollow_str, "passage");
-        lev->typ = CORR, lev->flags = 0;
+        ({ int _lv = (CORR); int _lx = (rx), _ly = (ry); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; }), ({ int _lv = (0); int _lx = (rx), _ly = (ry); struct rm _lr = lev_get(_lx, _ly); _lr.flags = _lv; lev_put(_lx, _ly, _lr); _lr.flags; });
         unblock_point(rx, ry);
         feel_newsym(rx, ry);
         return res;
@@ -658,7 +658,7 @@ struct obj *obj;
     spotmon = canspotmon(mtmp);
  got_target:
 
-    if (!spotmon && !glyph_is_invisible(levl[cc.x][cc.y].glyph)) {
+    if (!spotmon && !glyph_is_invisible(lev_get(cc.x, cc.y).glyph)) {
         /* for the unleash case, we don't verify whether this unseen
            monster is the creature attached to the current leash */
         You("fail to %sleash something.", obj->leashmon ? "un" : "");
@@ -1531,22 +1531,22 @@ genericptr arg;
 int x, y;
 {
     int traj = *(int *) arg;
-    struct rm *lev = &levl[x][y];
+    
 
     if (Passes_walls)
         return TRUE;
-    if (IS_STWALL(lev->typ))
+    if (IS_STWALL(lev_get(x, y).typ))
         return FALSE;
-    if (IS_DOOR(lev->typ)) {
+    if (IS_DOOR(lev_get(x, y).typ)) {
         if (closed_door(x, y))
             return FALSE;
-        if ((lev->doormask & D_ISOPEN) != 0 && traj != jAny
+        if ((lev_get(x, y).doormask & D_ISOPEN) != 0 && traj != jAny
             /* reject diagonal jump into or out-of or through open door */
             && (traj == jDiag
                 /* reject horizontal jump through horizontal open door
                    and non-horizontal (ie, vertical) jump through
                    non-horizontal (vertical) open door */
-                || ((traj & jHorz) != 0) == (lev->horizontal != 0)))
+                || ((traj & jHorz) != 0) == (lev_get(x, y).horizontal != 0)))
             return FALSE;
         /* empty doorways aren't restricted */
     }
@@ -1584,7 +1584,7 @@ boolean showmsg;
         return FALSE;
     } else {
         coord uc, tc;
-        struct rm *lev = &levl[u.ux][u.uy];
+        
         /* we want to categorize trajectory for use in determining
            passage through doorways: horizonal, vertical, or diagonal;
            since knight's jump and other irregular directions are
@@ -1607,10 +1607,10 @@ boolean showmsg;
            this is iffy:  if you're starting on a closed door spot,
            you _can_ jump diagonally from doorway (without needing
            Passes_walls); that's intentional but is it correct? */
-        if (diag == jDiag && IS_DOOR(lev->typ)
-            && (lev->doormask & D_ISOPEN) != 0
+        if (diag == jDiag && IS_DOOR(lev_get(u.ux, u.uy).typ)
+            && (lev_get(u.ux, u.uy).doormask & D_ISOPEN) != 0
             && (traj == jDiag
-                || ((traj & jHorz) != 0) == (lev->horizontal != 0))) {
+                || ((traj & jHorz) != 0) == (lev_get(u.ux, u.uy).horizontal != 0))) {
             if (showmsg)
                 You_cant("jump diagonally out of a doorway.");
             return FALSE;
@@ -1633,7 +1633,7 @@ get_valid_jump_position(x,y)
 int x,y;
 {
     return (isok(x, y)
-            && (ACCESSIBLE(levl[x][y].typ) || Passes_walls)
+            && (ACCESSIBLE(lev_get(x, y).typ) || Passes_walls)
             && is_valid_jump_pos(x, y, jumping_is_magic, FALSE));
 }
 
@@ -2230,11 +2230,11 @@ boolean quietly;
             You("cannot put the figurine there.");
         return FALSE;
     }
-    if (IS_ROCK(levl[x][y].typ)
+    if (IS_ROCK(lev_get(x, y).typ)
         && !(passes_walls(&mons[obj->corpsenm]) && may_passwall(x, y))) {
         if (!quietly)
             You("cannot place a figurine in %s!",
-                IS_TREE(levl[x][y].typ) ? "a tree" : "solid rock");
+                IS_TREE(lev_get(x, y).typ) ? "a tree" : "solid rock");
         return FALSE;
     }
     if (sobj_at(BOULDER, x, y) && !passes_walls(&mons[obj->corpsenm])
@@ -2500,7 +2500,7 @@ struct obj *otmp;
     int ttyp, tmp;
     const char *what = (char *) 0;
     char buf[BUFSZ];
-    int levtyp = levl[u.ux][u.uy].typ;
+    int levtyp = lev_get(u.ux, u.uy).typ;
     const char *occutext = "setting the trap";
 
     if (nohands(youmonst.data))
@@ -2760,7 +2760,7 @@ struct obj *obj;
             }
         }
         if (!wrapped_what) {
-            if (IS_FURNITURE(levl[rx][ry].typ))
+            if (IS_FURNITURE(lev_get(rx, ry).typ))
                 wrapped_what = something;
             else if (sobj_at(BOULDER, rx, ry))
                 wrapped_what = "a boulder";
@@ -2787,7 +2787,7 @@ struct obj *obj;
             pline1(msg_snap);
 
     } else if (mtmp) {
-        if (!canspotmon(mtmp) && !glyph_is_invisible(levl[rx][ry].glyph)) {
+        if (!canspotmon(mtmp) && !glyph_is_invisible(lev_get(rx, ry).glyph)) {
             pline("A monster is there that you couldn't see.");
             map_invisible(rx, ry);
         }
@@ -2958,7 +2958,7 @@ STATIC_OVL boolean
 get_valid_polearm_position(x, y)
 int x, y;
 {
-    return (isok(x, y) && ACCESSIBLE(levl[x][y].typ)
+    return (isok(x, y) && ACCESSIBLE(lev_get(x, y).typ)
             && distu(x, y) >= polearm_range_min
             && distu(x, y) <= polearm_range_max);
 }
@@ -3267,7 +3267,7 @@ struct obj *obj;
         }
     /*FALLTHRU*/
     case 3: /* Surface */
-        if (IS_AIR(levl[cc.x][cc.y].typ) || is_pool(cc.x, cc.y))
+        if (IS_AIR(lev_get(cc.x, cc.y).typ) || is_pool(cc.x, cc.y))
             pline_The("hook slices through the %s.", surface(cc.x, cc.y));
         else {
             You("are yanked toward the %s!", surface(cc.x, cc.y));
@@ -3417,7 +3417,7 @@ struct obj *obj;
             schar typ;
 
             if (dig_check(BY_OBJECT, FALSE, x, y)) {
-                if (IS_WALL(levl[x][y].typ) || IS_DOOR(levl[x][y].typ)) {
+                if (IS_WALL(lev_get(x, y).typ) || IS_DOOR(lev_get(x, y).typ)) {
                     /* normally, pits and holes don't anger guards, but they
                      * do if it's a wall or door that's being dug */
                     watch_dig((struct monst *) 0, x, y, TRUE);
@@ -3431,7 +3431,7 @@ struct obj *obj;
                  */
                 typ = fillholetyp(x, y, FALSE);
                 if (typ != ROOM) {
-                    levl[x][y].typ = typ, levl[x][y].flags = 0;
+                    ({ int _lv = (typ); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; }), ({ int _lv = (0); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.flags = _lv; lev_put(_lx, _ly, _lr); _lr.flags; });
                     liquid_flow(x, y, typ, t_at(x, y),
                                 fillmsg
                                   ? (char *) 0
@@ -3440,7 +3440,7 @@ struct obj *obj;
                 } else
                     digactualhole(x, y, BY_OBJECT, (rn2(obj->spe) < 3
                                                     || (!Can_dig_down(&u.uz)
-                                                        && !levl[x][y].candig))
+                                                        && !lev_get(x, y).candig))
                                                       ? PIT
                                                       : HOLE);
             }

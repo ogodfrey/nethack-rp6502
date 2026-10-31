@@ -53,7 +53,7 @@ boolean forceshow;
             silently = program_state.stopprint ? TRUE : FALSE;
     struct egd *egrd = EGD(grd);
     struct trap *trap;
-    struct rm *lev;
+    
 
     if (!on_level(&egrd->gdlevel, &u.uz))
         return TRUE;
@@ -83,22 +83,22 @@ boolean forceshow;
                     m_into_limbo(mtmp);
             }
         }
-        lev = &levl[fcx][fcy];
-        if (lev->typ == CORR && cansee(fcx, fcy))
+        
+        if (lev_get(fcx, fcy).typ == CORR && cansee(fcx, fcy))
             sawcorridor = TRUE;
-        lev->typ = egrd->fakecorr[fcbeg].ftyp;
-        if (IS_STWALL(lev->typ)) {
+        ({ int _lv = (egrd->fakecorr[fcbeg].ftyp); int _lx = (fcx), _ly = (fcy); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
+        if (IS_STWALL(lev_get(fcx, fcy).typ)) {
             /* destroy any trap here (pit dug by you, hole dug via
                wand while levitating or by monster, bear trap or land
                mine via object, spun web) when spot reverts to stone */
             if ((trap = t_at(fcx, fcy)) != 0)
                 deltrap(trap);
             /* undo scroll/wand/spell of light affecting this spot */
-            if (lev->typ == STONE)
+            if (lev_get(fcx, fcy).typ == STONE)
                 blackout(fcx, fcy);
         }
         map_location(fcx, fcy, 1); /* bypass vision */
-        if (!ACCESSIBLE(lev->typ))
+        if (!ACCESSIBLE(lev_get(fcx, fcy).typ))
             block_point(fcx, fcy);
         vision_full_recalc = 1;
         egrd->fcbeg++;
@@ -108,7 +108,7 @@ boolean forceshow;
     /* only give encased message if hero is still alive (might get here
        via paygd() -> mongone() -> grddead() when game is over;
        died: no message, quit: message) */
-    if (IS_ROCK(levl[u.ux][u.uy].typ) && (Upolyd ? u.mh : u.uhp) > 0
+    if (IS_ROCK(lev_get(u.ux, u.uy).typ) && (Upolyd ? u.mh : u.uhp) > 0
         && !silently)
         You("are encased in rock.");
     return TRUE;
@@ -122,21 +122,21 @@ STATIC_OVL void
 blackout(x, y)
 int x, y;
 {
-    struct rm *lev;
     int i, j;
 
     for (i = x - 1; i <= x + 1; ++i)
         for (j = y - 1; j <= y + 1; ++j) {
             if (!isok(i, j))
                 continue;
-            lev = &levl[i][j];
             /* [possible bug: when (i != x || j != y), perhaps we ought
                to check whether the spot on the far side is lit instead
                of doing a blanket blackout of adjacent locations] */
-            if (lev->typ == STONE)
-                lev->lit = lev->waslit = 0;
+            if (lev_get(i, j).typ == STONE) {
+                ({ int _lv = (0); int _lx = (i), _ly = (j); struct rm _lr = lev_get(_lx, _ly); _lr.lit = _lv; lev_put(_lx, _ly, _lr); _lr.lit; });
+                ({ int _lv = (0); int _lx = (i), _ly = (j); struct rm _lr = lev_get(_lx, _ly); _lr.waslit = _lv; lev_put(_lx, _ly, _lr); _lr.waslit; });
+            }
             /* mark <i,j> as not having been seen from <x,y> */
-            unset_seenv(lev, x, y, i, j);
+            unset_seenv(x, y, i, j);
         }
 }
 
@@ -283,10 +283,10 @@ xchar *rx, *ry;
                 if (guard && ((x == guard->mx && y == guard->my)
                               || (guard->isgd && in_fcorridor(guard, x, y))))
                     continue;
-                if (levl[x][y].typ == CORR) {
+                if (lev_get(x, y).typ == CORR) {
                     lx = (x < u.ux) ? x + 1 : (x > u.ux) ? x - 1 : x;
                     ly = (y < u.uy) ? y + 1 : (y > u.uy) ? y - 1 : y;
-                    if (levl[lx][ly].typ != STONE && levl[lx][ly].typ != CORR)
+                    if (lev_get(lx, ly).typ != STONE && lev_get(lx, ly).typ != CORR)
                         goto incr_radius;
                     *rx = x;
                     *ry = y;
@@ -334,30 +334,30 @@ invault()
         /* next find a good place for a door in the wall */
         x = u.ux;
         y = u.uy;
-        if (levl[x][y].typ != ROOM) { /* player dug a door and is in it */
-            if (levl[x + 1][y].typ == ROOM)
+        if (lev_get(x, y).typ != ROOM) { /* player dug a door and is in it */
+            if (lev_get(x + 1, y).typ == ROOM)
                 x = x + 1;
-            else if (levl[x][y + 1].typ == ROOM)
+            else if (lev_get(x, y + 1).typ == ROOM)
                 y = y + 1;
-            else if (levl[x - 1][y].typ == ROOM)
+            else if (lev_get(x - 1, y).typ == ROOM)
                 x = x - 1;
-            else if (levl[x][y - 1].typ == ROOM)
+            else if (lev_get(x, y - 1).typ == ROOM)
                 y = y - 1;
-            else if (levl[x + 1][y + 1].typ == ROOM) {
+            else if (lev_get(x + 1, y + 1).typ == ROOM) {
                 x = x + 1;
                 y = y + 1;
-            } else if (levl[x - 1][y - 1].typ == ROOM) {
+            } else if (lev_get(x - 1, y - 1).typ == ROOM) {
                 x = x - 1;
                 y = y - 1;
-            } else if (levl[x + 1][y - 1].typ == ROOM) {
+            } else if (lev_get(x + 1, y - 1).typ == ROOM) {
                 x = x + 1;
                 y = y - 1;
-            } else if (levl[x - 1][y + 1].typ == ROOM) {
+            } else if (lev_get(x - 1, y + 1).typ == ROOM) {
                 x = x - 1;
                 y = y + 1;
             }
         }
-        while (levl[x][y].typ == ROOM) {
+        while (lev_get(x, y).typ == ROOM) {
             register int dx, dy;
 
             dx = (gx > x) ? 1 : (gx < x) ? -1 : 0;
@@ -368,16 +368,16 @@ invault()
                 y += dy;
         }
         if (x == u.ux && y == u.uy) {
-            if (levl[x + 1][y].typ == HWALL || levl[x + 1][y].typ == DOOR)
+            if (lev_get(x + 1, y).typ == HWALL || lev_get(x + 1, y).typ == DOOR)
                 x = x + 1;
-            else if (levl[x - 1][y].typ == HWALL
-                     || levl[x - 1][y].typ == DOOR)
+            else if (lev_get(x - 1, y).typ == HWALL
+                     || lev_get(x - 1, y).typ == DOOR)
                 x = x - 1;
-            else if (levl[x][y + 1].typ == VWALL
-                     || levl[x][y + 1].typ == DOOR)
+            else if (lev_get(x, y + 1).typ == VWALL
+                     || lev_get(x, y + 1).typ == DOOR)
                 y = y + 1;
-            else if (levl[x][y - 1].typ == VWALL
-                     || levl[x][y - 1].typ == DOOR)
+            else if (lev_get(x, y - 1).typ == VWALL
+                     || lev_get(x, y - 1).typ == DOOR)
                 y = y - 1;
             else
                 return;
@@ -523,8 +523,8 @@ invault()
         EGD(guard)->fcbeg = 0;
         EGD(guard)->fakecorr[0].fx = x;
         EGD(guard)->fakecorr[0].fy = y;
-        if (IS_WALL(levl[x][y].typ)) {
-            EGD(guard)->fakecorr[0].ftyp = levl[x][y].typ;
+        if (IS_WALL(lev_get(x, y).typ)) {
+            EGD(guard)->fakecorr[0].ftyp = lev_get(x, y).typ;
         } else { /* the initial guard location is a dug door */
             int vlt = EGD(guard)->vroom;
             xchar lowx = rooms[vlt].lx, hix = rooms[vlt].hx;
@@ -543,8 +543,8 @@ invault()
             else if (x == lowx - 1 || x == hix + 1)
                 EGD(guard)->fakecorr[0].ftyp = VWALL;
         }
-        levl[x][y].typ = DOOR;
-        levl[x][y].doormask = D_NODOOR;
+        ({ int _lv = (DOOR); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
+        ({ int _lv = (D_NODOOR); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
         unblock_point(x, y); /* doesn't block light */
         EGD(guard)->fcend = 1;
         EGD(guard)->warncnt = 1;
@@ -588,7 +588,7 @@ struct monst *grd;
             if (x != lox && x != hix && y != loy && y != hiy)
                 continue;
 
-            if (!IS_WALL(levl[x][y].typ) && !in_fcorridor(grd, x, y)) {
+            if (!IS_WALL(lev_get(x, y).typ) && !in_fcorridor(grd, x, y)) {
                 if ((mon = m_at(x, y)) != 0 && mon != grd) {
                     if (mon->mtame)
                         yelp(mon);
@@ -608,8 +608,8 @@ struct monst *grd;
                         (y == loy) ? TRCORNER : (y == hiy) ? BRCORNER : VWALL;
                 else /* not left or right side, must be top or bottom */
                     typ = HWALL;
-                levl[x][y].typ = typ;
-                levl[x][y].doormask = 0;
+                ({ int _lv = (typ); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
+                ({ int _lv = (0); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
                 /*
                  * hack: player knows walls are restored because of the
                  * message, below, so show this on the screen.
@@ -749,7 +749,6 @@ register struct monst *grd;
     int x, y, nx, ny, m, n;
     int dx, dy, gx = 0, gy = 0, fci;
     uchar typ;
-    struct rm *crm;
     struct fakecorridor *fcp;
     register struct egd *egrd = EGD(grd);
     long umoney = 0L;
@@ -813,7 +812,7 @@ register struct monst *grd;
                 if (!Deaf)
                     verbalize("You've been warned, knave!");
                 mnexto(grd);
-                levl[m][n].typ = egrd->fakecorr[0].ftyp;
+                ({ int _lv = (egrd->fakecorr[0].ftyp); int _lx = (m), _ly = (n); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
                 newsym(m, n);
                 grd->mpeaceful = 0;
                 return -1;
@@ -829,7 +828,7 @@ register struct monst *grd;
                 m = grd->mx;
                 n = grd->my;
                 (void) rloc(grd, TRUE);
-                levl[m][n].typ = egrd->fakecorr[0].ftyp;
+                ({ int _lv = (egrd->fakecorr[0].ftyp); int _lx = (m), _ly = (n); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
                 newsym(m, n);
                 grd->mpeaceful = 0;
  letknow:
@@ -857,7 +856,7 @@ register struct monst *grd;
     if (egrd->fcend > 1) {
         if (egrd->fcend > 2 && in_fcorridor(grd, grd->mx, grd->my)
             && !egrd->gddone && !in_fcorridor(grd, u.ux, u.uy)
-            && levl[egrd->fakecorr[0].fx][egrd->fakecorr[0].fy].typ
+            && lev_get(egrd->fakecorr[0].fx, egrd->fakecorr[0].fy).typ
                    == egrd->fakecorr[0].ftyp) {
             pline("%s, confused, disappears.", noit_Monnam(grd));
             disappear_msg_seen = TRUE;
@@ -927,7 +926,7 @@ register struct monst *grd;
         for (ny = y - 1; ny <= y + 1; ny++) {
             if ((nx == x || ny == y) && (nx != x || ny != y)
                 && isok(nx, ny)) {
-                typ = (crm = &levl[nx][ny])->typ;
+                typ = lev_get(nx, ny).typ;
                 if (!IS_STWALL(typ) && !IS_POOL(typ)) {
                     if (in_fcorridor(grd, nx, ny))
                         goto nextnxy;
@@ -941,14 +940,14 @@ register struct monst *grd;
                         goto newpos;
 #ifdef STUPID
                     if (typ == SCORR)
-                        crm->typ = CORR;
+                        ({ int _lv = (CORR); int _lx = (nx), _ly = (ny); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
                     else
-                        crm->typ = DOOR;
+                        ({ int _lv = (DOOR); int _lx = (nx), _ly = (ny); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
 #else
-                    crm->typ = (typ == SCORR) ? CORR : DOOR;
+                    ({ int _lv = ((typ == SCORR) ? CORR : DOOR); int _lx = (nx), _ly = (ny); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
 #endif
-                    if (crm->typ == DOOR)
-                        crm->doormask = D_NODOOR;
+                    if (lev_get(nx, ny).typ == DOOR)
+                        ({ int _lv = (D_NODOOR); int _lx = (nx), _ly = (ny); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
                     goto proceed;
                 }
             }
@@ -967,13 +966,13 @@ register struct monst *grd;
     else
         ny += dy;
 
-    while ((typ = (crm = &levl[nx][ny])->typ) != STONE) {
+    while ((typ = lev_get(nx, ny).typ) != STONE) {
         /* in view of the above we must have IS_WALL(typ) or typ == POOL */
         /* must be a wall here */
         if (isok(nx + nx - x, ny + ny - y) && !IS_POOL(typ)
-            && IS_ROOM(levl[nx + nx - x][ny + ny - y].typ)) {
-            crm->typ = DOOR;
-            crm->doormask = D_NODOOR;
+            && IS_ROOM(lev_get(nx + nx - x, ny + ny - y).typ)) {
+            ({ int _lv = (DOOR); int _lx = (nx), _ly = (ny); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
+            ({ int _lv = (D_NODOOR); int _lx = (nx), _ly = (ny); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
             goto proceed;
         }
         if (dy && nx != x) {
@@ -989,13 +988,13 @@ register struct monst *grd;
         }
         /* I don't like this, but ... */
         if (IS_ROOM(typ)) {
-            crm->typ = DOOR;
-            crm->doormask = D_NODOOR;
+            ({ int _lv = (DOOR); int _lx = (nx), _ly = (ny); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
+            ({ int _lv = (D_NODOOR); int _lx = (nx), _ly = (ny); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
             goto proceed;
         }
         break;
     }
-    crm->typ = CORR;
+    ({ int _lv = (CORR); int _lx = (nx), _ly = (ny); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
  proceed:
     newspot = TRUE;
     unblock_point(nx, ny); /* doesn't block light */

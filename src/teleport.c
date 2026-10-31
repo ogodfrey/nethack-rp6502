@@ -382,7 +382,7 @@ boolean allow_drag;
     /* if terrain type changes, levitation or flying might become blocked
        or unblocked; might issue message, so do this after map+vision has
        been updated for new location instead of right after u_on_newpos() */
-    if (levl[u.ux][u.uy].typ != levl[u.ux0][u.uy0].typ)
+    if (lev_get(u.ux, u.uy).typ != lev_get(u.ux0, u.uy0).typ)
         switch_terrain();
     if (telescroll) {
         /* when teleporting by scroll, we need to handle discovery
@@ -1153,10 +1153,10 @@ struct monst *mtmp;
            sent out of his room (caller might resort to goodpos() if
            we report failure here, so this isn't full prevention) */
         if (mtmp->isshk && inhishop(mtmp)) {
-            if (levl[x][y].roomno != ESHK(mtmp)->shoproom)
+            if (lev_get(x, y).roomno != ESHK(mtmp)->shoproom)
                 return FALSE;
         } else if (mtmp->ispriest && inhistemple(mtmp)) {
-            if (levl[x][y].roomno != EPRI(mtmp)->shroom)
+            if (lev_get(x, y).roomno != EPRI(mtmp)->shroom)
                 return FALSE;
         }
         /* current location is <xx,yy> */

@@ -5,9 +5,11 @@
 
 #include "hack.h"
 
-/* at most one of `door' and `box' should be non-null at any given time */
+/* at most one of the door (doorx, doory, when hasdoor) and box should be in
+   use at any given time */
 STATIC_VAR NEARDATA struct xlock_s {
-    struct rm *door;
+    xchar doorx, doory;
+    boolean hasdoor;
     struct obj *box;
     int picktyp, /* key|pick|card for unlock, sharp vs blunt for #force */
         chance, usedtime;
@@ -40,7 +42,8 @@ boolean
 picking_at(x, y)
 int x, y;
 {
-    return (boolean) (occupation == picklock && xlock.door == &levl[x][y]);
+    return (boolean) (occupation == picklock && xlock.hasdoor
+                      && xlock.doorx == x && xlock.doory == y);
 }
 
 /* produce an occupation string appropriate for the current activity */
@@ -56,7 +59,7 @@ lock_action()
     };
 
     /* if the target is currently unlocked, we're trying to lock it now */
-    if (xlock.door && !(xlock.door->doormask & D_LOCKED))
+    if (xlock.hasdoor && !(lev_get(xlock.doorx, xlock.doory).doormask & D_LOCKED))
         return actions[0] + 2; /* "locking the door" */
     else if (xlock.box && !xlock.box->olocked)
         return xlock.box->otyp == CHEST ? actions[1] + 2 : actions[2] + 2;
@@ -65,7 +68,7 @@ lock_action()
         return actions[3]; /* "picking the lock" */
     else if (xlock.picktyp == CREDIT_CARD)
         return actions[3]; /* same as lock_pick */
-    else if (xlock.door)
+    else if (xlock.hasdoor)
         return actions[0]; /* "unlocking the door" */
     else if (xlock.box)
         return xlock.box->otyp == CHEST ? actions[1] : actions[2];
@@ -83,10 +86,11 @@ picklock(VOID_ARGS)
             return ((xlock.usedtime = 0)); /* you or it moved */
         }
     } else { /* door */
-        if (xlock.door != &(levl[u.ux + u.dx][u.uy + u.dy])) {
+        if (!xlock.hasdoor || xlock.doorx != u.ux + u.dx
+            || xlock.doory != u.uy + u.dy) {
             return ((xlock.usedtime = 0)); /* you moved */
         }
-        switch (xlock.door->doormask) {
+        switch (lev_get(xlock.doorx, xlock.doory).doormask) {
         case D_NODOOR:
             pline("This doorway has no door.");
             return ((xlock.usedtime = 0));
@@ -111,8 +115,8 @@ picklock(VOID_ARGS)
     /* using the Master Key of Thievery finds traps if its bless/curse
        state is adequate (non-cursed for rogues, blessed for others;
        checked when setting up 'xlock') */
-    if ((!xlock.door ? (int) xlock.box->otrapped
-                     : (xlock.door->doormask & D_TRAPPED) != 0)
+    if ((!xlock.hasdoor ? (int) xlock.box->otrapped
+                     : (lev_get(xlock.doorx, xlock.doory).doormask & D_TRAPPED) != 0)
         && xlock.magic_key) {
         xlock.chance += 20; /* less effort needed next time */
         /* unfortunately we don't have a 'tknown' flag to record
@@ -123,10 +127,10 @@ picklock(VOID_ARGS)
             boolean alreadyunlocked;
 
             /* disarming while using magic key always succeeds */
-            if (xlock.door) {
-                xlock.door->doormask &= ~D_TRAPPED;
+            if (xlock.hasdoor) {
+                ({ int _lv = (~D_TRAPPED); int _lx = (xlock.doorx), _ly = (xlock.doory); struct rm _lr = lev_get(_lx, _ly); _lr.doormask &= _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
                 what = "door";
-                alreadyunlocked = !(xlock.door->doormask & D_LOCKED);
+                alreadyunlocked = !(lev_get(xlock.doorx, xlock.doory).doormask & D_LOCKED);
             } else {
                 xlock.box->otrapped = 0;
                 what = (xlock.box->otyp == CHEST) ? "chest" : "box";
@@ -143,18 +147,18 @@ picklock(VOID_ARGS)
     }
 
     You("succeed in %s.", lock_action());
-    if (xlock.door) {
-        if (xlock.door->doormask & D_TRAPPED) {
+    if (xlock.hasdoor) {
+        if (lev_get(xlock.doorx, xlock.doory).doormask & D_TRAPPED) {
             b_trapped("door", FINGER);
-            xlock.door->doormask = D_NODOOR;
+            ({ int _lv = (D_NODOOR); int _lx = (xlock.doorx), _ly = (xlock.doory); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
             unblock_point(u.ux + u.dx, u.uy + u.dy);
             if (*in_rooms(u.ux + u.dx, u.uy + u.dy, SHOPBASE))
                 add_damage(u.ux + u.dx, u.uy + u.dy, SHOP_DOOR_COST);
             newsym(u.ux + u.dx, u.uy + u.dy);
-        } else if (xlock.door->doormask & D_LOCKED)
-            xlock.door->doormask = D_CLOSED;
+        } else if (lev_get(xlock.doorx, xlock.doory).doormask & D_LOCKED)
+            ({ int _lv = (D_CLOSED); int _lx = (xlock.doorx), _ly = (xlock.doory); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
         else
-            xlock.door->doormask = D_LOCKED;
+            ({ int _lv = (D_LOCKED); int _lx = (xlock.doorx), _ly = (xlock.doory); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
     } else {
         xlock.box->olocked = !xlock.box->olocked;
         xlock.box->lknown = 1;
@@ -268,7 +272,7 @@ reset_pick()
 {
     xlock.usedtime = xlock.chance = xlock.picktyp = 0;
     xlock.magic_key = FALSE;
-    xlock.door = (struct rm *) 0;
+    xlock.hasdoor = FALSE;
     xlock.box = (struct obj *) 0;
 }
 
@@ -308,7 +312,7 @@ struct obj *pick;
 {
     int picktyp, c, ch;
     coord cc;
-    struct rm *door;
+    
     struct obj *otmp;
     char qbuf[QBUFSZ];
 
@@ -435,7 +439,7 @@ struct obj *pick;
                     ch /= 2;
 
                 xlock.box = otmp;
-                xlock.door = 0;
+                xlock.hasdoor = FALSE;
                 break;
             }
         if (c != 'y') {
@@ -451,7 +455,7 @@ struct obj *pick;
             return PICKLOCK_LEARNED_SOMETHING;
         }
 
-        door = &levl[cc.x][cc.y];
+        
         mtmp = m_at(cc.x, cc.y);
         if (mtmp && canseemon(mtmp) && M_AP_TYPE(mtmp) != M_AP_FURNITURE
             && M_AP_TYPE(mtmp) != M_AP_OBJECT) {
@@ -469,14 +473,14 @@ struct obj *pick;
             maybe_absorb_item(mtmp, pick, 50, 10);
             return PICKLOCK_LEARNED_SOMETHING;
         }
-        if (!IS_DOOR(door->typ)) {
+        if (!IS_DOOR(lev_get(cc.x, cc.y).typ)) {
             if (is_drawbridge_wall(cc.x, cc.y) >= 0)
                 You("%s no lock on the drawbridge.", Blind ? "feel" : "see");
             else
                 You("%s no door there.", Blind ? "feel" : "see");
             return PICKLOCK_LEARNED_SOMETHING;
         }
-        switch (door->doormask) {
+        switch (lev_get(cc.x, cc.y).doormask) {
         case D_NODOOR:
             pline("This doorway has no door.");
             return PICKLOCK_LEARNED_SOMETHING;
@@ -488,13 +492,13 @@ struct obj *pick;
             return PICKLOCK_LEARNED_SOMETHING;
         default:
             /* credit cards are only good for unlocking */
-            if (picktyp == CREDIT_CARD && !(door->doormask & D_LOCKED)) {
+            if (picktyp == CREDIT_CARD && !(lev_get(cc.x, cc.y).doormask & D_LOCKED)) {
                 You_cant("lock a door with a credit card.");
                 return PICKLOCK_LEARNED_SOMETHING;
             }
 
             Sprintf(qbuf, "%s it?",
-                    (door->doormask & D_LOCKED) ? "Unlock" : "Lock");
+                    (lev_get(cc.x, cc.y).doormask & D_LOCKED) ? "Unlock" : "Lock");
 
             c = yn(qbuf);
             if (c == 'n')
@@ -513,7 +517,9 @@ struct obj *pick;
             default:
                 ch = 0;
             }
-            xlock.door = door;
+            xlock.hasdoor = TRUE;
+            xlock.doorx = cc.x;
+            xlock.doory = cc.y;
             xlock.box = 0;
         }
     }
@@ -634,7 +640,7 @@ doopen_indir(x, y)
 int x, y;
 {
     coord cc;
-    register struct rm *door;
+    
     boolean portcullis;
     int res = 0;
 
@@ -666,23 +672,23 @@ int x, y;
     if (Confusion || Stunned)
         res = 1;
 
-    door = &levl[cc.x][cc.y];
+    
     portcullis = (is_drawbridge_wall(cc.x, cc.y) >= 0);
     if (Blind) {
-        int oldglyph = door->glyph;
+        int oldglyph = lev_get(cc.x, cc.y).glyph;
         schar oldlastseentyp = lastseentyp[cc.x][cc.y];
 
         feel_location(cc.x, cc.y);
-        if (door->glyph != oldglyph
+        if (lev_get(cc.x, cc.y).glyph != oldglyph
             || lastseentyp[cc.x][cc.y] != oldlastseentyp)
             res = 1; /* learned something */
     }
 
-    if (portcullis || !IS_DOOR(door->typ)) {
+    if (portcullis || !IS_DOOR(lev_get(cc.x, cc.y).typ)) {
         /* closed portcullis or spot that opened bridge would span */
-        if (is_db_wall(cc.x, cc.y) || door->typ == DRAWBRIDGE_UP)
+        if (is_db_wall(cc.x, cc.y) || lev_get(cc.x, cc.y).typ == DRAWBRIDGE_UP)
             There("is no obvious way to open the drawbridge.");
-        else if (portcullis || door->typ == DRAWBRIDGE_DOWN)
+        else if (portcullis || lev_get(cc.x, cc.y).typ == DRAWBRIDGE_DOWN)
             pline_The("drawbridge is already open.");
         else if (container_at(cc.x, cc.y, TRUE))
             pline("%s like something lootable over there.",
@@ -692,10 +698,10 @@ int x, y;
         return res;
     }
 
-    if (!(door->doormask & D_CLOSED)) {
+    if (!(lev_get(cc.x, cc.y).doormask & D_CLOSED)) {
         const char *mesg;
 
-        switch (door->doormask) {
+        switch (lev_get(cc.x, cc.y).doormask) {
         case D_BROKEN:
             mesg = " is broken";
             break;
@@ -721,13 +727,13 @@ int x, y;
     /* door is known to be CLOSED */
     if (rnl(20) < (ACURRSTR + ACURR(A_DEX) + ACURR(A_CON)) / 3) {
         pline_The("door opens.");
-        if (door->doormask & D_TRAPPED) {
+        if (lev_get(cc.x, cc.y).doormask & D_TRAPPED) {
             b_trapped("door", FINGER);
-            door->doormask = D_NODOOR;
+            ({ int _lv = (D_NODOOR); int _lx = (cc.x), _ly = (cc.y); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
             if (*in_rooms(cc.x, cc.y, SHOPBASE))
                 add_damage(cc.x, cc.y, SHOP_DOOR_COST);
         } else
-            door->doormask = D_ISOPEN;
+            ({ int _lv = (D_ISOPEN); int _lx = (cc.x), _ly = (cc.y); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
         feel_newsym(cc.x, cc.y); /* the hero knows she opened it */
         unblock_point(cc.x, cc.y); /* vision: new see through there */
     } else {
@@ -777,7 +783,7 @@ int
 doclose()
 {
     register int x, y;
-    register struct rm *door;
+    
     boolean portcullis;
     int res = 0;
 
@@ -812,22 +818,22 @@ doclose()
     if (Confusion || Stunned)
         res = 1;
 
-    door = &levl[x][y];
+    
     portcullis = (is_drawbridge_wall(x, y) >= 0);
     if (Blind) {
-        int oldglyph = door->glyph;
+        int oldglyph = lev_get(x, y).glyph;
         schar oldlastseentyp = lastseentyp[x][y];
 
         feel_location(x, y);
-        if (door->glyph != oldglyph || lastseentyp[x][y] != oldlastseentyp)
+        if (lev_get(x, y).glyph != oldglyph || lastseentyp[x][y] != oldlastseentyp)
             res = 1; /* learned something */
     }
 
-    if (portcullis || !IS_DOOR(door->typ)) {
+    if (portcullis || !IS_DOOR(lev_get(x, y).typ)) {
         /* is_db_wall: closed portcullis */
-        if (is_db_wall(x, y) || door->typ == DRAWBRIDGE_UP)
+        if (is_db_wall(x, y) || lev_get(x, y).typ == DRAWBRIDGE_UP)
             pline_The("drawbridge is already closed.");
-        else if (portcullis || door->typ == DRAWBRIDGE_DOWN)
+        else if (portcullis || lev_get(x, y).typ == DRAWBRIDGE_DOWN)
             There("is no obvious way to close the drawbridge.");
         else {
  nodoor:
@@ -836,20 +842,20 @@ doclose()
         return res;
     }
 
-    if (door->doormask == D_NODOOR) {
+    if (lev_get(x, y).doormask == D_NODOOR) {
         pline("This doorway has no door.");
         return res;
     } else if (obstructed(x, y, FALSE)) {
         return res;
-    } else if (door->doormask == D_BROKEN) {
+    } else if (lev_get(x, y).doormask == D_BROKEN) {
         pline("This door is broken.");
         return res;
-    } else if (door->doormask & (D_CLOSED | D_LOCKED)) {
+    } else if (lev_get(x, y).doormask & (D_CLOSED | D_LOCKED)) {
         pline("This door is already closed.");
         return res;
     }
 
-    if (door->doormask == D_ISOPEN) {
+    if (lev_get(x, y).doormask == D_ISOPEN) {
         if (verysmall(youmonst.data) && !u.usteed) {
             pline("You're too small to push the door closed.");
             return res;
@@ -857,7 +863,7 @@ doclose()
         if (u.usteed
             || rn2(25) < (ACURRSTR + ACURR(A_DEX) + ACURR(A_CON)) / 3) {
             pline_The("door closes.");
-            door->doormask = D_CLOSED;
+            ({ int _lv = (D_CLOSED); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
             feel_newsym(x, y); /* the hero knows she closed it */
             block_point(x, y); /* vision:  no longer see there */
         } else {
@@ -922,7 +928,7 @@ doorlock(otmp, x, y)
 struct obj *otmp;
 int x, y;
 {
-    register struct rm *door = &levl[x][y];
+    
     boolean res = TRUE;
     int loudness = 0;
     const char *msg = (const char *) 0;
@@ -930,14 +936,14 @@ int x, y;
     const char *quickly_dissipates = "quickly dissipates";
     boolean mysterywand = (otmp->oclass == WAND_CLASS && !otmp->dknown);
 
-    if (door->typ == SDOOR) {
+    if (lev_get(x, y).typ == SDOOR) {
         switch (otmp->otyp) {
         case WAN_OPENING:
         case SPE_KNOCK:
         case WAN_STRIKING:
         case SPE_FORCE_BOLT:
-            door->typ = DOOR;
-            door->doormask = D_CLOSED | (door->doormask & D_TRAPPED);
+            ({ int _lv = (DOOR); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
+            ({ int _lv = (D_CLOSED | (lev_get(x, y).doormask & D_TRAPPED)); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
             newsym(x, y);
             if (cansee(x, y))
                 pline("A door appears in the wall!");
@@ -968,7 +974,7 @@ int x, y;
                 return FALSE;
             }
             block_point(x, y);
-            door->typ = SDOOR, door->doormask = D_NODOOR;
+            ({ int _lv = (SDOOR); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; }), ({ int _lv = (D_NODOOR); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
             if (vis)
                 pline_The("doorway vanishes!");
             newsym(x, y);
@@ -985,7 +991,7 @@ int x, y;
             return FALSE;
         }
 
-        switch (door->doormask & ~D_TRAPPED) {
+        switch (lev_get(x, y).doormask & ~D_TRAPPED) {
         case D_CLOSED:
             msg = "The door locks!";
             break;
@@ -1004,21 +1010,21 @@ int x, y;
             break;
         }
         block_point(x, y);
-        door->doormask = D_LOCKED | (door->doormask & D_TRAPPED);
+        ({ int _lv = (D_LOCKED | (lev_get(x, y).doormask & D_TRAPPED)); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
         newsym(x, y);
         break;
     case WAN_OPENING:
     case SPE_KNOCK:
-        if (door->doormask & D_LOCKED) {
+        if (lev_get(x, y).doormask & D_LOCKED) {
             msg = "The door unlocks!";
-            door->doormask = D_CLOSED | (door->doormask & D_TRAPPED);
+            ({ int _lv = (D_CLOSED | (lev_get(x, y).doormask & D_TRAPPED)); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
         } else
             res = FALSE;
         break;
     case WAN_STRIKING:
     case SPE_FORCE_BOLT:
-        if (door->doormask & (D_LOCKED | D_CLOSED)) {
-            if (door->doormask & D_TRAPPED) {
+        if (lev_get(x, y).doormask & (D_LOCKED | D_CLOSED)) {
+            if (lev_get(x, y).doormask & D_TRAPPED) {
                 if (MON_AT(x, y))
                     (void) mb_trapped(m_at(x, y));
                 else if (flags.verbose) {
@@ -1027,13 +1033,13 @@ int x, y;
                     else
                         You_hear("a distant explosion.");
                 }
-                door->doormask = D_NODOOR;
+                ({ int _lv = (D_NODOOR); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
                 unblock_point(x, y);
                 newsym(x, y);
                 loudness = 40;
                 break;
             }
-            door->doormask = D_BROKEN;
+            ({ int _lv = (D_BROKEN); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
             if (flags.verbose) {
                 if (cansee(x, y))
                     pline_The("door crashes open!");

@@ -36,7 +36,7 @@ dosit()
 {
     static const char sit_message[] = "sit on the %s.";
     register struct trap *trap = t_at(u.ux, u.uy);
-    register int typ = levl[u.ux][u.uy].typ;
+    register int typ = lev_get(u.ux, u.uy).typ;
 
     if (u.usteed) {
         You("are already sitting on %s.", mon_nam(u.usteed));
@@ -280,9 +280,9 @@ dosit()
                 You_feel("somehow out of place...");
         }
 
-        if (!rn2(3) && IS_THRONE(levl[u.ux][u.uy].typ)) {
+        if (!rn2(3) && IS_THRONE(lev_get(u.ux, u.uy).typ)) {
             /* may have teleported */
-            levl[u.ux][u.uy].typ = ROOM, levl[u.ux][u.uy].flags = 0;
+            ({ int _lv = (ROOM); int _lx = (u.ux), _ly = (u.uy); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; }), ({ int _lv = (0); int _lx = (u.ux), _ly = (u.uy); struct rm _lr = lev_get(_lx, _ly); _lr.flags = _lv; lev_put(_lx, _ly, _lr); _lr.flags; });
             pline_The("throne vanishes in a puff of logic.");
             newsym(u.ux, u.uy);
         }

@@ -3701,7 +3701,7 @@ struct obj *no_wish;
      */
  wiztrap:
     if (wizard && !program_state.wizkit_wishing) {
-        struct rm *lev;
+        
         boolean madeterrain = FALSE;
         int trap, x = u.ux, y = u.uy;
 
@@ -3727,21 +3727,21 @@ struct obj *no_wish;
 
         /* furniture and terrain (use at your own risk; can clobber stairs
            or place furniture on existing traps which shouldn't be allowed) */
-        lev = &levl[x][y];
+        
         p = eos(bp);
         if (!BSTRCMPI(bp, p - 8, "fountain")) {
-            lev->typ = FOUNTAIN;
+            ({ int _lv = (FOUNTAIN); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
             level.flags.nfountains++;
             if (!strncmpi(bp, "magic ", 6))
-                lev->blessedftn = 1;
-            pline("A %sfountain.", lev->blessedftn ? "magic " : "");
+                ({ int _lv = (1); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.blessedftn = _lv; lev_put(_lx, _ly, _lr); _lr.blessedftn; });
+            pline("A %sfountain.", lev_get(x, y).blessedftn ? "magic " : "");
             madeterrain = TRUE;
         } else if (!BSTRCMPI(bp, p - 6, "throne")) {
-            lev->typ = THRONE;
+            ({ int _lv = (THRONE); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
             pline("A throne.");
             madeterrain = TRUE;
         } else if (!BSTRCMPI(bp, p - 4, "sink")) {
-            lev->typ = SINK;
+            ({ int _lv = (SINK); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
             level.flags.nsinks++;
             pline("A sink.");
             madeterrain = TRUE;
@@ -3749,16 +3749,16 @@ struct obj *no_wish;
         /* ("water" matches "potion of water" rather than terrain) */
         } else if (!BSTRCMPI(bp, p - 4, "pool")
                    || !BSTRCMPI(bp, p - 4, "moat")) {
-            lev->typ = !BSTRCMPI(bp, p - 4, "pool") ? POOL : MOAT;
+            ({ int _lv = (!BSTRCMPI(bp, p - 4, "pool") ? POOL : MOAT); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
             del_engr_at(x, y);
-            pline("A %s.", (lev->typ == POOL) ? "pool" : "moat");
+            pline("A %s.", (lev_get(x, y).typ == POOL) ? "pool" : "moat");
             /* Must manually make kelp! */
             water_damage_chain(level.objects[x][y], TRUE);
             madeterrain = TRUE;
 
         /* also matches "molten lava" */
         } else if (!BSTRCMPI(bp, p - 4, "lava")) {
-            lev->typ = LAVAPOOL;
+            ({ int _lv = (LAVAPOOL); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
             del_engr_at(x, y);
             pline("A pool of molten lava.");
             if (!(Levitation || Flying))
@@ -3767,7 +3767,7 @@ struct obj *no_wish;
         } else if (!BSTRCMPI(bp, p - 5, "altar")) {
             aligntyp al;
 
-            lev->typ = ALTAR;
+            ({ int _lv = (ALTAR); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
             if (!strncmpi(bp, "chaotic ", 8))
                 al = A_CHAOTIC;
             else if (!strncmpi(bp, "neutral ", 8))
@@ -3778,22 +3778,22 @@ struct obj *no_wish;
                 al = A_NONE;
             else /* -1 - A_CHAOTIC, 0 - A_NEUTRAL, 1 - A_LAWFUL */
                 al = !rn2(6) ? A_NONE : (rn2((int) A_LAWFUL + 2) - 1);
-            lev->altarmask = Align2amask(al);
+            ({ int _lv = (Align2amask(al)); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.altarmask = _lv; lev_put(_lx, _ly, _lr); _lr.altarmask; });
             pline("%s altar.", An(align_str(al)));
             madeterrain = TRUE;
         } else if (!BSTRCMPI(bp, p - 5, "grave")
                    || !BSTRCMPI(bp, p - 9, "headstone")) {
             make_grave(x, y, (char *) 0);
-            pline("%s.", IS_GRAVE(lev->typ) ? "A grave"
+            pline("%s.", IS_GRAVE(lev_get(x, y).typ) ? "A grave"
                                             : "Can't place a grave here");
             madeterrain = TRUE;
         } else if (!BSTRCMPI(bp, p - 4, "tree")) {
-            lev->typ = TREE;
+            ({ int _lv = (TREE); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
             pline("A tree.");
             block_point(x, y);
             madeterrain = TRUE;
         } else if (!BSTRCMPI(bp, p - 4, "bars")) {
-            lev->typ = IRONBARS;
+            ({ int _lv = (IRONBARS); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
             pline("Iron bars.");
             madeterrain = TRUE;
         }

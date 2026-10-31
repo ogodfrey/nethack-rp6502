@@ -241,9 +241,9 @@ const void *b;
 
 #define IS_UNEXPLORED_LOC(x,y) \
     (isok((x), (y))                                     \
-     && glyph_is_cmap(levl[(x)][(y)].glyph)             \
-     && glyph_to_cmap(levl[(x)][(y)].glyph) == S_stone  \
-     && !levl[(x)][(y)].seenv)
+     && glyph_is_cmap(lev_get((x), (y)).glyph)             \
+     && glyph_to_cmap(lev_get((x), (y)).glyph) == S_stone  \
+     && !lev_get((x), (y)).seenv)
 
 static struct opvar *gloc_filter_map = (struct opvar *) 0;
 
@@ -283,7 +283,7 @@ int x, y;
 {
     int glyph = back_to_glyph(x, y);
 
-    if (!levl[x][y].seenv)
+    if (!lev_get(x, y).seenv)
         return FALSE;
 
     if (glyph == gloc_filter_floodfill_match_glyph)
@@ -315,7 +315,7 @@ gloc_filter_init()
         }
         /* special case: if we're in a doorway, try to figure out which
            direction we're moving, and use that side of the doorway */
-        if (IS_DOOR(levl[u.ux][u.uy].typ)) {
+        if (IS_DOOR(lev_get(u.ux, u.uy).typ)) {
             if (u.dx || u.dy) {
                 gloc_filter_floodfill(u.ux + u.dx, u.uy + u.dy);
             } else {
@@ -913,14 +913,14 @@ const char *goal;
                                     /* !terrainmode: don't move to remembered
                                        trap or object if not currently shown */
                                     && !iflags.terrainmode) {
-                                    k = levl[tx][ty].glyph;
+                                    k = lev_get(tx, ty).glyph;
                                     if (glyph_is_cmap(k)
                                         && matching[glyph_to_cmap(k)])
                                         goto foundc;
                                 }
                                 /* last, try actual terrain here (shouldn't
                                    we be using lastseentyp[][] instead?) */
-                                if (levl[tx][ty].seenv) {
+                                if (lev_get(tx, ty).seenv) {
                                     k = back_to_glyph(tx, ty);
                                     if (glyph_is_cmap(k)
                                         && matching[glyph_to_cmap(k)])

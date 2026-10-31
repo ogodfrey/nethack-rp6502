@@ -349,12 +349,32 @@ extern struct symsetentry symset[NUM_GRAPHICS]; /* from drawing.c */
  */
 #define F_LOOTED 1
 #define F_WARNED 2
-#define FOUNTAIN_IS_WARNED(x, y) (levl[x][y].looted & F_WARNED)
-#define FOUNTAIN_IS_LOOTED(x, y) (levl[x][y].looted & F_LOOTED)
-#define SET_FOUNTAIN_WARNED(x, y) levl[x][y].looted |= F_WARNED;
-#define SET_FOUNTAIN_LOOTED(x, y) levl[x][y].looted |= F_LOOTED;
-#define CLEAR_FOUNTAIN_WARNED(x, y) levl[x][y].looted &= ~F_WARNED;
-#define CLEAR_FOUNTAIN_LOOTED(x, y) levl[x][y].looted &= ~F_LOOTED;
+#define FOUNTAIN_IS_WARNED(x, y) (lev_get((x), (y)).looted & F_WARNED)
+#define FOUNTAIN_IS_LOOTED(x, y) (lev_get((x), (y)).looted & F_LOOTED)
+#define SET_FOUNTAIN_WARNED(x, y)                                      \
+    do {                                                               \
+        struct rm _lf = lev_get((x), (y));                             \
+        _lf.looted |= F_WARNED;                                        \
+        lev_put((x), (y), _lf);                                        \
+    } while (0)
+#define SET_FOUNTAIN_LOOTED(x, y)                                      \
+    do {                                                               \
+        struct rm _lf = lev_get((x), (y));                             \
+        _lf.looted |= F_LOOTED;                                        \
+        lev_put((x), (y), _lf);                                        \
+    } while (0)
+#define CLEAR_FOUNTAIN_WARNED(x, y)                                    \
+    do {                                                               \
+        struct rm _lf = lev_get((x), (y));                             \
+        _lf.looted &= ~F_WARNED;                                       \
+        lev_put((x), (y), _lf);                                        \
+    } while (0)
+#define CLEAR_FOUNTAIN_LOOTED(x, y)                                    \
+    do {                                                               \
+        struct rm _lf = lev_get((x), (y));                             \
+        _lf.looted &= ~F_LOOTED;                                       \
+        lev_put((x), (y), _lf);                                        \
+    } while (0)
 
 /*
  * Doors are even worse :-) The special warning has a side effect
@@ -429,20 +449,22 @@ struct rm {
     Bitfield(candig, 1); /* Exception to Can_dig_down; was a trapdoor */
 };
 
-#define SET_TYPLIT(x, y, ttyp, llit)                              \
-    {                                                             \
-        if ((x) >= 0 && (y) >= 0 && (x) < COLNO && (y) < ROWNO) { \
-            if ((ttyp) < MAX_TYPE)                                \
-                levl[(x)][(y)].typ = (ttyp);                      \
-            if ((ttyp) == LAVAPOOL)                               \
-                levl[(x)][(y)].lit = 1;                           \
-            else if ((schar)(llit) != -2) {                       \
-                if ((schar)(llit) == -1)                          \
-                    levl[(x)][(y)].lit = rn2(2);                  \
-                else                                              \
-                    levl[(x)][(y)].lit = (llit);                  \
-            }                                                     \
-        }                                                         \
+#define SET_TYPLIT(x, y, ttyp, llit)                                 \
+    {                                                                \
+        if ((x) >= 0 && (y) >= 0 && (x) < COLNO && (y) < ROWNO) {    \
+            struct rm _lt = lev_get((x), (y));                       \
+            if ((ttyp) < MAX_TYPE)                                   \
+                _lt.typ = (ttyp);                                    \
+            if ((ttyp) == LAVAPOOL)                                  \
+                _lt.lit = 1;                                         \
+            else if ((schar)(llit) != -2) {                          \
+                if ((schar)(llit) == -1)                             \
+                    _lt.lit = rn2(2);                                \
+                else                                                 \
+                    _lt.lit = (llit);                                \
+            }                                                        \
+            lev_put((x), (y), _lt);                                  \
+        }                                                            \
     }
 
 /*
@@ -590,7 +612,9 @@ struct levelflags {
 };
 
 typedef struct {
+#ifndef RP6502_LEV_XRAM
     struct rm locations[COLNO][ROWNO];
+#endif
 #ifndef MICROPORT_BUG
     struct obj *objects[COLNO][ROWNO];
     struct monst *monsters[COLNO][ROWNO];
@@ -613,9 +637,25 @@ extern schar lastseentyp[COLNO][ROWNO]; /* last seen/touched dungeon typ */
 extern dlevel_t level; /* structure describing the current level */
 
 /*
+ * The level map. Code reads and writes a cell with lev_get() and lev_put(),
+ * so the map can live in RAM or in XRAM (RP6502_LEV_XRAM, see
+ * sys/rp6502/rp6502lev.c). Use a local copy of the cell for several accesses:
+ *     struct rm r = lev_get(x, y);  ...  lev_put(x, y, r);
+ */
+#ifdef RP6502_LEV_XRAM
+struct rm rpl_get(int x, int y);
+void rpl_put(int x, int y, struct rm v);
+void rpl_clear(void);
+#define lev_get(x, y) rpl_get((x), (y))
+#define lev_put(x, y, v) rpl_put((x), (y), (v))
+#else
+#define lev_get(x, y) (level.locations[(x)][(y)])
+#define lev_put(x, y, v) (level.locations[(x)][(y)] = (v))
+#endif
+
+/*
  * Macros for compatibility with old code. Someday these will go away.
  */
-#define levl level.locations
 #define fobj level.objlist
 #define fmon level.monlist
 

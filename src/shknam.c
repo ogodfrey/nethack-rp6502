@@ -603,17 +603,17 @@ struct mkroom *sroom;
     if (sroom->irregular) {
         int rmno = (int) ((sroom - rooms) + ROOMOFFSET);
 
-        if (isok(sx - 1, sy) && !levl[sx - 1][sy].edge
-            && (int) levl[sx - 1][sy].roomno == rmno)
+        if (isok(sx - 1, sy) && !lev_get(sx - 1, sy).edge
+            && (int) lev_get(sx - 1, sy).roomno == rmno)
             sx--;
-        else if (isok(sx + 1, sy) && !levl[sx + 1][sy].edge
-                 && (int) levl[sx + 1][sy].roomno == rmno)
+        else if (isok(sx + 1, sy) && !lev_get(sx + 1, sy).edge
+                 && (int) lev_get(sx + 1, sy).roomno == rmno)
             sx++;
-        else if (isok(sx, sy - 1) && !levl[sx][sy - 1].edge
-                 && (int) levl[sx][sy - 1].roomno == rmno)
+        else if (isok(sx, sy - 1) && !lev_get(sx, sy - 1).edge
+                 && (int) lev_get(sx, sy - 1).roomno == rmno)
             sy--;
-        else if (isok(sx, sy + 1) && !levl[sx][sy + 1].edge
-                 && (int) levl[sx][sy + 1].roomno == rmno)
+        else if (isok(sx, sy + 1) && !lev_get(sx, sy + 1).edge
+                 && (int) lev_get(sx, sy + 1).roomno == rmno)
             sy++;
         else
             goto shk_failed;
@@ -685,8 +685,8 @@ struct mkroom *sroom;
 int rmno, sh, sx,sy;
 {
     if (sroom->irregular) {
-        if (levl[sx][sy].edge
-            || (int) levl[sx][sy].roomno != rmno
+        if (lev_get(sx, sy).edge
+            || (int) lev_get(sx, sy).roomno != rmno
             || distmin(sx, sy, doors[sh].x, doors[sh].y) <= 1)
             return FALSE;
     } else if ((sx == sroom->lx && doors[sh].x == sx - 1)
@@ -722,18 +722,18 @@ register struct mkroom *sroom;
     /* make sure no doorways without doors, and no trapped doors, in shops */
     sx = doors[sroom->fdoor].x;
     sy = doors[sroom->fdoor].y;
-    if (levl[sx][sy].doormask == D_NODOOR) {
-        levl[sx][sy].doormask = D_ISOPEN;
+    if (lev_get(sx, sy).doormask == D_NODOOR) {
+        ({ int _lv = (D_ISOPEN); int _lx = (sx), _ly = (sy); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
         newsym(sx, sy);
     }
-    if (levl[sx][sy].typ == SDOOR) {
-        cvt_sdoor_to_door(&levl[sx][sy]); /* .typ = DOOR */
+    if (lev_get(sx, sy).typ == SDOOR) {
+        cvt_sdoor_to_door(sx, sy); /* .typ = DOOR */
         newsym(sx, sy);
     }
-    if (levl[sx][sy].doormask & D_TRAPPED)
-        levl[sx][sy].doormask = D_LOCKED;
+    if (lev_get(sx, sy).doormask & D_TRAPPED)
+        ({ int _lv = (D_LOCKED); int _lx = (sx), _ly = (sy); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
 
-    if (levl[sx][sy].doormask == D_LOCKED) {
+    if (lev_get(sx, sy).doormask == D_LOCKED) {
         register int m = sx, n = sy;
 
         if (inside_shop(sx + 1, sy))

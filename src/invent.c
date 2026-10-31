@@ -3332,13 +3332,13 @@ dfeature_at(x, y, buf)
 int x, y;
 char *buf;
 {
-    struct rm *lev = &levl[x][y];
-    int ltyp = lev->typ, cmap = -1;
+    
+    int ltyp = lev_get(x, y).typ, cmap = -1;
     const char *dfeature = 0;
     static char altbuf[BUFSZ];
 
     if (IS_DOOR(ltyp)) {
-        switch (lev->doormask) {
+        switch (lev_get(x, y).doormask) {
         case D_NODOOR:
             cmap = S_ndoor;
             break; /* "doorway" */
@@ -3369,12 +3369,12 @@ char *buf;
         cmap = S_sink; /* "sink" */
     else if (IS_ALTAR(ltyp)) {
         Sprintf(altbuf, "%saltar to %s (%s)",
-                ((lev->altarmask & AM_SHRINE)
+                ((lev_get(x, y).altarmask & AM_SHRINE)
                  && (Is_astralevel(&u.uz) || Is_sanctum(&u.uz)))
                     ? "high "
                     : "",
                 a_gname(),
-                align_str(Amask2align(lev->altarmask & ~AM_SHRINE)));
+                align_str(Amask2align(lev_get(x, y).altarmask & ~AM_SHRINE)));
         dfeature = altbuf;
     } else if ((x == xupstair && y == yupstair)
                || (x == sstairs.sx && y == sstairs.sy && sstairs.up))

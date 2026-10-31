@@ -500,7 +500,7 @@ register struct monst *mtmp;
                   || Is_waterlevel(&u.uz)));
     inlava = (is_lava(mtmp->mx, mtmp->my)
               && !(is_flyer(mtmp->data) || is_floater(mtmp->data)));
-    infountain = IS_FOUNTAIN(levl[mtmp->mx][mtmp->my].typ);
+    infountain = IS_FOUNTAIN(lev_get(mtmp->mx, mtmp->my).typ);
 
     /* Flying and levitation keeps our steed out of the liquid
        (but not water-walking or swimming; note: if hero is in a
@@ -1323,7 +1323,7 @@ long flag;
 
     x = mon->mx;
     y = mon->my;
-    nowtyp = levl[x][y].typ;
+    nowtyp = lev_get(x, y).typ;
 
     nodiag = NODIAG(mdat - mons);
     wantpool = (pm_get(mdat)->mlet == S_EEL);
@@ -1375,7 +1375,7 @@ long flag;
         for (ny = max(0, y - 1); ny <= maxy; ny++) {
             if (nx == x && ny == y)
                 continue;
-            ntyp = levl[nx][ny].typ;
+            ntyp = lev_get(nx, ny).typ;
             if (IS_ROCK(ntyp)
                 && !((flag & ALLOW_WALL) && may_passwall(nx, ny))
                 && !((IS_TREE(ntyp) ? treeok : rockok) && may_dig(nx, ny)))
@@ -1383,13 +1383,13 @@ long flag;
             /* KMH -- Added iron bars */
             if (ntyp == IRONBARS
                 && (!(flag & ALLOW_BARS)
-                    || ((levl[nx][ny].wall_info & W_NONDIGGABLE)
+                    || ((lev_get(nx, ny).wall_info & W_NONDIGGABLE)
                         && (dmgtype(mdat, AD_RUST)
                             || dmgtype(mdat, AD_CORR)))))
                 continue;
             if (IS_DOOR(ntyp) && !(amorphous(mdat) || can_fog(mon))
-                && (((levl[nx][ny].doormask & D_CLOSED) && !(flag & OPENDOOR))
-                    || ((levl[nx][ny].doormask & D_LOCKED)
+                && (((lev_get(nx, ny).doormask & D_CLOSED) && !(flag & OPENDOOR))
+                    || ((lev_get(nx, ny).doormask & D_LOCKED)
                         && !(flag & UNLOCKDOOR))) && !thrudoor)
                 continue;
             /* avoid poison gas? */
@@ -1400,8 +1400,8 @@ long flag;
             /* first diagonal checks (tight squeezes handled below) */
             if (nx != x && ny != y
                 && (nodiag
-                    || (IS_DOOR(nowtyp) && (levl[x][y].doormask & ~D_BROKEN))
-                    || (IS_DOOR(ntyp) && (levl[nx][ny].doormask & ~D_BROKEN))
+                    || (IS_DOOR(nowtyp) && (lev_get(x, y).doormask & ~D_BROKEN))
+                    || (IS_DOOR(ntyp) && (lev_get(nx, ny).doormask & ~D_BROKEN))
                     || ((IS_DOOR(nowtyp) || IS_DOOR(ntyp))
                         && Is_rogue_level(&u.uz))
                     /* mustn't pass between adjacent long worm segments,
@@ -2063,7 +2063,7 @@ register struct monst *mtmp;
         nemdead();
     if (mtmp->data == &mons[PM_MEDUSA])
         u.uachieve.killed_medusa = 1;
-    if (glyph_is_invisible(levl[mtmp->mx][mtmp->my].glyph))
+    if (glyph_is_invisible(lev_get(mtmp->mx, mtmp->my).glyph))
         unmap_object(mtmp->mx, mtmp->my);
     m_detach(mtmp, mptr);
 }
@@ -2248,7 +2248,7 @@ struct monst *mdef;
 
     stackobj(otmp);
     /* mondead() already does this, but we must do it before the newsym */
-    if (glyph_is_invisible(levl[x][y].glyph))
+    if (glyph_is_invisible(lev_get(x, y).glyph))
         unmap_object(x, y);
     if (cansee(x, y))
         newsym(x, y);
@@ -3094,7 +3094,7 @@ register struct monst *mtmp;
      *  Discovered mimics don't block light.
      */
     if (is_blocker_appear
-        && !does_block(mtmp->mx, mtmp->my, &levl[mtmp->mx][mtmp->my]))
+        && !does_block(mtmp->mx, mtmp->my))
         unblock_point(mtmp->mx, mtmp->my);
 
     newsym(mtmp->mx, mtmp->my);
@@ -3185,7 +3185,7 @@ register struct monst *mtmp;
     if (pm_get(mtmp->data)->mlet == S_MIMIC) {
         set_mimic_sym(mtmp);
         return TRUE;
-    } else if (levl[mtmp->mx][mtmp->my].typ == ROOM) {
+    } else if (lev_get(mtmp->mx, mtmp->my).typ == ROOM) {
         mtmp->mundetected = 1;
         return TRUE;
     }

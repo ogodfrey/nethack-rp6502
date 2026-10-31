@@ -285,7 +285,7 @@ struct monst *oracle;
         return FALSE;
 
     oracle->mpeaceful = 1;
-    o_ridx = levl[oracle->mx][oracle->my].roomno - ROOMOFFSET;
+    o_ridx = lev_get(oracle->mx, oracle->my).roomno - ROOMOFFSET;
     if (o_ridx >= 0 && rooms[o_ridx].rtype == DELPHI)
         return TRUE; /* no fixup needed */
 
@@ -307,7 +307,7 @@ struct monst *oracle;
         cc.y = (rooms[ridx].ly + rooms[ridx].hy) / 2;
         if (enexto(&cc, cc.x, cc.y, oracle->data)) {
             rloc_to(oracle, cc.x, cc.y);
-            o_ridx = levl[oracle->mx][oracle->my].roomno - ROOMOFFSET;
+            o_ridx = lev_get(oracle->mx, oracle->my).roomno - ROOMOFFSET;
         }
         /* [if her room is already full, she might end up outside;
            that's ok, next hero just won't get any welcome message,
@@ -488,9 +488,9 @@ struct obj *corpse;
     /* Clear all memory from the level. */
     for (x = 1; x < COLNO; x++)
         for (y = 0; y < ROWNO; y++) {
-            levl[x][y].seenv = 0;
-            levl[x][y].waslit = 0;
-            levl[x][y].glyph = cmap_to_glyph(S_stone);
+            ({ int _lv = (0); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.seenv = _lv; lev_put(_lx, _ly, _lr); _lr.seenv; });
+            ({ int _lv = (0); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.waslit = _lv; lev_put(_lx, _ly, _lr); _lr.waslit; });
+            ({ int _lv = (cmap_to_glyph(S_stone)); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.glyph = _lv; lev_put(_lx, _ly, _lr); _lr.glyph; });
             lastseentyp[x][y] = 0;
         }
 

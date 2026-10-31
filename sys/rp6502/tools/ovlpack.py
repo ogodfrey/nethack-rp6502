@@ -629,8 +629,8 @@ def cmd_emit(argv):
     asmdir, planfile, out = argv[0], argv[1], argv[2]
     with open(planfile) as f:
         plan = json.load(f)
-    cfg = {'desc_xram': int(str(plan.get('desc_xram', 0xA000)), 0),
-           'dir_xram': int(str(plan.get('dir_xram', 0xC000)), 0)}
+    cfg = {'desc_xram': int(str(plan.get('desc_xram', 0xD200)), 0),
+           'dir_xram': int(str(plan.get('dir_xram', 0x0000)), 0)}
     prog = Program(load_modules(asmdir))
     ovls = load_plan(prog, plan)
     assign_rodata(prog)
@@ -813,6 +813,14 @@ def cmd_link(argv):
     for name, unit in meta['desc']:
         e = entries[name] - slot0
         desc += bytes([unit, e & 0xFF, e >> 8])
+    # The directory lives in $0000-$0FFF and the descriptor in the top of
+    # XRAM, above the level map (see include/xram.h).
+    if meta['dir_xram'] + len(dirs) > 0x1000:
+        sys.exit('overlay directory (%d bytes) does not fit at $%04X'
+                 % (len(dirs), meta['dir_xram']))
+    if meta['desc_xram'] + len(desc) > 0x10000:
+        sys.exit('overlay descriptor (%d bytes) does not fit at $%04X'
+                 % (len(desc), meta['desc_xram']))
     for name, data in ((meta['file'], blob), ('ovldesc.bin', desc),
                        ('ovldir.bin', dirs)):
         with open(os.path.join(out, name), 'wb') as f:

@@ -142,11 +142,11 @@ STATIC_DCL int FDECL(set_twall, (int, int, int, int, int, int, int, int));
 STATIC_DCL int FDECL(set_wall, (int, int, int));
 STATIC_DCL int FDECL(set_corn, (int, int, int, int, int, int, int, int));
 STATIC_DCL int FDECL(set_crosswall, (int, int));
-STATIC_DCL void FDECL(set_seenv, (struct rm *, int, int, int, int));
-STATIC_DCL void FDECL(t_warn, (struct rm *));
-STATIC_DCL int FDECL(wall_angle, (struct rm *));
+STATIC_DCL void FDECL(set_seenv, (int, int, int, int));
+STATIC_DCL void FDECL(t_warn, (int, int));
+STATIC_DCL int FDECL(wall_angle, (int, int));
 
-#define remember_topology(x, y) (lastseentyp[x][y] = levl[x][y].typ)
+#define remember_topology(x, y) (lastseentyp[x][y] = lev_get(x, y).typ)
 
 /*
  * magic_map_background()
@@ -160,23 +160,23 @@ xchar x, y;
 int show;
 {
     int glyph = back_to_glyph(x, y); /* assumes hero can see x,y */
-    struct rm *lev = &levl[x][y];
+    
 
     /*
      * Correct for out of sight lit corridors and rooms that the hero
      * doesn't remember as lit.
      */
-    if (!cansee(x, y) && !lev->waslit) {
+    if (!cansee(x, y) && !lev_get(x, y).waslit) {
         /* Floor spaces are dark if unlit.  Corridors are dark if unlit. */
-        if (lev->typ == ROOM && glyph == cmap_to_glyph(S_room))
+        if (lev_get(x, y).typ == ROOM && glyph == cmap_to_glyph(S_room))
             glyph = cmap_to_glyph((flags.dark_room && iflags.use_color)
                                       ? (DARKROOMSYM)
                                       : S_stone);
-        else if (lev->typ == CORR && glyph == cmap_to_glyph(S_litcorr))
+        else if (lev_get(x, y).typ == CORR && glyph == cmap_to_glyph(S_litcorr))
             glyph = cmap_to_glyph(S_corr);
     }
     if (level.flags.hero_memory)
-        lev->glyph = glyph;
+        ({ int _lv = (glyph); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.glyph = _lv; lev_put(_lx, _ly, _lr); _lr.glyph; });
     if (show)
         show_glyph(x, y, glyph);
 
@@ -212,7 +212,7 @@ register int show;
     register int glyph = back_to_glyph(x, y);
 
     if (level.flags.hero_memory)
-        levl[x][y].glyph = glyph;
+        ({ int _lv = (glyph); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.glyph = _lv; lev_put(_lx, _ly, _lr); _lr.glyph; });
     if (show)
         show_glyph(x, y, glyph);
 }
@@ -232,7 +232,7 @@ register int show;
     register int glyph = trap_to_glyph(trap, newsym_rn2);
 
     if (level.flags.hero_memory)
-        levl[x][y].glyph = glyph;
+        ({ int _lv = (glyph); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.glyph = _lv; lev_put(_lx, _ly, _lr); _lr.glyph; });
     if (show)
         show_glyph(x, y, glyph);
 }
@@ -256,9 +256,9 @@ register int show;
         /*       but remembered as random objects.                        */
 
         if (Hallucination && obj->otyp == STATUE) {
-            levl[x][y].glyph = random_obj_to_glyph(newsym_rn2);
+            ({ int _lv = (random_obj_to_glyph(newsym_rn2)); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.glyph = _lv; lev_put(_lx, _ly, _lr); _lr.glyph; });
         } else {
-            levl[x][y].glyph = glyph;
+            ({ int _lv = (glyph); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.glyph = _lv; lev_put(_lx, _ly, _lr); _lr.glyph; });
         }
     }
     if (show)
@@ -280,7 +280,7 @@ register xchar x, y;
 {
     if (x != u.ux || y != u.uy) { /* don't display I at hero's location */
         if (level.flags.hero_memory)
-            levl[x][y].glyph = GLYPH_INVISIBLE;
+            ({ int _lv = (GLYPH_INVISIBLE); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.glyph = _lv; lev_put(_lx, _ly, _lr); _lr.glyph; });
         show_glyph(x, y, GLYPH_INVISIBLE);
     }
 }
@@ -289,7 +289,7 @@ boolean
 unmap_invisible(x, y)
 int x, y;
 {
-    if (isok(x,y) && glyph_is_invisible(levl[x][y].glyph)) {
+    if (isok(x,y) && glyph_is_invisible(lev_get(x, y).glyph)) {
         unmap_object(x, y);
         newsym(x, y);
         return TRUE;
@@ -318,17 +318,17 @@ register int x, y;
 
     if ((trap = t_at(x, y)) != 0 && trap->tseen && !covers_traps(x, y)) {
         map_trap(trap, 0);
-    } else if (levl[x][y].seenv) {
-        struct rm *lev = &levl[x][y];
+    } else if (lev_get(x, y).seenv) {
+        
 
         map_background(x, y, 0);
 
         /* turn remembered dark room squares dark */
-        if (!lev->waslit && lev->glyph == cmap_to_glyph(S_room)
-            && lev->typ == ROOM)
-            lev->glyph = cmap_to_glyph(S_stone);
+        if (!lev_get(x, y).waslit && lev_get(x, y).glyph == cmap_to_glyph(S_room)
+            && lev_get(x, y).typ == ROOM)
+            ({ int _lv = (cmap_to_glyph(S_stone)); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.glyph = _lv; lev_put(_lx, _ly, _lr); _lr.glyph; });
     } else {
-        levl[x][y].glyph = cmap_to_glyph(S_stone); /* default val */
+        ({ int _lv = (cmap_to_glyph(S_stone)); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.glyph = _lv; lev_put(_lx, _ly, _lr); _lr.glyph; }); /* default val */
     }
 }
 
@@ -372,7 +372,7 @@ int x, y, monglyph;
     /* "remembered, unseen monster" is tracked by object layer so if we're
        putting something on monster layer at same spot, stop remembering
        that; if an object is in view there, start remembering it instead */
-    if (glyph_is_invisible(levl[x][y].glyph)) {
+    if (glyph_is_invisible(lev_get(x, y).glyph)) {
         unmap_object(x, y);
         if (cansee(x, y) && (o = vobj_at(x, y)) != 0)
             map_object(o, FALSE);
@@ -436,7 +436,7 @@ xchar worm_tail;            /* mon is actually a worm tail */
              */
             int sym = mon->mappearance, glyph = cmap_to_glyph(sym);
 
-            levl[x][y].glyph = glyph;
+            ({ int _lv = (glyph); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.glyph = _lv; lev_put(_lx, _ly, _lr); _lr.glyph; });
             if (!sensed) {
                 show_glyph(x, y, glyph);
                 /* override real topology with mimic's fake one */
@@ -574,19 +574,19 @@ void
 feel_location(x, y)
 xchar x, y;
 {
-    struct rm *lev;
+    
     struct obj *boulder;
     register struct monst *mon;
 
     if (!isok(x, y))
         return;
-    lev = &(levl[x][y]);
+    
     /* If hero's memory of an invisible monster is accurate, we want to keep
      * him from detecting the same monster over and over again on each turn.
      * We must return (so we don't erase the monster).  (We must also, in the
      * search function, be sure to skip over previously detected 'I's.)
      */
-    if (glyph_is_invisible(lev->glyph) && m_at(x, y))
+    if (glyph_is_invisible(lev_get(x, y).glyph) && m_at(x, y))
         return;
 
     /* The hero can't feel non pool locations while under water
@@ -597,7 +597,7 @@ xchar x, y;
 
     /* Set the seen vector as if the hero had seen it.
        It doesn't matter if the hero is levitating or not. */
-    set_seenv(lev, u.ux, u.uy, x, y);
+    set_seenv(u.ux, u.uy, x, y);
 
     if (!can_reach_floor(FALSE)) {
         /*
@@ -615,15 +615,15 @@ xchar x, y;
          *      + Room/water positions
          *      + Everything else (hallways!)
          */
-        if (IS_ROCK(lev->typ)
-            || (IS_DOOR(lev->typ)
-                && (lev->doormask & (D_LOCKED | D_CLOSED)))) {
+        if (IS_ROCK(lev_get(x, y).typ)
+            || (IS_DOOR(lev_get(x, y).typ)
+                && (lev_get(x, y).doormask & (D_LOCKED | D_CLOSED)))) {
             map_background(x, y, 1);
         } else if ((boulder = sobj_at(BOULDER, x, y)) != 0) {
             map_object(boulder, 1);
-        } else if (IS_DOOR(lev->typ)) {
+        } else if (IS_DOOR(lev_get(x, y).typ)) {
             map_background(x, y, 1);
-        } else if (IS_ROOM(lev->typ) || IS_POOL(lev->typ)) {
+        } else if (IS_ROOM(lev_get(x, y).typ) || IS_POOL(lev_get(x, y).typ)) {
             boolean do_room_glyph;
 
             /*
@@ -651,35 +651,35 @@ xchar x, y;
              * object stack (if anything).
              */
             do_room_glyph = FALSE;
-            if (lev->glyph == objnum_to_glyph(BOULDER)
-                || glyph_is_invisible(lev->glyph)) {
-                if (lev->typ != ROOM && lev->seenv)
+            if (lev_get(x, y).glyph == objnum_to_glyph(BOULDER)
+                || glyph_is_invisible(lev_get(x, y).glyph)) {
+                if (lev_get(x, y).typ != ROOM && lev_get(x, y).seenv)
                     map_background(x, y, 1);
                 else
                     do_room_glyph = TRUE;
-            } else if (lev->glyph >= cmap_to_glyph(S_stone)
-                       && lev->glyph < cmap_to_glyph(S_darkroom)) {
+            } else if (lev_get(x, y).glyph >= cmap_to_glyph(S_stone)
+                       && lev_get(x, y).glyph < cmap_to_glyph(S_darkroom)) {
                 do_room_glyph = TRUE;
             }
             if (do_room_glyph) {
-                lev->glyph = (flags.dark_room && iflags.use_color
+                ({ int _lv = ((flags.dark_room && iflags.use_color
                               && !Is_rogue_level(&u.uz))
                                  ? cmap_to_glyph(S_darkroom)
-                                 : (lev->waslit ? cmap_to_glyph(S_room)
-                                                : cmap_to_glyph(S_stone));
-                show_glyph(x, y, lev->glyph);
+                                 : (lev_get(x, y).waslit ? cmap_to_glyph(S_room)
+                                                : cmap_to_glyph(S_stone))); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.glyph = _lv; lev_put(_lx, _ly, _lr); _lr.glyph; });
+                show_glyph(x, y, lev_get(x, y).glyph);
             }
         } else {
             /* We feel it (I think hallways are the only things left). */
             map_background(x, y, 1);
             /* Corridors are never felt as lit (unless remembered that way) */
             /* (lit_corridor only).                                         */
-            if (lev->typ == CORR && lev->glyph == cmap_to_glyph(S_litcorr)
-                && !lev->waslit)
-                show_glyph(x, y, lev->glyph = cmap_to_glyph(S_corr));
-            else if (lev->typ == ROOM && flags.dark_room && iflags.use_color
-                     && lev->glyph == cmap_to_glyph(S_room))
-                show_glyph(x, y, lev->glyph = cmap_to_glyph(S_darkroom));
+            if (lev_get(x, y).typ == CORR && lev_get(x, y).glyph == cmap_to_glyph(S_litcorr)
+                && !lev_get(x, y).waslit)
+                show_glyph(x, y, ({ int _lv = (cmap_to_glyph(S_corr)); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.glyph = _lv; lev_put(_lx, _ly, _lr); _lr.glyph; }));
+            else if (lev_get(x, y).typ == ROOM && flags.dark_room && iflags.use_color
+                     && lev_get(x, y).glyph == cmap_to_glyph(S_room))
+                show_glyph(x, y, ({ int _lv = (cmap_to_glyph(S_darkroom)); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.glyph = _lv; lev_put(_lx, _ly, _lr); _lr.glyph; }));
         }
     } else {
         _map_location(x, y, 1);
@@ -707,13 +707,13 @@ xchar x, y;
         }
 
         /* Floor spaces are dark if unlit.  Corridors are dark if unlit. */
-        if (lev->typ == ROOM && lev->glyph == cmap_to_glyph(S_room)
-            && (!lev->waslit || (flags.dark_room && iflags.use_color)))
-            show_glyph(x, y, lev->glyph = cmap_to_glyph(
-                                 flags.dark_room ? S_darkroom : S_stone));
-        else if (lev->typ == CORR && lev->glyph == cmap_to_glyph(S_litcorr)
-                 && !lev->waslit)
-            show_glyph(x, y, lev->glyph = cmap_to_glyph(S_corr));
+        if (lev_get(x, y).typ == ROOM && lev_get(x, y).glyph == cmap_to_glyph(S_room)
+            && (!lev_get(x, y).waslit || (flags.dark_room && iflags.use_color)))
+            show_glyph(x, y, ({ int _lv = (cmap_to_glyph(
+                                 flags.dark_room ? S_darkroom : S_stone)); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.glyph = _lv; lev_put(_lx, _ly, _lr); _lr.glyph; }));
+        else if (lev_get(x, y).typ == CORR && lev_get(x, y).glyph == cmap_to_glyph(S_litcorr)
+                 && !lev_get(x, y).waslit)
+            show_glyph(x, y, ({ int _lv = (cmap_to_glyph(S_corr)); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.glyph = _lv; lev_put(_lx, _ly, _lr); _lr.glyph; }));
     }
     /* draw monster on top if we can sense it */
     if ((x != u.ux || y != u.uy) && (mon = m_at(x, y)) != 0 && sensemon(mon))
@@ -734,7 +734,7 @@ newsym(x, y)
 register int x, y;
 {
     register struct monst *mon;
-    register struct rm *lev = &(levl[x][y]);
+    
     register int see_it;
     register xchar worm_tail;
 
@@ -773,7 +773,7 @@ register int x, y;
          * Perhaps ALL areas should revert to their "unlit" look when
          * out of sight.
          */
-        lev->waslit = (lev->lit != 0); /* remember lit condition */
+        ({ int _lv = ((lev_get(x, y).lit != 0)); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.waslit = _lv; lev_put(_lx, _ly, _lr); _lr.waslit; }); /* remember lit condition */
 
         mon = m_at(x, y);
         worm_tail = is_worm_tail(mon);
@@ -784,7 +784,7 @@ register int x, y;
          * However, sensed monsters take precedence over all regions.
          */
         if (reg
-            && (ACCESSIBLE(lev->typ)
+            && (ACCESSIBLE(lev_get(x, y).typ)
                 || (reg->glyph == cmap_to_glyph(S_poisoncloud)
                     && is_pool_or_lava(x, y)))
             && (!mon || worm_tail || !sensemon(mon))) {
@@ -821,7 +821,7 @@ register int x, y;
                                 worm_tail);
             } else if (mon && mon_warning(mon) && !is_worm_tail(mon)) {
                 display_warning(mon);
-            } else if (glyph_is_invisible(lev->glyph)) {
+            } else if (glyph_is_invisible(lev_get(x, y).glyph)) {
                 map_invisible(x, y);
             } else
                 _map_location(x, y, 1); /* map the location */\
@@ -868,23 +868,23 @@ register int x, y;
          * They are dependent on the position being out of sight.
          */
         } else if (Is_rogue_level(&u.uz)) {
-            if (lev->glyph == cmap_to_glyph(S_litcorr) && lev->typ == CORR)
-                show_glyph(x, y, lev->glyph = cmap_to_glyph(S_corr));
-            else if (lev->glyph == cmap_to_glyph(S_room) && lev->typ == ROOM
-                     && !lev->waslit)
-                show_glyph(x, y, lev->glyph = cmap_to_glyph(S_stone));
+            if (lev_get(x, y).glyph == cmap_to_glyph(S_litcorr) && lev_get(x, y).typ == CORR)
+                show_glyph(x, y, ({ int _lv = (cmap_to_glyph(S_corr)); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.glyph = _lv; lev_put(_lx, _ly, _lr); _lr.glyph; }));
+            else if (lev_get(x, y).glyph == cmap_to_glyph(S_room) && lev_get(x, y).typ == ROOM
+                     && !lev_get(x, y).waslit)
+                show_glyph(x, y, ({ int _lv = (cmap_to_glyph(S_stone)); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.glyph = _lv; lev_put(_lx, _ly, _lr); _lr.glyph; }));
             else
                 goto show_mem;
-        } else if (!lev->waslit || (flags.dark_room && iflags.use_color)) {
-            if (lev->glyph == cmap_to_glyph(S_litcorr) && lev->typ == CORR)
-                show_glyph(x, y, lev->glyph = cmap_to_glyph(S_corr));
-            else if (lev->glyph == cmap_to_glyph(S_room) && lev->typ == ROOM)
-                show_glyph(x, y, lev->glyph = cmap_to_glyph(DARKROOMSYM));
+        } else if (!lev_get(x, y).waslit || (flags.dark_room && iflags.use_color)) {
+            if (lev_get(x, y).glyph == cmap_to_glyph(S_litcorr) && lev_get(x, y).typ == CORR)
+                show_glyph(x, y, ({ int _lv = (cmap_to_glyph(S_corr)); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.glyph = _lv; lev_put(_lx, _ly, _lr); _lr.glyph; }));
+            else if (lev_get(x, y).glyph == cmap_to_glyph(S_room) && lev_get(x, y).typ == ROOM)
+                show_glyph(x, y, ({ int _lv = (cmap_to_glyph(DARKROOMSYM)); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.glyph = _lv; lev_put(_lx, _ly, _lr); _lr.glyph; }));
             else
                 goto show_mem;
         } else {
  show_mem:
-            show_glyph(x, y, lev->glyph);
+            show_glyph(x, y, lev_get(x, y).glyph);
         }
     }
 }
@@ -1100,7 +1100,7 @@ int tg, rpt;
 
     rpt *= 2; /* two loop iterations per 'count' */
     glyph[0] = tg;
-    glyph[1] = (level.flags.hero_memory) ? levl[x][y].glyph
+    glyph[1] = (level.flags.hero_memory) ? lev_get(x, y).glyph
                                          : back_to_glyph(x, y);
     /* even iteration count (guaranteed) ends with glyph[1] showing;
        caller might want to override that, but no newsym() calls here
@@ -1379,7 +1379,6 @@ void
 docrt()
 {
     register int x, y;
-    register struct rm *lev;
 
     if (!u.ux)
         return; /* display isn't ready yet */
@@ -1408,12 +1407,13 @@ docrt()
     cls();
 
     /* display memory */
-    for (x = 1; x < COLNO; x++) {
-        lev = &levl[x][0];
-        for (y = 0; y < ROWNO; y++, lev++)
-            if (lev->glyph != cmap_to_glyph(S_stone))
-                show_glyph(x, y, lev->glyph);
-    }
+    for (x = 1; x < COLNO; x++)
+        for (y = 0; y < ROWNO; y++) {
+            struct rm mem = lev_get(x, y);
+
+            if (mem.glyph != cmap_to_glyph(S_stone))
+                show_glyph(x, y, mem.glyph);
+        }
 
     /* see what is to be seen */
     vision_recalc(0);
@@ -1702,9 +1702,9 @@ back_to_glyph(x, y)
 xchar x, y;
 {
     int idx;
-    struct rm *ptr = &(levl[x][y]);
+    
 
-    switch (ptr->typ) {
+    switch (lev_get(x, y).typ) {
     case SCORR:
     case STONE:
         idx = level.flags.arboreal ? S_tree : S_stone;
@@ -1713,7 +1713,7 @@ xchar x, y;
         idx = S_room;
         break;
     case CORR:
-        idx = (ptr->waslit || flags.lit_corridor) ? S_litcorr : S_corr;
+        idx = (lev_get(x, y).waslit || flags.lit_corridor) ? S_litcorr : S_corr;
         break;
     case HWALL:
     case VWALL:
@@ -1727,16 +1727,16 @@ xchar x, y;
     case TLWALL:
     case TRWALL:
     case SDOOR:
-        idx = ptr->seenv ? wall_angle(ptr) : S_stone;
+        idx = lev_get(x, y).seenv ? wall_angle(x, y) : S_stone;
         break;
     case DOOR:
-        if (ptr->doormask) {
-            if (ptr->doormask & D_BROKEN)
+        if (lev_get(x, y).doormask) {
+            if (lev_get(x, y).doormask & D_BROKEN)
                 idx = S_ndoor;
-            else if (ptr->doormask & D_ISOPEN)
-                idx = (ptr->horizontal) ? S_hodoor : S_vodoor;
+            else if (lev_get(x, y).doormask & D_ISOPEN)
+                idx = (lev_get(x, y).horizontal) ? S_hodoor : S_vodoor;
             else /* else is closed */
-                idx = (ptr->horizontal) ? S_hcdoor : S_vcdoor;
+                idx = (lev_get(x, y).horizontal) ? S_hcdoor : S_vcdoor;
         } else
             idx = S_ndoor;
         break;
@@ -1751,10 +1751,10 @@ xchar x, y;
         idx = S_pool;
         break;
     case STAIRS:
-        idx = (ptr->ladder & LA_DOWN) ? S_dnstair : S_upstair;
+        idx = (lev_get(x, y).ladder & LA_DOWN) ? S_dnstair : S_upstair;
         break;
     case LADDER:
-        idx = (ptr->ladder & LA_DOWN) ? S_dnladder : S_upladder;
+        idx = (lev_get(x, y).ladder & LA_DOWN) ? S_dnladder : S_upladder;
         break;
     case FOUNTAIN:
         idx = S_fountain;
@@ -1787,10 +1787,10 @@ xchar x, y;
         idx = S_water;
         break;
     case DBWALL:
-        idx = (ptr->horizontal) ? S_hcdbridge : S_vcdbridge;
+        idx = (lev_get(x, y).horizontal) ? S_hcdbridge : S_vcdbridge;
         break;
     case DRAWBRIDGE_UP:
-        switch (ptr->drawbridgemask & DB_UNDER) {
+        switch (lev_get(x, y).drawbridgemask & DB_UNDER) {
         case DB_MOAT:
             idx = S_pool;
             break;
@@ -1805,16 +1805,16 @@ xchar x, y;
             break;
         default:
             impossible("Strange db-under: %d",
-                       ptr->drawbridgemask & DB_UNDER);
+                       lev_get(x, y).drawbridgemask & DB_UNDER);
             idx = S_room; /* something is better than nothing */
             break;
         }
         break;
     case DRAWBRIDGE_DOWN:
-        idx = (ptr->horizontal) ? S_hodbridge : S_vodbridge;
+        idx = (lev_get(x, y).horizontal) ? S_hodbridge : S_vodbridge;
         break;
     default:
-        impossible("back_to_glyph:  unknown level type [ = %d ]", ptr->typ);
+        impossible("back_to_glyph:  unknown level type [ = %d ]", lev_get(x, y).typ);
         idx = S_room;
         break;
     }
@@ -1900,11 +1900,11 @@ get_bk_glyph(x, y)
 xchar x, y;
 {
     int idx, bkglyph = NO_GLYPH;
-    struct rm *lev = &levl[x][y];
+    
 
-    if (iflags.use_background_glyph && lev->seenv != 0
+    if (iflags.use_background_glyph && lev_get(x, y).seenv != 0
         && gbuf[y][x].glyph != cmap_to_glyph(S_stone)) {
-        switch (lev->typ) {
+        switch (lev_get(x, y).typ) {
         case SCORR:
         case STONE:
             idx = level.flags.arboreal ? S_tree : S_stone;
@@ -1913,7 +1913,7 @@ xchar x, y;
            idx = S_room;
            break;
         case CORR:
-           idx = (lev->waslit || flags.lit_corridor) ? S_litcorr : S_corr;
+           idx = (lev_get(x, y).waslit || flags.lit_corridor) ? S_litcorr : S_corr;
            break;
         case ICE:
            idx = S_ice;
@@ -1939,9 +1939,9 @@ xchar x, y;
            break;
         }
 
-        if (!cansee(x, y) && (!lev->waslit || flags.dark_room)) {
+        if (!cansee(x, y) && (!lev_get(x, y).waslit || flags.dark_room)) {
             /* Floor spaces are dark if unlit.  Corridors are dark if unlit. */
-            if (lev->typ == CORR && idx == S_litcorr)
+            if (lev_get(x, y).typ == CORR && idx == S_litcorr)
                 idx = S_corr;
             else if (idx == S_room)
                 idx = (flags.dark_room && iflags.use_color)
@@ -1984,9 +1984,9 @@ error4(x, y, a, b, c, dd)
 int x, y, a, b, c, dd;
 {
     pline("set_wall_state: %s @ (%d,%d) %s%s%s%s",
-          type_to_name(levl[x][y].typ), x, y,
+          type_to_name(lev_get(x, y).typ), x, y,
           a ? "1" : "", b ? "2" : "", c ? "3" : "", dd ? "4" : "");
-    bad_count[levl[x][y].typ]++;
+    bad_count[lev_get(x, y).typ]++;
 }
 #endif /* WA_VERBOSE */
 
@@ -2004,7 +2004,7 @@ int x, y, which;
 
     if (!isok(x, y))
         return which;
-    type = levl[x][y].typ;
+    type = lev_get(x, y).typ;
     if (IS_ROCK(type) || type == CORR || type == SCORR)
         return which;
     return 0;
@@ -2146,7 +2146,6 @@ set_wall_state()
 {
     int x, y;
     int wmode;
-    struct rm *lev;
 
 #ifdef WA_VERBOSE
     for (x = 0; x < MAX_TYPE; x++)
@@ -2154,10 +2153,10 @@ set_wall_state()
 #endif
 
     for (x = 0; x < COLNO; x++)
-        for (lev = &levl[x][0], y = 0; y < ROWNO; y++, lev++) {
-            switch (lev->typ) {
+        for (y = 0; y < ROWNO; y++) {
+            switch (lev_get(x, y).typ) {
             case SDOOR:
-                wmode = set_wall(x, y, (int) lev->horizontal);
+                wmode = set_wall(x, y, (int) lev_get(x, y).horizontal);
                 break;
             case VWALL:
                 wmode = set_wall(x, y, 0);
@@ -2202,8 +2201,12 @@ set_wall_state()
                 break;
             }
 
-            if (wmode >= 0)
-                lev->wall_info = (lev->wall_info & ~WM_MASK) | wmode;
+            if (wmode >= 0) {
+                struct rm cell = lev_get(x, y);
+
+                cell.wall_info = (cell.wall_info & ~WM_MASK) | wmode;
+                lev_put(x, y, cell);
+            }
         }
 
 #ifdef WA_VERBOSE
@@ -2227,27 +2230,29 @@ unsigned char seenv_matrix[3][3] = { { SV2, SV1, SV0 },
 
 #define sign(z) ((z) < 0 ? -1 : ((z) > 0 ? 1 : 0))
 
-/* Set the seen vector of lev as if seen from (x0,y0) to (x,y). */
+/* Set the seen vector of (x,y) as if seen from (x0,y0). */
 STATIC_OVL void
-set_seenv(lev, x0, y0, x, y)
-struct rm *lev;
+set_seenv(x0, y0, x, y)
 int x0, y0, x, y; /* from, to */
 {
     int dx = x - x0, dy = y0 - y;
+    struct rm cell = lev_get(x, y);
 
-    lev->seenv |= seenv_matrix[sign(dy) + 1][sign(dx) + 1];
+    cell.seenv |= seenv_matrix[sign(dy) + 1][sign(dx) + 1];
+    lev_put(x, y, cell);
 }
 
 /* Called by blackout(vault.c) when vault guard removes temporary corridor,
    turning spot <x0,y0> back into stone; <x1,y1> is an adjacent spot. */
 void
-unset_seenv(lev, x0, y0, x1, y1)
-struct rm *lev;     /* &levl[x1][y1] */
+unset_seenv(x0, y0, x1, y1)
 int x0, y0, x1, y1; /* from, to; abs(x1-x0)==1 && abs(y0-y1)==1 */
 {
     int dx = x1 - x0, dy = y0 - y1;
+    struct rm cell = lev_get(x1, y1);
 
-    lev->seenv &= ~seenv_matrix[dy + 1][dx + 1];
+    cell.seenv &= ~seenv_matrix[dy + 1][dx + 1];
+    lev_put(x1, y1, cell);
 }
 
 /* ------------------------------------------------------------------------ */
@@ -2308,11 +2313,13 @@ static const int cross_matrix[4][6] = {
 
 /* Print out a T wall warning and all interesting info. */
 STATIC_OVL void
-t_warn(lev)
-struct rm *lev;
+t_warn(x, y)
+int x, y;
 {
     static const char warn_str[] = "wall_angle: %s: case %d: seenv = 0x%x";
     const char *wname;
+    struct rm lc = lev_get(x, y);
+    struct rm *lev = &lc;
 
     if (lev->typ == TUWALL)
         wname = "tuwall";
@@ -2341,9 +2348,11 @@ struct rm *lev;
  * seen vector (SV).
  */
 STATIC_OVL int
-wall_angle(lev)
-struct rm *lev;
+wall_angle(x, y)
+int x, y;
 {
+    struct rm lc = lev_get(x, y);
+    struct rm *lev = &lc;
     register unsigned int seenv = lev->seenv & 0xff;
     const int *row;
     int col, idx;
@@ -2377,7 +2386,7 @@ struct rm *lev;
             } else if (seenv & (SV0 | SV1 | SV2)) {
                 col = (seenv & (SV4 | SV6) ? T_tdwall : T_hwall);
             } else {
-                t_warn(lev);
+                t_warn(x, y);
                 col = T_stone;
             }
             break;
@@ -2392,7 +2401,7 @@ struct rm *lev;
             } else {
                 /* only SV0|SV1|SV2 */
                 if (!only(seenv, SV0 | SV1 | SV2))
-                    t_warn(lev);
+                    t_warn(x, y);
                 col = T_stone;
             }
             break;
@@ -2409,7 +2418,7 @@ struct rm *lev;
                 col = T_tdwall;
             } else {
                 if (seenv != SV6)
-                    t_warn(lev);
+                    t_warn(x, y);
                 col = T_stone;
             }
 #endif /* 0 */
@@ -2436,7 +2445,7 @@ struct rm *lev;
                 col = T_tdwall;
             } else {
                 if (seenv != SV4)
-                    t_warn(lev);
+                    t_warn(x, y);
                 col = T_stone;
             }
 #endif /* 0 */

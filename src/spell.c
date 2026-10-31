@@ -806,7 +806,7 @@ cast_protection()
             if (u.uspellprot) {
                 pline_The("%s haze around you becomes more dense.", hgolden);
             } else {
-                rmtyp = levl[u.ux][u.uy].typ;
+                rmtyp = lev_get(u.ux, u.uy).typ;
                 atmosphere = u.uswallow
                                 ? ((u.ustuck->data == &mons[PM_FOG_CLOUD])
                                    ? "mist"
@@ -1070,7 +1070,7 @@ boolean atme;
                     u.dx = cc.x + rnd(3) - 2;
                     u.dy = cc.y + rnd(3) - 2;
                     if (!isok(u.dx, u.dy) || !cansee(u.dx, u.dy)
-                        || IS_STWALL(levl[u.dx][u.dy].typ) || u.uswallow) {
+                        || IS_STWALL(lev_get(u.dx, u.dy).typ) || u.uswallow) {
                         /* Spell is reflected back to center */
                         u.dx = cc.x;
                         u.dy = cc.y;
@@ -1220,8 +1220,8 @@ int x, y;
 {
     if (!isok(x,y))
         return FALSE;
-    if (!ZAP_POS(levl[x][y].typ)
-        && !(IS_DOOR(levl[x][y].typ) && (levl[x][y].doormask & D_ISOPEN)))
+    if (!ZAP_POS(lev_get(x, y).typ)
+        && !(IS_DOOR(lev_get(x, y).typ) && (lev_get(x, y).doormask & D_ISOPEN)))
         return FALSE;
     return TRUE;
 }
@@ -1258,7 +1258,7 @@ throwspell()
         return 1;
     } else if ((!cansee(cc.x, cc.y)
                 && (!(mtmp = m_at(cc.x, cc.y)) || !canspotmon(mtmp)))
-               || IS_STWALL(levl[cc.x][cc.y].typ)) {
+               || IS_STWALL(lev_get(cc.x, cc.y).typ)) {
         Your("mind fails to lock onto that location!");
         return 0;
     }

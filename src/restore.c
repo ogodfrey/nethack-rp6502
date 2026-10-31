@@ -987,7 +987,7 @@ boolean rlecomp;
         while (i < ROWNO) {
             while (j < COLNO) {
                 if (len > 0) {
-                    levl[j][i] = r;
+                    ({ __auto_type _lv = (r); lev_put(j, i, _lv); });
                     len -= 1;
                     j += 1;
                 } else {
@@ -1003,7 +1003,17 @@ boolean rlecomp;
 #else /* !RLECOMP */
     nhUse(rlecomp);
 #endif /* ?RLECOMP */
-    mread(fd, (genericptr_t) levl, sizeof levl);
+    {
+        /* one column at a time: the same bytes as the whole array */
+        struct rm col[ROWNO];
+        int x, y;
+
+        for (x = 0; x < COLNO; x++) {
+            mread(fd, (genericptr_t) col, sizeof col);
+            for (y = 0; y < ROWNO; y++)
+                lev_put(x, y, col[y]);
+        }
+    }
 }
 
 void
@@ -1157,7 +1167,7 @@ boolean ghostly;
             mazexy(&cc);
             xdnstair = cc.x;
             ydnstair = cc.y;
-            levl[cc.x][cc.y].typ = STAIRS;
+            ({ int _lv = (STAIRS); int _lx = (cc.x), _ly = (cc.y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
         }
 
         br = Is_branchlev(&u.uz);

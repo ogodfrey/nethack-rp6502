@@ -393,8 +393,8 @@ register xchar x, y;
 {
     register char rno;
 
-    rno = levl[x][y].roomno;
-    if ((rno < ROOMOFFSET) || levl[x][y].edge || !IS_SHOP(rno - ROOMOFFSET))
+    rno = lev_get(x, y).roomno;
+    if ((rno < ROOMOFFSET) || lev_get(x, y).edge || !IS_SHOP(rno - ROOMOFFSET))
         rno = NO_ROOM;
     return rno;
 }
@@ -414,7 +414,7 @@ boolean newlev;
      *   (he wasn't strictly-inside last turn anyway)))
      * THEN (there's nothing to do, so just return)
      */
-    if (!*leavestring && (!levl[u.ux][u.uy].edge || levl[u.ux0][u.uy0].edge))
+    if (!*leavestring && (!lev_get(u.ux, u.uy).edge || lev_get(u.ux0, u.uy0).edge))
         return;
 
     shkp = shop_keeper(*u.ushops0);
@@ -443,7 +443,7 @@ boolean newlev;
     }
 
     if (rob_shop(shkp)) {
-        call_kops(shkp, (!newlev && levl[u.ux0][u.uy0].edge));
+        call_kops(shkp, (!newlev && lev_get(u.ux0, u.uy0).edge));
     }
 }
 
@@ -1894,7 +1894,7 @@ struct monst *shkp;
 
     /* if you're not in this shk's shop room, or if you're in its doorway
         or entry spot, then your gear gets dumped all the way inside */
-    if (*u.ushops != eshkp->shoproom || IS_DOOR(levl[u.ux][u.uy].typ)
+    if (*u.ushops != eshkp->shoproom || IS_DOOR(lev_get(u.ux, u.uy).typ)
         || (u.ux == eshkp->shk.x && u.uy == eshkp->shk.y)) {
         /* shk.x,shk.y is the position immediately in
          * front of the door -- move in one more space
@@ -3470,7 +3470,7 @@ long cost;
     struct damage *tmp_dam;
     char *shops;
 
-    if (IS_DOOR(levl[x][y].typ)) {
+    if (IS_DOOR(lev_get(x, y).typ)) {
         struct monst *mtmp;
 
         /* Don't schedule for repair unless it's a real shop entrance */
@@ -3493,12 +3493,12 @@ long cost;
     tmp_dam->place.x = x;
     tmp_dam->place.y = y;
     tmp_dam->cost = cost;
-    tmp_dam->typ = levl[x][y].typ;
+    tmp_dam->typ = lev_get(x, y).typ;
     tmp_dam->next = level.damagelist;
     level.damagelist = tmp_dam;
     /* If player saw damage, display as a wall forever */
     if (cansee(x, y))
-        levl[x][y].seenv = SVALL;
+        ({ int _lv = (SVALL); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.seenv = _lv; lev_put(_lx, _ly, _lr); _lr.seenv; });
 }
 
 /*
@@ -3534,8 +3534,8 @@ boolean croaked;
         disposition = 0;
         Strcpy(shops, in_rooms(x, y, SHOPBASE));
         if (index(shops, ESHK(shkp)->shoproom)) {
-            if (IS_DOOR(levl[x][y].typ))
-                old_doormask = levl[x][y].doormask;
+            if (IS_DOOR(lev_get(x, y).typ))
+                old_doormask = lev_get(x, y).doormask;
 
             if (croaked) {
                 disposition = (shops[1]) ? 0 : 1;
@@ -3560,15 +3560,15 @@ boolean croaked;
         if (disposition > 1) {
             did_repair = TRUE;
             if (cansee(x, y)) {
-                if (IS_WALL(levl[x][y].typ)) {
+                if (IS_WALL(lev_get(x, y).typ)) {
                     saw_walls++;
-                } else if (IS_DOOR(levl[x][y].typ)
+                } else if (IS_DOOR(lev_get(x, y).typ)
                            /* an existing door here implies trap removal */
                            && !(old_doormask & (D_ISOPEN | D_CLOSED))) {
                     saw_door = TRUE;
                 } else if (disposition == 3) { /* untrapped */
                     saw_untrap++;
-                    if (IS_DOOR(levl[x][y].typ))
+                    if (IS_DOOR(lev_get(x, y).typ))
                         doorway_trap = TRUE;
                 } else {
                     saw_floor = TRUE;
@@ -3709,16 +3709,16 @@ boolean catchup; /* restoring a level */
             disposition = 3;
     }
     if (IS_ROOM(tmp_dam->typ)
-        || (tmp_dam->typ == levl[x][y].typ
-            && (!IS_DOOR(tmp_dam->typ) || levl[x][y].doormask > D_BROKEN)))
+        || (tmp_dam->typ == lev_get(x, y).typ
+            && (!IS_DOOR(tmp_dam->typ) || lev_get(x, y).doormask > D_BROKEN)))
         /* no terrain fix necessary (trap removal or manually repaired) */
         return disposition;
 
     /* door or wall repair; trap, if any, is now gone;
        restore original terrain type and move any items away */
-    levl[x][y].typ = tmp_dam->typ;
+    ({ int _lv = (tmp_dam->typ); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
     if (IS_DOOR(tmp_dam->typ))
-        levl[x][y].doormask = D_CLOSED; /* arbitrary */
+        ({ int _lv = (D_CLOSED); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; }); /* arbitrary */
 
     (void) memset((genericptr_t) litter, 0, sizeof litter);
 #define NEED_UPDATE 1
@@ -3727,11 +3727,11 @@ boolean catchup; /* restoring a level */
 #define horiz(i) ((i % 3) - 1)
 #define vert(i) ((i / 3) - 1)
     k = 0; /* number of adjacent shop spots */
-    if (level.objects[x][y] && !IS_ROOM(levl[x][y].typ)) {
+    if (level.objects[x][y] && !IS_ROOM(lev_get(x, y).typ)) {
         for (i = 0; i < 9; i++) {
             ix = x + horiz(i);
             iy = y + vert(i);
-            if (i == 4 || !isok(ix, iy) || !ZAP_POS(levl[ix][iy].typ))
+            if (i == 4 || !isok(ix, iy) || !ZAP_POS(lev_get(ix, iy).typ))
                 continue;
             litter[i] = OPEN;
             if (inside_shop(ix, iy) == ESHK(shkp)->shoproom) {
@@ -3797,7 +3797,7 @@ boolean catchup; /* restoring a level */
     if (cansee(x, y)) {
         if (IS_WALL(tmp_dam->typ))
             /* player sees actual repair process, so KNOWS it's a wall */
-            levl[x][y].seenv = SVALL;
+            ({ int _lv = (SVALL); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.seenv = _lv; lev_put(_lx, _ly, _lr); _lr.seenv; });
         newsym(x, y);
     }
     for (i = 0; i < 9; i++)
@@ -4661,7 +4661,7 @@ register xchar x, y;
 
     if (roomno < 0 || !IS_SHOP(roomno))
         return FALSE;
-    if (!IS_DOOR(levl[x][y].typ))
+    if (!IS_DOOR(lev_get(x, y).typ))
         return FALSE;
     if (roomno != *u.ushops)
         return FALSE;
@@ -4695,8 +4695,8 @@ register xchar x, y;
     register int roomno;
     register struct monst *shkp;
 
-    if (!(IS_DOOR(levl[u.ux][u.uy].typ)
-          && levl[u.ux][u.uy].doormask == D_BROKEN))
+    if (!(IS_DOOR(lev_get(u.ux, u.uy).typ)
+          && lev_get(u.ux, u.uy).doormask == D_BROKEN))
         return FALSE;
 
     roomno = *in_rooms(x, y, SHOPBASE);

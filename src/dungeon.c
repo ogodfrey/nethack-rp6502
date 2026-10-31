@@ -2522,9 +2522,9 @@ recalc_mapseen()
     for (x = 1; x < COLNO; x++) {
         for (y = 0; y < ROWNO; y++) {
             if (cansee(x, y) || (x == u.ux && y == u.uy && !Levitation)) {
-                ltyp = levl[x][y].typ;
+                ltyp = lev_get(x, y).typ;
                 if (ltyp == DRAWBRIDGE_UP)
-                    ltyp = db_under_typ(levl[x][y].drawbridgemask);
+                    ltyp = db_under_typ(lev_get(x, y).drawbridgemask);
                 if ((mtmp = m_at(x, y)) != 0
                     && M_AP_TYPE(mtmp) == M_AP_FURNITURE && canseemon(mtmp))
                     ltyp = cmap_to_type(mtmp->mappearance);
@@ -2578,9 +2578,9 @@ recalc_mapseen()
                 break;
             case ALTAR:
                 atmp = (Is_astralevel(&u.uz)
-                        && (levl[x][y].seenv & SVALL) != SVALL)
+                        && (lev_get(x, y).seenv & SVALL) != SVALL)
                          ? MSA_NONE
-                         : Amask2msa(levl[x][y].altarmask);
+                         : Amask2msa(lev_get(x, y).altarmask);
                 if (!mptr->feat.naltar)
                     mptr->feat.msalign = atmp;
                 else if (mptr->feat.msalign != atmp)
@@ -2618,7 +2618,7 @@ recalc_mapseen()
                      * both throne and door on the lower of the two rows.
                      */
                     for (ty = y - 1; ty <= y + 1; ++ty)
-                        if (isok(tx, ty) && IS_THRONE(levl[tx][ty].typ)) {
+                        if (isok(tx, ty) && IS_THRONE(lev_get(tx, ty).typ)) {
                             mptr->flags.ludios = 1;
                             break;
                         }

@@ -126,7 +126,7 @@ genericptr_t poolcnt;
     register struct trap *ttmp;
 
     if (((x + y) % 2) || (x == u.ux && y == u.uy)
-        || (rn2(1 + distmin(u.ux, u.uy, x, y))) || (levl[x][y].typ != ROOM)
+        || (rn2(1 + distmin(u.ux, u.uy, x, y))) || (lev_get(x, y).typ != ROOM)
         || (sobj_at(BOULDER, x, y)) || nexttodoor(x, y))
         return;
 
@@ -137,7 +137,7 @@ genericptr_t poolcnt;
         pline("Water gushes forth from the overflowing fountain!");
 
     /* Put a pool at x, y */
-    levl[x][y].typ = POOL, levl[x][y].flags = 0;
+    ({ int _lv = (POOL); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; }), ({ int _lv = (0); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.flags = _lv; lev_put(_lx, _ly, _lr); _lr.flags; });
     /* No kelp! */
     del_engr_at(x, y);
     water_damage_chain(level.objects[x][y], TRUE);
@@ -168,7 +168,7 @@ dryup(x, y, isyou)
 xchar x, y;
 boolean isyou;
 {
-    if (IS_FOUNTAIN(levl[x][y].typ)
+    if (IS_FOUNTAIN(lev_get(x, y).typ)
         && (!rn2(3) || FOUNTAIN_IS_WARNED(x, y))) {
         if (isyou && in_town(x, y) && !FOUNTAIN_IS_WARNED(x, y)) {
             struct monst *mtmp;
@@ -205,8 +205,8 @@ boolean isyou;
                 return;
         }
         /* replace the fountain with ordinary floor */
-        levl[x][y].typ = ROOM, levl[x][y].flags = 0;
-        levl[x][y].blessedftn = 0;
+        ({ int _lv = (ROOM); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; }), ({ int _lv = (0); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.flags = _lv; lev_put(_lx, _ly, _lr); _lr.flags; });
+        ({ int _lv = (0); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.blessedftn = _lv; lev_put(_lx, _ly, _lr); _lr.blessedftn; });
         if (cansee(x, y))
             pline_The("fountain dries up!");
         /* The location is seen if the hero/monster is invisible
@@ -222,7 +222,7 @@ void
 drinkfountain()
 {
     /* What happens when you drink from a fountain? */
-    register boolean mgkftn = (levl[u.ux][u.uy].blessedftn == 1);
+    register boolean mgkftn = (lev_get(u.ux, u.uy).blessedftn == 1);
     register int fate = rnd(30);
 
     if (Levitation) {
@@ -251,7 +251,7 @@ drinkfountain()
         display_nhwindow(WIN_MESSAGE, FALSE);
         pline("A wisp of vapor escapes the fountain...");
         exercise(A_WIS, TRUE);
-        levl[u.ux][u.uy].blessedftn = 0;
+        ({ int _lv = (0); int _lx = (u.ux), _ly = (u.uy); struct rm _lr = lev_get(_lx, _ly); _lr.blessedftn = _lv; lev_put(_lx, _ly, _lr); _lr.blessedftn; });
         return;
     }
 
@@ -398,7 +398,7 @@ register struct obj *obj;
             exercise(A_WIS, TRUE);
         }
         update_inventory();
-        levl[u.ux][u.uy].typ = ROOM, levl[u.ux][u.uy].flags = 0;
+        ({ int _lv = (ROOM); int _lx = (u.ux), _ly = (u.uy); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; }), ({ int _lv = (0); int _lx = (u.ux), _ly = (u.uy); struct rm _lr = lev_get(_lx, _ly); _lr.flags = _lv; lev_put(_lx, _ly, _lr); _lr.flags; });
         newsym(u.ux, u.uy);
         level.flags.nfountains--;
         if (in_town(u.ux, u.uy))
@@ -511,8 +511,8 @@ int x, y;
     if (cansee(x, y) || (x == u.ux && y == u.uy))
         pline_The("pipes break!  Water spurts out!");
     level.flags.nsinks--;
-    levl[x][y].typ = FOUNTAIN, levl[x][y].looted = 0;
-    levl[x][y].blessedftn = 0;
+    ({ int _lv = (FOUNTAIN); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; }), ({ int _lv = (0); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.looted = _lv; lev_put(_lx, _ly, _lr); _lr.looted; });
+    ({ int _lv = (0); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.blessedftn = _lv; lev_put(_lx, _ly, _lr); _lr.blessedftn; });
     SET_FOUNTAIN_LOOTED(x, y);
     level.flags.nfountains++;
     newsym(x, y);
@@ -572,10 +572,10 @@ drinksink()
         obfree(otmp, (struct obj *) 0);
         break;
     case 5:
-        if (!(levl[u.ux][u.uy].looted & S_LRING)) {
+        if (!(lev_get(u.ux, u.uy).looted & S_LRING)) {
             You("find a ring in the sink!");
             (void) mkobj_at(RING_CLASS, u.ux, u.uy, TRUE);
-            levl[u.ux][u.uy].looted |= S_LRING;
+            ({ int _lv = (S_LRING); int _lx = (u.ux), _ly = (u.uy); struct rm _lr = lev_get(_lx, _ly); _lr.looted |= _lv; lev_put(_lx, _ly, _lr); _lr.looted; });
             exercise(A_WIS, TRUE);
             newsym(u.ux, u.uy);
         } else

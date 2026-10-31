@@ -806,9 +806,9 @@ int howmuch;
         for (zy = 0; zy < ROWNO; zy++)
             if (howmuch & ALL_MAP || rn2(7)) {
                 /* Zonk all memory of this location. */
-                levl[zx][zy].seenv = 0;
-                levl[zx][zy].waslit = 0;
-                levl[zx][zy].glyph = cmap_to_glyph(S_stone);
+                ({ int _lv = (0); int _lx = (zx), _ly = (zy); struct rm _lr = lev_get(_lx, _ly); _lr.seenv = _lv; lev_put(_lx, _ly, _lr); _lr.seenv; });
+                ({ int _lv = (0); int _lx = (zx), _ly = (zy); struct rm _lr = lev_get(_lx, _ly); _lr.waslit = _lv; lev_put(_lx, _ly, _lr); _lr.waslit; });
+                ({ int _lv = (cmap_to_glyph(S_stone)); int _lx = (zx), _ly = (zy); struct rm _lr = lev_get(_lx, _ly); _lr.glyph = _lv; lev_put(_lx, _ly, _lr); _lr.glyph; });
                 lastseentyp[zx][zy] = STONE;
             }
     /* forget overview data for this level */
@@ -954,7 +954,7 @@ get_valid_stinking_cloud_pos(x,y)
 int x,y;
 {
     return (!(!isok(x,y) || !cansee(x, y)
-              || !ACCESSIBLE(levl[x][y].typ)
+              || !ACCESSIBLE(lev_get(x, y).typ)
               || distu(x, y) >= 32));
 }
 
@@ -1556,8 +1556,8 @@ struct obj *sobj; /* scroll, or fake spellbook object for scroll-like spell */
 
             for (x = 1; x < COLNO; x++)
                 for (y = 0; y < ROWNO; y++)
-                    if (levl[x][y].typ == SDOOR)
-                        cvt_sdoor_to_door(&levl[x][y]);
+                    if (lev_get(x, y).typ == SDOOR)
+                        cvt_sdoor_to_door(x, y);
             /* do_mapping() already reveals secret passages */
         }
         known = TRUE;
@@ -1670,8 +1670,8 @@ struct obj *sobj; /* scroll, or fake spellbook object for scroll-like spell */
                     for (y = u.uy - 1; y <= u.uy + 1; y++) {
                         /* Is this a suitable spot? */
                         if (isok(x, y) && !closed_door(x, y)
-                            && !IS_ROCK(levl[x][y].typ)
-                            && !IS_AIR(levl[x][y].typ)
+                            && !IS_ROCK(lev_get(x, y).typ)
+                            && !IS_AIR(lev_get(x, y).typ)
                             && (x != u.ux || y != u.uy)) {
                             nboulders +=
                                 drop_boulder_on_monster(x, y, confused, TRUE);
@@ -1913,7 +1913,7 @@ genericptr_t val;
     struct litmon *gremlin;
 
     if (val) {
-        levl[x][y].lit = 1;
+        ({ int _lv = (1); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.lit = _lv; lev_put(_lx, _ly, _lr); _lr.lit; });
         if ((mtmp = m_at(x, y)) != 0 && mtmp->data == &mons[PM_GREMLIN]) {
             gremlin = (struct litmon *) alloc(sizeof *gremlin);
             gremlin->mon = mtmp;
@@ -1921,7 +1921,7 @@ genericptr_t val;
             gremlins = gremlin;
         }
     } else {
-        levl[x][y].lit = 0;
+        ({ int _lv = (0); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.lit = _lv; lev_put(_lx, _ly, _lr); _lr.lit; });
         snuff_light_source(x, y);
     }
 }
@@ -1983,7 +1983,7 @@ struct obj *obj;
     if (Is_rogue_level(&u.uz)) {
         /* Can't use do_clear_area because MAX_RADIUS is too small */
         /* rogue lighting must light the entire room */
-        int rnum = levl[u.ux][u.uy].roomno - ROOMOFFSET;
+        int rnum = lev_get(u.ux, u.uy).roomno - ROOMOFFSET;
         int rx, ry;
 
         if (rnum >= 0) {
@@ -2573,7 +2573,7 @@ struct _create_particular_data *d;
         }
         if (d->invisible) {
             mon_set_minvis(mtmp);
-            if (does_block(mx, my, &levl[mx][my]))
+            if (does_block(mx, my))
                 block_point(mx, my);
             else
                 unblock_point(mx, my);

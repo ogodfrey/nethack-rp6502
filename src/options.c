@@ -591,20 +591,20 @@ reglyph_darkroom()
 
     for (x = 0; x < COLNO; x++)
         for (y = 0; y < ROWNO; y++) {
-            struct rm *lev = &levl[x][y];
+            
 
             if (!flags.dark_room || !iflags.use_color
                 || Is_rogue_level(&u.uz)) {
-                if (lev->glyph == cmap_to_glyph(S_darkroom))
-                    lev->glyph = lev->waslit ? cmap_to_glyph(S_room)
-                                             : cmap_to_glyph(S_stone);
+                if (lev_get(x, y).glyph == cmap_to_glyph(S_darkroom))
+                    ({ int _lv = (lev_get(x, y).waslit ? cmap_to_glyph(S_room)
+                                             : cmap_to_glyph(S_stone)); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.glyph = _lv; lev_put(_lx, _ly, _lr); _lr.glyph; });
             } else {
-                if (lev->glyph == cmap_to_glyph(S_room) && lev->seenv
-                    && lev->waslit && !cansee(x, y))
-                    lev->glyph = cmap_to_glyph(S_darkroom);
-                else if (lev->glyph == cmap_to_glyph(S_stone)
-                         && lev->typ == ROOM && lev->seenv && !cansee(x, y))
-                    lev->glyph = cmap_to_glyph(S_darkroom);
+                if (lev_get(x, y).glyph == cmap_to_glyph(S_room) && lev_get(x, y).seenv
+                    && lev_get(x, y).waslit && !cansee(x, y))
+                    ({ int _lv = (cmap_to_glyph(S_darkroom)); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.glyph = _lv; lev_put(_lx, _ly, _lr); _lr.glyph; });
+                else if (lev_get(x, y).glyph == cmap_to_glyph(S_stone)
+                         && lev_get(x, y).typ == ROOM && lev_get(x, y).seenv && !cansee(x, y))
+                    ({ int _lv = (cmap_to_glyph(S_darkroom)); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.glyph = _lv; lev_put(_lx, _ly, _lr); _lr.glyph; });
             }
         }
     if (flags.dark_room && iflags.use_color)

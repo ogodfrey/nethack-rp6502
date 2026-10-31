@@ -541,7 +541,7 @@ int after, udist, whappr;
                     }
                 } else if (gtyp == UNDEF && in_masters_sight
                            && !dog_has_minvent
-                           && (!levl[omx][omy].lit || levl[u.ux][u.uy].lit)
+                           && (!lev_get(omx, omy).lit || lev_get(u.ux, u.uy).lit)
                            && (otyp == MANFOOD || m_cansee(mtmp, nx, ny))
                            && edog->apport > rn2(8)
                            && can_carry(mtmp, obj) > 0) {
@@ -562,7 +562,7 @@ int after, udist, whappr;
             return -2;
         appr = (udist >= 9) ? 1 : (mtmp->mflee) ? -1 : 0;
         if (udist > 1) {
-            if (!IS_ROOM(levl[u.ux][u.uy].typ) || !rn2(4) || whappr
+            if (!IS_ROOM(lev_get(u.ux, u.uy).typ) || !rn2(4) || whappr
                 || (dog_has_minvent && rn2(edog->apport)))
                 appr = 1;
         }
@@ -1209,7 +1209,7 @@ int after; /* this is extra fast monster movement */
                don't use glyph_at() here--it would return the pet but we want
                to know whether an object is remembered at this map location */
             struct obj *o = (!Hallucination && level.flags.hero_memory
-                             && glyph_is_object(levl[nix][niy].glyph))
+                             && glyph_is_object(lev_get(nix, niy).glyph))
                                ? vobj_at(nix, niy) : 0;
             const char *what = o ? distant_name(o, doname) : something;
 
@@ -1305,11 +1305,11 @@ xchar mx, my, fx, fy;
                 continue;
             if (dist2(i, j, fx, fy) >= dist)
                 continue;
-            if (IS_ROCK(levl[i][j].typ) && !passes_walls(mon->data)
+            if (IS_ROCK(lev_get(i, j).typ) && !passes_walls(mon->data)
                 && (!may_dig(i, j) || !tunnels(mon->data)))
                 continue;
-            if (IS_DOOR(levl[i][j].typ)
-                && (levl[i][j].doormask & (D_CLOSED | D_LOCKED)))
+            if (IS_DOOR(lev_get(i, j).typ)
+                && (lev_get(i, j).doormask & (D_CLOSED | D_LOCKED)))
                 continue;
             if (!could_reach_item(mon, i, j))
                 continue;

@@ -276,7 +276,7 @@ int force;
                 }
             }
             if (!rn2(14 - force))
-                switch (levl[x][y].typ) {
+                switch (lev_get(x, y).typ) {
                 case FOUNTAIN: /* Make the fountain disappear */
                     if (cansee(x, y))
                         pline_The("fountain falls into a chasm.");
@@ -313,7 +313,7 @@ int force;
                      * reduce indentation and the consequent line-wraps.
                      */
 
-                    levl[x][y].doormask = 0;
+                    ({ int _lv = (0); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
                     /*
                      * Let liquid flow into the newly created chasm.
                      * Adjust corresponding code in apply.c for
@@ -321,7 +321,7 @@ int force;
                      */
                     filltype = fillholetyp(x, y, FALSE);
                     if (filltype != ROOM) {
-                        levl[x][y].typ = filltype; /* flags set via doormask */
+                        ({ int _lv = (filltype); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; }); /* flags set via doormask */
                         liquid_flow(x, y, filltype, chasm, (char *) 0);
                     }
 
@@ -426,13 +426,13 @@ int force;
                         newsym(x, y);
                     break;
                 case DOOR: /* Make the door collapse */
-                    if (levl[x][y].doormask == D_NODOOR)
+                    if (lev_get(x, y).doormask == D_NODOOR)
                         goto do_pit;
                     if (cansee(x, y))
                         pline_The("door collapses.");
                     if (*in_rooms(x, y, SHOPBASE))
                         add_damage(x, y, 0L);
-                    levl[x][y].doormask = D_NODOOR;
+                    ({ int _lv = (D_NODOOR); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
                     unblock_point(x, y);
                     newsym(x, y);
                     break;
@@ -775,7 +775,7 @@ struct obj *instr;
                             if (find_drawbridge(&x, &y)) {
                                 /* tune now fully known */
                                 u.uevent.uheard_tune = 2;
-                                if (levl[x][y].typ == DRAWBRIDGE_DOWN)
+                                if (lev_get(x, y).typ == DRAWBRIDGE_DOWN)
                                     close_drawbridge(x, y);
                                 else
                                     open_drawbridge(x, y);
@@ -791,7 +791,7 @@ struct obj *instr;
                 for (y = u.uy - 1; y <= u.uy + 1 && !ok; y++)
                     for (x = u.ux - 1; x <= u.ux + 1 && !ok; x++)
                         if (isok(x, y))
-                            if (IS_DRAWBRIDGE(levl[x][y].typ)
+                            if (IS_DRAWBRIDGE(lev_get(x, y).typ)
                                 || is_drawbridge_wall(x, y) >= 0)
                                 ok = TRUE;
                 if (ok) { /* There is a drawbridge near */

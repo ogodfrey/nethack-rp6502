@@ -674,7 +674,7 @@ boolean verbosely;
                    && !obj->unpaid && costly_spot(omx, omy)
                    /* being at costly_spot guarantees lev->roomno is not 0 */
                    && index(in_rooms(u.ux, u.uy, SHOPBASE),
-                            levl[omx][omy].roomno)) {
+                            lev_get(omx, omy).roomno)) {
             obj->no_charge = 1;
         }
         /* this should be done even if the monster has died */

@@ -153,12 +153,13 @@ vision_init()
  * sight.
  */
 int
-does_block(x, y, lev)
+does_block(x, y)
 int x, y;
-register struct rm *lev;
 {
     struct obj *obj;
     struct monst *mon;
+    struct rm lc = lev_get(x, y);
+    register struct rm *lev = &lc;
 
     /* Features that block . . */
     if (IS_ROCK(lev->typ) || lev->typ == TREE
@@ -194,7 +195,6 @@ vision_reset()
 {
     int y;
     register int x, i, dig_left, block;
-    register struct rm *lev;
 
     /* Start out with cs0 as our current array */
     viz_array = cs_rows0;
@@ -210,9 +210,8 @@ vision_reset()
     for (y = 0; y < ROWNO; y++) {
         dig_left = 0;
         block = TRUE; /* location (0,y) is always stone; it's !isok() */
-        lev = &levl[1][y];
-        for (x = 1; x < COLNO; x++, lev += ROWNO)
-            if (block != (IS_ROCK(lev->typ) || does_block(x, y, lev))) {
+        for (x = 1; x < COLNO; x++)
+            if (block != (IS_ROCK(lev_get(x, y).typ) || does_block(x, y))) {
                 if (block) {
                     for (i = dig_left; i < x; i++) {
                         left_ptrs[y][i] = dig_left;
@@ -299,7 +298,7 @@ rogue_vision(next, rmin, rmax)
 char **next; /* could_see array pointers */
 char *rmin, *rmax;
 {
-    int rnum = levl[u.ux][u.uy].roomno - ROOMOFFSET; /* no SHARED... */
+    int rnum = lev_get(u.ux, u.uy).roomno - ROOMOFFSET; /* no SHARED... */
     int start, stop, in_door, xhi, xlo, yhi, ylo;
     register int zx, zy;
 
@@ -313,14 +312,14 @@ char *rmin, *rmax;
             for (zx = start; zx <= stop; zx++) {
                 if (rooms[rnum].rlit) {
                     next[zy][zx] = COULD_SEE | IN_SIGHT;
-                    levl[zx][zy].seenv = SVALL; /* see the walls */
+                    ({ int _lv = (SVALL); int _lx = (zx), _ly = (zy); struct rm _lr = lev_get(_lx, _ly); _lr.seenv = _lv; lev_put(_lx, _ly, _lr); _lr.seenv; }); /* see the walls */
                 } else
                     next[zy][zx] = COULD_SEE;
             }
         }
     }
 
-    in_door = levl[u.ux][u.uy].typ == DOOR;
+    in_door = lev_get(u.ux, u.uy).typ == DOOR;
 
     /* Can always see adjacent. */
     ylo = max(u.uy - 1, 0);
@@ -512,8 +511,6 @@ int control;
     int start, stop;   /* inner loop starting/stopping index */
     int dx, dy;        /* one step from a lit door or lit wall (see below) */
     register int col;  /* inner loop counter */
-    register struct rm *lev; /* pointer to current pos */
-    struct rm *flev; /* pointer to position in "front" of current pos */
     extern unsigned char seenv_matrix[3][3]; /* from display.c */
     static unsigned char colbump[COLNO + 1]; /* cols to bump sv */
     unsigned char *sv;                       /* ptr to seen angle bits */
@@ -637,8 +634,8 @@ int control;
                     for (col = start; col <= stop; col++) {
                         char old_row_val = next_row[col];
                         next_row[col] |= IN_SIGHT;
-                        oldseenv = levl[col][row].seenv;
-                        levl[col][row].seenv = SVALL; /* see all! */
+                        oldseenv = lev_get(col, row).seenv;
+                        ({ int _lv = (SVALL); int _lx = (col), _ly = (row); struct rm _lr = lev_get(_lx, _ly); _lr.seenv = _lv; lev_put(_lx, _ly, _lr); _lr.seenv; }); /* see all! */
                         /* Update if previously not in sight or new angle. */
                         if (!(old_row_val & IN_SIGHT) || oldseenv != SVALL)
                             newsym(col, row);
@@ -650,7 +647,7 @@ int control;
 
             } else { /* range is 0 */
                 next_array[u.uy][u.ux] |= IN_SIGHT;
-                levl[u.ux][u.uy].seenv = SVALL;
+                ({ int _lv = (SVALL); int _lx = (u.ux), _ly = (u.uy); struct rm _lr = lev_get(_lx, _ly); _lr.seenv = _lv; lev_put(_lx, _ly, _lr); _lr.seenv; });
                 next_rmin[u.uy] = min(u.ux, next_rmin[u.uy]);
                 next_rmax[u.uy] = max(u.ux, next_rmax[u.uy]);
             }
@@ -659,7 +656,7 @@ int control;
         if (has_night_vision && u.xray_range < u.nv_range) {
             if (!u.nv_range) { /* range is 0 */
                 next_array[u.uy][u.ux] |= IN_SIGHT;
-                levl[u.ux][u.uy].seenv = SVALL;
+                ({ int _lv = (SVALL); int _lx = (u.ux), _ly = (u.uy); struct rm _lr = lev_get(_lx, _ly); _lr.seenv = _lv; lev_put(_lx, _ly, _lr); _lr.seenv; });
                 next_rmin[u.uy] = min(u.ux, next_rmin[u.uy]);
                 next_rmax[u.uy] = max(u.ux, next_rmax[u.uy]);
             } else if (u.nv_range > 0) {
@@ -723,12 +720,14 @@ int control;
         /* Find the min and max positions on the row. */
         start = min(viz_rmin[row], next_rmin[row]);
         stop = max(viz_rmax[row], next_rmax[row]);
-        lev = &levl[start][row];
 
         sv = &seenv_matrix[dy + 1][start < u.ux ? 0 : (start > u.ux ? 2 : 1)];
 
-        for (col = start; col <= stop;
-             lev += ROWNO, sv += (int) colbump[++col]) {
+        for (col = start; col <= stop; sv += (int) colbump[++col]) {
+            /* the cell is copied in and written back before newsym() */
+            struct rm lcell = lev_get(col, row);
+            register struct rm *lev = &lcell;
+
             if (next_row[col] & IN_SIGHT) {
                 /*
                  * We see this position because of night- or xray-vision.
@@ -736,6 +735,7 @@ int control;
                 oldseenv = lev->seenv;
                 lev->seenv |=
                     new_angle(lev, sv, row, col); /* update seen angle */
+                lev_put(col, row, lcell);
 
                 /* Update pos if previously not in sight or new angle. */
                 if (!(old_row[col] & IN_SIGHT) || oldseenv != lev->seenv)
@@ -757,13 +757,13 @@ int control;
                      */
                     dx = u.ux - col;
                     dx = sign(dx);
-                    flev = &(levl[col + dx][row + dy]);
-                    if (flev->lit
+                    if (lev_get(col + dx, row + dy).lit
                         || next_array[row + dy][col + dx] & TEMP_LIT) {
                         next_row[col] |= IN_SIGHT; /* we see it */
 
                         oldseenv = lev->seenv;
                         lev->seenv |= new_angle(lev, sv, row, col);
+                        lev_put(col, row, lcell);
 
                         /* Update pos if previously not in sight or new
                          * angle.*/
@@ -778,6 +778,7 @@ int control;
 
                     oldseenv = lev->seenv;
                     lev->seenv |= new_angle(lev, sv, row, col);
+                    lev_put(col, row, lcell);
 
                     /* Update pos if previously not in sight or new angle. */
                     if (!(old_row[col] & IN_SIGHT) || oldseenv != lev->seenv)
@@ -792,6 +793,7 @@ int control;
                  * and update the location.
                  */
                 lev->waslit = 0; /* remember lit condition */
+                lev_put(col, row, lcell);
                 newsym(col, row);
 
             /*

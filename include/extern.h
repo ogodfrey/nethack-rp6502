@@ -291,7 +291,7 @@ E const char *FDECL(level_distance, (d_level *));
 E void FDECL(use_crystal_ball, (struct obj **));
 E void NDECL(do_mapping);
 E void FDECL(do_vicinity_map, (struct obj *));
-E void FDECL(cvt_sdoor_to_door, (struct rm *));
+E void FDECL(cvt_sdoor_to_door, (int, int));
 #ifdef USE_TRAMPOLI
 E void FDECL(findone, (int, int, genericptr_t));
 E void FDECL(openone, (int, int, genericptr_t));
@@ -383,7 +383,7 @@ E int FDECL(back_to_glyph, (XCHAR_P, XCHAR_P));
 E int FDECL(zapdir_to_glyph, (int, int, int));
 E int FDECL(glyph_at, (XCHAR_P, XCHAR_P));
 E void NDECL(set_wall_state);
-E void FDECL(unset_seenv, (struct rm *, int, int, int, int));
+E void FDECL(unset_seenv, (int, int, int, int));
 E int FDECL(warning_of, (struct monst *));
 
 /* ### do.c ### */
@@ -2700,7 +2700,7 @@ E void NDECL(vis_tab_init);
 /* ### vision.c ### */
 
 E void NDECL(vision_init);
-E int FDECL(does_block, (int, int, struct rm *));
+E int FDECL(does_block, (int, int));
 E void NDECL(vision_reset);
 E void FDECL(vision_recalc, (int));
 E void FDECL(block_point, (int, int));

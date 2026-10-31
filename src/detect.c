@@ -141,16 +141,16 @@ trapped_door_at(ttyp, x, y)
 int ttyp;
 int x, y;
 {
-    struct rm *lev;
+    
 
     if (!glyph_is_trap(glyph_at(x, y)))
         return FALSE;
     if (ttyp != BEAR_TRAP || (Hallucination && rn2(20)))
         return FALSE;
-    lev = &levl[x][y];
-    if (!IS_DOOR(lev->typ))
+    
+    if (!IS_DOOR(lev_get(x, y).typ))
         return FALSE;
-    if ((lev->doormask & (D_NODOOR | D_BROKEN | D_ISOPEN)) != 0
+    if ((lev_get(x, y).doormask & (D_NODOOR | D_BROKEN | D_ISOPEN)) != 0
          && trapped_chest_at(ttyp, x, y))
         return FALSE;
     return TRUE;
@@ -977,7 +977,7 @@ struct obj *sobj; /* null if crystal ball, *scroll if gold detection scroll */
     /* door traps */
     for (door = 0; door < doorindex; door++) {
         cc = doors[door];
-        if (levl[cc.x][cc.y].doormask & D_TRAPPED) {
+        if (lev_get(cc.x, cc.y).doormask & D_TRAPPED) {
             if (cc.x != u.ux || cc.y != u.uy)
                 goto outtrapmap;
             else
@@ -1015,7 +1015,7 @@ struct obj *sobj; /* null if crystal ball, *scroll if gold detection scroll */
 
     for (door = 0; door < doorindex; door++) {
         cc = doors[door];
-        if (levl[cc.x][cc.y].doormask & D_TRAPPED)
+        if (lev_get(cc.x, cc.y).doormask & D_TRAPPED)
             sense_trap((struct trap *) 0, cc.x, cc.y, cursed_src);
     }
 
@@ -1238,19 +1238,19 @@ STATIC_OVL void
 show_map_spot(x, y)
 register int x, y;
 {
-    struct rm *lev;
+    
     struct trap *t;
     int oldglyph;
 
     if (Confusion && rn2(7))
         return;
-    lev = &levl[x][y];
+    
 
-    lev->seenv = SVALL;
+    ({ int _lv = (SVALL); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.seenv = _lv; lev_put(_lx, _ly, _lr); _lr.seenv; });
 
     /* Secret corridors are found, but not secret doors. */
-    if (lev->typ == SCORR) {
-        lev->typ = CORR;
+    if (lev_get(x, y).typ == SCORR) {
+        ({ int _lv = (CORR); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
         unblock_point(x, y);
     }
 
@@ -1268,13 +1268,13 @@ register int x, y;
     } else {
         magic_map_background(x, y, 1); /* display it */
     }
-    if (!IS_FURNITURE(lev->typ)) {
+    if (!IS_FURNITURE(lev_get(x, y).typ)) {
         if ((t = t_at(x, y)) != 0 && t->tseen) {
             map_trap(t, 1);
         } else if (glyph_is_trap(oldglyph) || glyph_is_object(oldglyph)) {
             show_glyph(x, y, oldglyph);
             if (level.flags.hero_memory)
-                lev->glyph = oldglyph;
+                ({ int _lv = (oldglyph); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.glyph = _lv; lev_put(_lx, _ly, _lr); _lr.glyph; });
         }
     }
 }
@@ -1432,10 +1432,11 @@ struct obj *sobj; /* scroll--actually fake spellbook--object */
 
 /* convert a secret door into a normal door */
 void
-cvt_sdoor_to_door(lev)
-struct rm *lev;
+cvt_sdoor_to_door(x, y)
+int x, y;
 {
-    int newmask = lev->doormask & ~WM_MASK;
+    struct rm cell = lev_get(x, y);
+    int newmask = cell.doormask & ~WM_MASK;
 
     if (Is_rogue_level(&u.uz))
         /* rogue didn't have doors, only doorways */
@@ -1445,8 +1446,9 @@ struct rm *lev;
         if (!(newmask & D_LOCKED))
         newmask |= D_CLOSED;
 
-    lev->typ = DOOR;
-    lev->doormask = newmask;
+    cell.typ = DOOR;
+    cell.doormask = newmask;
+    lev_put(x, y, cell);
 }
 
 /* find something at one location; it should find all somethings there
@@ -1466,13 +1468,13 @@ genericptr_t num;
      * monster to be hiding at the location of an unseen trap.
      */
 
-    if (levl[zx][zy].typ == SDOOR) {
-        cvt_sdoor_to_door(&levl[zx][zy]); /* .typ = DOOR */
+    if (lev_get(zx, zy).typ == SDOOR) {
+        cvt_sdoor_to_door(zx, zy); /* .typ = DOOR */
         magic_map_background(zx, zy, 0);
         newsym(zx, zy);
         (*(int *) num)++;
-    } else if (levl[zx][zy].typ == SCORR) {
-        levl[zx][zy].typ = CORR;
+    } else if (lev_get(zx, zy).typ == SCORR) {
+        ({ int _lv = (CORR); int _lx = (zx), _ly = (zy); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
         unblock_point(zx, zy);
         magic_map_background(zx, zy, 0);
         newsym(zx, zy);
@@ -1500,7 +1502,7 @@ genericptr_t num;
             newsym(zx, zy);
             (*(int *) num)++;
         }
-        if (!canspotmon(mtmp) && !glyph_is_invisible(levl[zx][zy].glyph))
+        if (!canspotmon(mtmp) && !glyph_is_invisible(lev_get(zx, zy).glyph))
             map_invisible(zx, zy);
     } else if (unmap_invisible(zx, zy)) {
         (*(int *) num)++;
@@ -1525,12 +1527,12 @@ genericptr_t num;
         }
         /* let it fall to the next cases. could be on trap. */
     }
-    if (levl[zx][zy].typ == SDOOR
-        || (levl[zx][zy].typ == DOOR
-            && (levl[zx][zy].doormask & (D_CLOSED | D_LOCKED)))) {
-        if (levl[zx][zy].typ == SDOOR)
-            cvt_sdoor_to_door(&levl[zx][zy]); /* .typ = DOOR */
-        if (levl[zx][zy].doormask & D_TRAPPED) {
+    if (lev_get(zx, zy).typ == SDOOR
+        || (lev_get(zx, zy).typ == DOOR
+            && (lev_get(zx, zy).doormask & (D_CLOSED | D_LOCKED)))) {
+        if (lev_get(zx, zy).typ == SDOOR)
+            cvt_sdoor_to_door(zx, zy); /* .typ = DOOR */
+        if (lev_get(zx, zy).doormask & D_TRAPPED) {
             if (distu(zx, zy) < 3)
                 b_trapped("door", 0);
             else
@@ -1538,14 +1540,14 @@ genericptr_t num;
                       cansee(zx, zy) ? "see" : (!Deaf ? "hear"
                                                       : "feel the shock of"));
             wake_nearto(zx, zy, 11 * 11);
-            levl[zx][zy].doormask = D_NODOOR;
+            ({ int _lv = (D_NODOOR); int _lx = (zx), _ly = (zy); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
         } else
-            levl[zx][zy].doormask = D_ISOPEN;
+            ({ int _lv = (D_ISOPEN); int _lx = (zx), _ly = (zy); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
         unblock_point(zx, zy);
         newsym(zx, zy);
         (*num_p)++;
-    } else if (levl[zx][zy].typ == SCORR) {
-        levl[zx][zy].typ = CORR;
+    } else if (lev_get(zx, zy).typ == SCORR) {
+        ({ int _lv = (CORR); int _lx = (zx), _ly = (zy); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
         unblock_point(zx, zy);
         newsym(zx, zy);
         (*num_p)++;
@@ -1625,7 +1627,7 @@ struct trap *trap;
        behaviour might need a rework in the hallucination case
        (e.g. to not prompt if any trap glyph appears on the square). */
     if (Hallucination ||
-        levl[trap->tx][trap->ty].glyph !=
+        lev_get(trap->tx, trap->ty).glyph !=
         trap_to_glyph(trap, rn2_on_display_rng)) {
         /* There's too much clutter to see your find otherwise */
         cls();
@@ -1675,7 +1677,7 @@ boolean via_warning;
     }
 
     if (found_something) {
-        if (!canspotmon(mtmp) && glyph_is_invisible(levl[x][y].glyph))
+        if (!canspotmon(mtmp) && glyph_is_invisible(lev_get(x, y).glyph))
             return -1; /* Found invisible monster in square which already has
                         * 'I' in it.  Logically, this should still take time
                         * and lead to `return 1', but if we did that the hero
@@ -1729,18 +1731,18 @@ register int aflag; /* intrinsic autosearch vs explicit searching */
 
                 if (Blind && !aflag)
                     feel_location(x, y);
-                if (levl[x][y].typ == SDOOR) {
+                if (lev_get(x, y).typ == SDOOR) {
                     if (rnl(7 - fund))
                         continue;
-                    cvt_sdoor_to_door(&levl[x][y]); /* .typ = DOOR */
+                    cvt_sdoor_to_door(x, y); /* .typ = DOOR */
                     exercise(A_WIS, TRUE);
                     nomul(0);
                     feel_location(x, y); /* make sure it shows up */
                     You("find a hidden door.");
-                } else if (levl[x][y].typ == SCORR) {
+                } else if (lev_get(x, y).typ == SCORR) {
                     if (rnl(7 - fund))
                         continue;
-                    levl[x][y].typ = CORR;
+                    ({ int _lv = (CORR); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
                     unblock_point(x, y); /* vision */
                     exercise(A_WIS, TRUE);
                     nomul(0);
@@ -1813,8 +1815,8 @@ sokoban_detect()
     /* Map the background and boulders */
     for (x = 1; x < COLNO; x++)
         for (y = 0; y < ROWNO; y++) {
-            levl[x][y].seenv = SVALL;
-            levl[x][y].waslit = TRUE;
+            ({ int _lv = (SVALL); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.seenv = _lv; lev_put(_lx, _ly, _lr); _lr.seenv; });
+            ({ int _lv = (TRUE); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.waslit = _lv; lev_put(_lx, _ly, _lr); _lr.waslit; });
             map_background(x, y, 1);
             if ((obj = sobj_at(BOULDER, x, y)) != 0)
                 map_object(obj, 1);
@@ -1848,14 +1850,14 @@ int default_glyph, which_subset;
        otherwise what the hero remembers for seen locations with
        monsters, objects, and/or traps removed as caller dictates */
     seenv = (full || level.flags.hero_memory)
-              ? levl[x][y].seenv : cansee(x, y) ? SVALL : 0;
+              ? lev_get(x, y).seenv : cansee(x, y) ? SVALL : 0;
     if (full) {
-        levl[x][y].seenv = SVALL;
+        ({ int _lv = (SVALL); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.seenv = _lv; lev_put(_lx, _ly, _lr); _lr.seenv; });
         glyph = back_to_glyph(x, y);
-        levl[x][y].seenv = seenv;
+        ({ int _lv = (seenv); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.seenv = _lv; lev_put(_lx, _ly, _lr); _lr.seenv; });
     } else {
         levl_glyph = level.flags.hero_memory
-              ? levl[x][y].glyph
+              ? lev_get(x, y).glyph
               : seenv ? back_to_glyph(x, y): default_glyph;
         /* glyph_at() returns the displayed glyph, which might
            be a monster.  levl[][].glyph contains the remembered
@@ -1880,7 +1882,7 @@ int default_glyph, which_subset;
             || glyph_is_invisible(glyph)) {
             if (!seenv) {
                 glyph = default_glyph;
-            } else if (lastseentyp[x][y] == levl[x][y].typ) {
+            } else if (lastseentyp[x][y] == lev_get(x, y).typ) {
                 glyph = back_to_glyph(x, y);
             } else {
                 /* look for a mimic here posing as furniture;
@@ -1896,11 +1898,11 @@ int default_glyph, which_subset;
                        S_upstair or S_dnstair, for example; current
                        flags might not be intended for remembered type,
                        but we've got no other choice) */
-                    schar save_typ = levl[x][y].typ;
+                    schar save_typ = lev_get(x, y).typ;
 
-                    levl[x][y].typ = lastseentyp[x][y];
+                    ({ int _lv = (lastseentyp[x][y]); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
                     glyph = back_to_glyph(x, y);
-                    levl[x][y].typ = save_typ;
+                    ({ int _lv = (save_typ); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
                 }
             }
         }

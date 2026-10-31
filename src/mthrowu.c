@@ -466,19 +466,19 @@ boolean verbose;    /* give message(s) even when you can't see what happened */
     (/* missile hits edge of screen */                                  \
      !isok(bhitpos.x + dx, bhitpos.y + dy)                              \
      /* missile hits the wall */                                        \
-     || IS_ROCK(levl[bhitpos.x + dx][bhitpos.y + dy].typ)               \
+     || IS_ROCK(lev_get(bhitpos.x + dx, bhitpos.y + dy).typ)            \
      /* missile hit closed door */                                      \
      || closed_door(bhitpos.x + dx, bhitpos.y + dy)                     \
      /* missile might hit iron bars */                                  \
      /* the random chance for small objects hitting bars is */          \
      /* skipped when reaching them at point blank range */              \
-     || (levl[bhitpos.x + dx][bhitpos.y + dy].typ == IRONBARS           \
+     || (lev_get(bhitpos.x + dx, bhitpos.y + dy).typ == IRONBARS       \
          && hits_bars(&singleobj,                                       \
                       bhitpos.x, bhitpos.y,                             \
                       bhitpos.x + dx, bhitpos.y + dy,                   \
                       ((pre) ? 0 : !rn2(5)), 0))                        \
      /* Thrown objects "sink" */                                        \
-     || (!(pre) && IS_SINK(levl[bhitpos.x][bhitpos.y].typ)))
+     || (!(pre) && IS_SINK(lev_get(bhitpos.x, bhitpos.y).typ)))
 
 void
 m_throw(mon, x, y, dx, dy, range, obj)
@@ -1065,7 +1065,7 @@ int boulderhandling; /* 0=block, 1=ignore, 2=conditionally block */
         do {
             /* <bx,by> is guaranteed to eventually converge with <ax,ay> */
             bx += dx, by += dy;
-            if (IS_ROCK(levl[bx][by].typ) || closed_door(bx, by))
+            if (IS_ROCK(lev_get(bx, by).typ) || closed_door(bx, by))
                 return FALSE;
             if (sobj_at(BOULDER, bx, by))
                 ++boulderspots;
@@ -1126,7 +1126,7 @@ boolean your_fault, from_invent;
 {
     struct obj *otmp = *objp;
     int obj_type = otmp->otyp;
-    boolean unbreakable = (levl[barsx][barsy].wall_info & W_NONDIGGABLE) != 0;
+    boolean unbreakable = (lev_get(barsx, barsy).wall_info & W_NONDIGGABLE) != 0;
 
     if (your_fault
         ? hero_breaks(otmp, objx, objy, from_invent)

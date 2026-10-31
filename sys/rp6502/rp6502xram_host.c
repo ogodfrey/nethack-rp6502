@@ -9,9 +9,11 @@
 #include "onames.h"
 #include "permonst.h"
 #include "objclass.h"
+#include "hack.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define PM_SLOTS 4
 
@@ -100,3 +102,40 @@ rpo_put(struct objclass *p, const struct objclass *rec)
     }
     rp6502_ram_objects[off / sizeof(struct objclass)] = *rec;
 }
+
+#ifdef RP6502_LEV_XRAM
+/* The level map: a host array stands in for its XRAM image. Every access is
+ * checked, because a cell outside the map would overwrite another XRAM table
+ * on the target. */
+static struct rm rp6502_lev_image[COLNO][ROWNO];
+
+static void
+lev_check(int x, int y, const char *what)
+{
+    if (x < 0 || x >= COLNO || y < 0 || y >= ROWNO) {
+        fprintf(stderr, "%s: cell (%d,%d) is outside the level map\n", what,
+                x, y);
+        abort();
+    }
+}
+
+struct rm
+rpl_get(int x, int y)
+{
+    lev_check(x, y, "lev_get");
+    return rp6502_lev_image[x][y];
+}
+
+void
+rpl_put(int x, int y, struct rm v)
+{
+    lev_check(x, y, "lev_put");
+    rp6502_lev_image[x][y] = v;
+}
+
+void
+rpl_clear(void)
+{
+    memset(rp6502_lev_image, 0, sizeof rp6502_lev_image);
+}
+#endif /* RP6502_LEV_XRAM */

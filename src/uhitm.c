@@ -363,7 +363,7 @@ register struct monst *mtmp;
                         break;
                     }
             }
-            if (inshop || foo || (IS_ROCK(levl[u.ux][u.uy].typ)
+            if (inshop || foo || (IS_ROCK(lev_get(u.ux, u.uy).typ)
                                   && !passes_walls(mtmp->data))) {
                 char buf[BUFSZ];
 
@@ -453,7 +453,7 @@ register struct monst *mtmp;
      * evade.
      */
     if (context.forcefight && !DEADMONSTER(mtmp) && !canspotmon(mtmp)
-        && !glyph_is_invisible(levl[u.ux + u.dx][u.uy + u.dy].glyph)
+        && !glyph_is_invisible(lev_get(u.ux + u.dx, u.uy + u.dy).glyph)
         && !(u.uswallow && mtmp == u.ustuck))
         map_invisible(u.ux + u.dx, u.uy + u.dy);
 
@@ -572,7 +572,7 @@ struct attack *uattk; /* ... but we don't enforce that here; Null works ok */
             continue;
         mtmp = m_at(tx, ty);
         if (!mtmp) {
-            if (glyph_is_invisible(levl[tx][ty].glyph))
+            if (glyph_is_invisible(lev_get(tx, ty).glyph))
                 (void) unmap_invisible(tx, ty);
             continue;
         }
@@ -3064,7 +3064,7 @@ struct monst *mtmp;
         else if (M_AP_TYPE(mtmp) == M_AP_MONSTER)
             what = a_monnam(mtmp); /* differs from what was sensed */
     } else {
-        int glyph = levl[u.ux + u.dx][u.uy + u.dy].glyph;
+        int glyph = lev_get(u.ux + u.dx, u.uy + u.dy).glyph;
 
         if (glyph_is_cmap(glyph) && (glyph_to_cmap(glyph) == S_hcdoor
                                      || glyph_to_cmap(glyph) == S_vcdoor))
@@ -3086,7 +3086,7 @@ struct monst *mtmp;
     /* if hero is blind, wakeup() won't display the monster even though
        it's no longer concealed */
     if (!canspotmon(mtmp)
-        && !glyph_is_invisible(levl[mtmp->mx][mtmp->my].glyph))
+        && !glyph_is_invisible(lev_get(mtmp->mx, mtmp->my).glyph))
         map_invisible(mtmp->mx, mtmp->my);
 }
 

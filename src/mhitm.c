@@ -699,7 +699,7 @@ boolean
 engulf_target(magr, mdef)
 struct monst *magr, *mdef;
 {
-    struct rm *lev;
+    
     int dx, dy;
 
     /* can't swallow something that's too big */
@@ -717,10 +717,10 @@ struct monst *magr, *mdef;
     dx = mdef->mx, dy = mdef->my;
     if (mdef == &youmonst)
         dx = u.ux, dy = u.uy;
-    lev = &levl[dx][dy];
-    if (IS_ROCK(lev->typ) || closed_door(dx, dy) || IS_TREE(lev->typ)
+    
+    if (IS_ROCK(lev_get(dx, dy).typ) || closed_door(dx, dy) || IS_TREE(lev_get(dx, dy).typ)
         /* not passes_bars(); engulfer isn't squeezing through */
-        || (lev->typ == IRONBARS && !is_whirly(magr->data)))
+        || (lev_get(dx, dy).typ == IRONBARS && !is_whirly(magr->data)))
         return FALSE;
 
     return TRUE;

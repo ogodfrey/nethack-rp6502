@@ -219,8 +219,8 @@ solidify_map()
 
     for (x = 0; x < COLNO; x++)
         for (y = 0; y < ROWNO; y++)
-            if (IS_STWALL(levl[x][y].typ) && !SpLev_Map[x][y])
-                levl[x][y].wall_info |= (W_NONDIGGABLE | W_NONPASSWALL);
+            if (IS_STWALL(lev_get(x, y).typ) && !SpLev_Map[x][y])
+                ({ int _lv = ((W_NONDIGGABLE | W_NONPASSWALL)); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.wall_info |= _lv; lev_put(_lx, _ly, _lr); _lr.wall_info; });
 }
 
 void
@@ -608,10 +608,10 @@ schar filling;
     for (x = x1; x <= x2; x++)
         for (y = y1; y <= y2; y++) {
             if (level.flags.corrmaze)
-                levl[x][y].typ = STONE;
+                ({ int _lv = (STONE); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
             else
-                levl[x][y].typ = (y < 2 || ((x % 2) && (y % 2))) ? STONE
-                                                                 : filling;
+                ({ int _lv = ((y < 2 || ((x % 2) && (y % 2))) ? STONE
+                                                                 : filling); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
         }
 }
 
@@ -637,7 +637,7 @@ xchar x1, y1, x2, y2;
 int prop;
 {
     register xchar x, y;
-    struct rm *lev;
+    
 
     x1 = max(x1, 1);
     x2 = min(x2, COLNO - 1);
@@ -645,12 +645,12 @@ int prop;
     y2 = min(y2, ROWNO - 1);
     for (y = y1; y <= y2; y++)
         for (x = x1; x <= x2; x++) {
-            lev = &levl[x][y];
-            if (IS_STWALL(lev->typ) || IS_TREE(lev->typ)
+            
+            if (IS_STWALL(lev_get(x, y).typ) || IS_TREE(lev_get(x, y).typ)
                 /* 3.6.2: made iron bars eligible to be flagged nondiggable
                    (checked by chewing(hack.c) and zap_over_floor(zap.c)) */
-                || lev->typ == IRONBARS)
-                lev->wall_info |= prop;
+                || lev_get(x, y).typ == IRONBARS)
+                ({ int _lv = (prop); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.wall_info |= _lv; lev_put(_lx, _ly, _lr); _lr.wall_info; });
         }
 }
 
@@ -683,7 +683,7 @@ count_features()
     level.flags.nfountains = level.flags.nsinks = 0;
     for (y = 0; y < ROWNO; y++)
         for (x = 0; x < COLNO; x++) {
-            int typ = levl[x][y].typ;
+            int typ = lev_get(x, y).typ;
             if (typ == FOUNTAIN)
                 level.flags.nfountains++;
             else if (typ == SINK)
@@ -704,15 +704,15 @@ remove_boundary_syms()
 
     for (x = 0; x < COLNO - 1; x++)
         for (y = 0; y < ROWNO - 1; y++)
-            if (levl[x][y].typ == CROSSWALL) {
+            if (lev_get(x, y).typ == CROSSWALL) {
                 has_bounds = TRUE;
                 break;
             }
     if (has_bounds) {
         for (x = 0; x < x_maze_max; x++)
             for (y = 0; y < y_maze_max; y++)
-                if ((levl[x][y].typ == CROSSWALL) && SpLev_Map[x][y])
-                    levl[x][y].typ = ROOM;
+                if ((lev_get(x, y).typ == CROSSWALL) && SpLev_Map[x][y])
+                    ({ int _lv = (ROOM); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
     }
 }
 
@@ -741,27 +741,27 @@ int x, y;
      * to that, we check for solid rock which hasn't been wallified
      * yet (cf lower leftside of leader's room in Cav quest).
      */
-    wleft  = (isok(x - 1, y) && (IS_WALL(levl[x - 1][y].typ)
-                                 || IS_DOOR(levl[x - 1][y].typ)
-                                 || levl[x - 1][y].typ == SDOOR));
-    wright = (isok(x + 1, y) && (IS_WALL(levl[x + 1][y].typ)
-                                 || IS_DOOR(levl[x + 1][y].typ)
-                                 || levl[x + 1][y].typ == SDOOR));
-    wup    = (isok(x, y - 1) && (IS_WALL(levl[x][y - 1].typ)
-                                 || IS_DOOR(levl[x][y - 1].typ)
-                                 || levl[x][y - 1].typ == SDOOR));
-    wdown  = (isok(x, y + 1) && (IS_WALL(levl[x][y + 1].typ)
-                                 || IS_DOOR(levl[x][y + 1].typ)
-                                 || levl[x][y + 1].typ == SDOOR));
+    wleft  = (isok(x - 1, y) && (IS_WALL(lev_get(x - 1, y).typ)
+                                 || IS_DOOR(lev_get(x - 1, y).typ)
+                                 || lev_get(x - 1, y).typ == SDOOR));
+    wright = (isok(x + 1, y) && (IS_WALL(lev_get(x + 1, y).typ)
+                                 || IS_DOOR(lev_get(x + 1, y).typ)
+                                 || lev_get(x + 1, y).typ == SDOOR));
+    wup    = (isok(x, y - 1) && (IS_WALL(lev_get(x, y - 1).typ)
+                                 || IS_DOOR(lev_get(x, y - 1).typ)
+                                 || lev_get(x, y - 1).typ == SDOOR));
+    wdown  = (isok(x, y + 1) && (IS_WALL(lev_get(x, y + 1).typ)
+                                 || IS_DOOR(lev_get(x, y + 1).typ)
+                                 || lev_get(x, y + 1).typ == SDOOR));
     if (!wleft && !wright && !wup && !wdown) {
         /* out of bounds is treated as implicit wall; should be academic
            because we don't expect to have doors so near the level's edge */
-        wleft  = (!isok(x - 1, y) || IS_DOORJOIN(levl[x - 1][y].typ));
-        wright = (!isok(x + 1, y) || IS_DOORJOIN(levl[x + 1][y].typ));
-        wup    = (!isok(x, y - 1) || IS_DOORJOIN(levl[x][y - 1].typ));
-        wdown  = (!isok(x, y + 1) || IS_DOORJOIN(levl[x][y + 1].typ));
+        wleft  = (!isok(x - 1, y) || IS_DOORJOIN(lev_get(x - 1, y).typ));
+        wright = (!isok(x + 1, y) || IS_DOORJOIN(lev_get(x + 1, y).typ));
+        wup    = (!isok(x, y - 1) || IS_DOORJOIN(lev_get(x, y - 1).typ));
+        wdown  = (!isok(x, y + 1) || IS_DOORJOIN(lev_get(x, y + 1).typ));
     }
-    levl[x][y].horizontal = ((wleft || wright) && !(wup && wdown)) ? 1 : 0;
+    ({ int _lv = (((wleft || wright) && !(wup && wdown)) ? 1 : 0); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.horizontal = _lv; lev_put(_lx, _ly, _lr); _lr.horizontal; });
 }
 
 STATIC_OVL void
@@ -781,7 +781,7 @@ link_doors_rooms()
 
     for (y = 0; y < ROWNO; y++)
         for (x = 0; x < COLNO; x++)
-            if (IS_DOOR(levl[x][y].typ) || levl[x][y].typ == SDOOR) {
+            if (IS_DOOR(lev_get(x, y).typ) || lev_get(x, y).typ == SDOOR) {
                 /* in case this door was a '+' or 'S' from the
                    MAP...ENDMAP section without an explicit DOOR
                    directive, set/clear levl[][].horizontal for it */
@@ -948,16 +948,16 @@ register int humidity;
     if (humidity & ANY_LOC)
         return TRUE;
 
-    if ((humidity & SOLID) && IS_ROCK(levl[x][y].typ))
+    if ((humidity & SOLID) && IS_ROCK(lev_get(x, y).typ))
         return TRUE;
 
     if (humidity & DRY) {
-        typ = levl[x][y].typ;
+        typ = lev_get(x, y).typ;
         if (typ == ROOM || typ == AIR || typ == CLOUD || typ == ICE
             || typ == CORR)
             return TRUE;
     }
-    if ((humidity & SPACELOC) && SPACE_POS(levl[x][y].typ))
+    if ((humidity & SPACELOC) && SPACE_POS(lev_get(x, y).typ))
         return TRUE;
     if ((humidity & WET) && is_pool(x, y))
         return TRUE;
@@ -1048,11 +1048,11 @@ packed_coord pos;
     register int trycnt = 0;
 
     get_location_coord(&try_x, &try_y, DRY, croom, pos);
-    if (levl[try_x][try_y].typ != ROOM) {
+    if (lev_get(try_x, try_y).typ != ROOM) {
         do {
             try_x = *x, try_y = *y;
             get_room_loc(&try_x, &try_y, croom);
-        } while (levl[try_x][try_y].typ != ROOM && ++trycnt <= 100);
+        } while (lev_get(try_x, try_y).typ != ROOM && ++trycnt <= 100);
 
         if (trycnt > 100)
             panic("get_free_room_loc:  can't find a place!");
@@ -1066,7 +1066,6 @@ xchar *lowx, *ddx, *lowy, *ddy;
 boolean vault;
 {
     register int x, y, hix = *lowx + *ddx, hiy = *lowy + *ddy;
-    register struct rm *lev;
     int xlim, ylim, ymax;
 
     xlim = XLIM + (vault ? 1 : 0);
@@ -1094,9 +1093,8 @@ chk:
             y = 0;
         if (ymax >= ROWNO)
             ymax = (ROWNO - 1);
-        lev = &levl[x][y];
         for (; y <= ymax; y++) {
-            if (lev++->typ) {
+            if (lev_get(x, y).typ) {
                 if (!vault) {
                     debugpline2("strange area [%d,%d] in check_room.", x, y);
                 }
@@ -1396,7 +1394,7 @@ struct mkroom *broom;
             y = broom->ly - 1;
             x = broom->lx
                 + ((dpos == -1) ? rn2(1 + (broom->hx - broom->lx)) : dpos);
-            if (IS_ROCK(levl[x][y - 1].typ))
+            if (IS_ROCK(lev_get(x, y - 1).typ))
                 goto redoloop;
             goto outdirloop;
         case 1:
@@ -1405,7 +1403,7 @@ struct mkroom *broom;
             y = broom->hy + 1;
             x = broom->lx
                 + ((dpos == -1) ? rn2(1 + (broom->hx - broom->lx)) : dpos);
-            if (IS_ROCK(levl[x][y + 1].typ))
+            if (IS_ROCK(lev_get(x, y + 1).typ))
                 goto redoloop;
             goto outdirloop;
         case 2:
@@ -1414,7 +1412,7 @@ struct mkroom *broom;
             x = broom->lx - 1;
             y = broom->ly
                 + ((dpos == -1) ? rn2(1 + (broom->hy - broom->ly)) : dpos);
-            if (IS_ROCK(levl[x - 1][y].typ))
+            if (IS_ROCK(lev_get(x - 1, y).typ))
                 goto redoloop;
             goto outdirloop;
         case 3:
@@ -1423,7 +1421,7 @@ struct mkroom *broom;
             x = broom->hx + 1;
             y = broom->ly
                 + ((dpos == -1) ? rn2(1 + (broom->hy - broom->ly)) : dpos);
-            if (IS_ROCK(levl[x + 1][y].typ))
+            if (IS_ROCK(lev_get(x + 1, y).typ))
                 goto redoloop;
             goto outdirloop;
         default:
@@ -1441,8 +1439,8 @@ struct mkroom *broom;
         impossible("create_door: Can't find a proper place!");
         return;
     }
-    levl[x][y].typ = (dd->secret ? SDOOR : DOOR);
-    levl[x][y].doormask = dd->mask;
+    ({ int _lv = ((dd->secret ? SDOOR : DOOR)); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
+    ({ int _lv = (dd->mask); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
 }
 
 /*
@@ -1484,8 +1482,8 @@ xchar walls; /* any of W_NORTH | W_SOUTH | W_EAST | W_WEST (or W_ANY) */
         }
 
         if (okdoor(sx, sy)) {
-            levl[sx][sy].typ = SDOOR;
-            levl[sx][sy].doormask = D_CLOSED;
+            ({ int _lv = (SDOOR); int _lx = (sx), _ly = (sy); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
+            ({ int _lv = (D_CLOSED); int _lx = (sx), _ly = (sy); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
             return;
         }
     }
@@ -1510,7 +1508,7 @@ struct mkroom *croom;
         int trycnt = 0;
         do {
             get_location_coord(&x, &y, DRY, croom, t->coord);
-        } while ((levl[x][y].typ == STAIRS || levl[x][y].typ == LADDER)
+        } while ((lev_get(x, y).typ == STAIRS || lev_get(x, y).typ == LADDER)
                  && ++trycnt <= 100);
         if (trycnt > 100)
             return;
@@ -1542,7 +1540,7 @@ STATIC_OVL boolean
 m_bad_boulder_spot(x, y)
 int x, y;
 {
-    struct rm *lev;
+    
 
     /* avoid trap locations */
     if (t_at(x, y))
@@ -1552,8 +1550,8 @@ int x, y;
     if (sobj_at(BOULDER, x, y))
         return TRUE;
     /* avoid closed doors */
-    lev = &levl[x][y];
-    if (IS_DOOR(lev->typ) && (lev->doormask & (D_CLOSED | D_LOCKED)) != 0)
+    
+    if (IS_DOOR(lev_get(x, y).typ) && (lev_get(x, y).doormask & (D_CLOSED | D_LOCKED)) != 0)
         return TRUE;
     /* spot is ok */
     return FALSE;
@@ -1776,7 +1774,7 @@ struct mkroom *croom;
                            m->appear, m->appear_as.str);
                 break;
             }
-            if (does_block(x, y, &levl[x][y]))
+            if (does_block(x, y))
                 block_point(x, y);
         }
 
@@ -2092,7 +2090,7 @@ struct mkroom *croom;
     }
 
     /* check for existing features */
-    oldtyp = levl[x][y].typ;
+    oldtyp = lev_get(x, y).typ;
     if (oldtyp == STAIRS || oldtyp == LADDER)
         return;
 
@@ -2111,8 +2109,8 @@ struct mkroom *croom;
                      ? induced_align(80)
                      : (a->align < 0 ? ralign[-a->align - 1] : a->align);
 
-    levl[x][y].typ = ALTAR;
-    levl[x][y].altarmask = amask;
+    ({ int _lv = (ALTAR); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
+    ({ int _lv = (amask); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.altarmask = _lv; lev_put(_lx, _ly, _lr); _lr.altarmask; });
 
     if (a->shrine < 0)
         a->shrine = rn2(2); /* handle random case */
@@ -2122,7 +2120,7 @@ struct mkroom *croom;
 
     if (a->shrine) { /* Is it a shrine  or sanctum? */
         priestini(&u.uz, croom, x, y, (a->shrine > 1));
-        levl[x][y].altarmask |= AM_SHRINE;
+        ({ int _lv = (AM_SHRINE); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.altarmask |= _lv; lev_put(_lx, _ly, _lr); _lr.altarmask; });
         level.flags.has_temple = TRUE;
     }
 }
@@ -2147,7 +2145,7 @@ struct mkroom *croom;
 
     for (x = max(x1, 0); x <= min(x2, COLNO - 1); x++)
         for (y = max(y1, 0); y <= min(y2, ROWNO - 1); y++)
-            if (levl[x][y].typ == terr->fromter && rn2(100) < terr->chance) {
+            if (lev_get(x, y).typ == terr->fromter && rn2(100) < terr->chance) {
                 SET_TYPLIT(x, y, terr->toter, terr->tolit);
             }
 }
@@ -2196,7 +2194,7 @@ int cnt;
         break;
     }
     while (xx <= croom->hx + 1 && yy <= croom->hy + 1) {
-        if (IS_DOOR(levl[xx][yy].typ) || levl[xx][yy].typ == SDOOR) {
+        if (IS_DOOR(lev_get(xx, yy).typ) || lev_get(xx, yy).typ == SDOOR) {
             *x = xx;
             *y = yy;
             if (cnt-- <= 0)
@@ -2218,7 +2216,7 @@ boolean nxcor;
 schar ftyp, btyp;
 {
     int dx = 0, dy = 0, dix, diy, cct;
-    struct rm *crm;
+    
     int tx, ty, xx, yy;
 
     xx = org->x;
@@ -2254,16 +2252,16 @@ schar ftyp, btyp;
         if (xx >= COLNO - 1 || xx <= 0 || yy <= 0 || yy >= ROWNO - 1)
             return FALSE; /* impossible */
 
-        crm = &levl[xx][yy];
-        if (crm->typ == btyp) {
+        
+        if (lev_get(xx, yy).typ == btyp) {
             if (ftyp != CORR || rn2(100)) {
-                crm->typ = ftyp;
+                ({ int _lv = (ftyp); int _lx = (xx), _ly = (yy); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
                 if (nxcor && !rn2(50))
                     (void) mksobj_at(BOULDER, xx, yy, TRUE, FALSE);
             } else {
-                crm->typ = SCORR;
+                ({ int _lv = (SCORR); int _lx = (xx), _ly = (yy); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
             }
-        } else if (crm->typ != ftyp && crm->typ != SCORR) {
+        } else if (lev_get(xx, yy).typ != ftyp && lev_get(xx, yy).typ != SCORR) {
             /* strange ... */
             return FALSE;
         }
@@ -2282,8 +2280,8 @@ schar ftyp, btyp;
         if (dy && dix > diy) {
             register int ddx = (xx > tx) ? -1 : 1;
 
-            crm = &levl[xx + ddx][yy];
-            if (crm->typ == btyp || crm->typ == ftyp || crm->typ == SCORR) {
+            
+            if (lev_get(xx + ddx, yy).typ == btyp || lev_get(xx + ddx, yy).typ == ftyp || lev_get(xx + ddx, yy).typ == SCORR) {
                 dx = ddx;
                 dy = 0;
                 continue;
@@ -2291,8 +2289,8 @@ schar ftyp, btyp;
         } else if (dx && diy > dix) {
             register int ddy = (yy > ty) ? -1 : 1;
 
-            crm = &levl[xx][yy + ddy];
-            if (crm->typ == btyp || crm->typ == ftyp || crm->typ == SCORR) {
+            
+            if (lev_get(xx, yy + ddy).typ == btyp || lev_get(xx, yy + ddy).typ == ftyp || lev_get(xx, yy + ddy).typ == SCORR) {
                 dy = ddy;
                 dx = 0;
                 continue;
@@ -2300,8 +2298,8 @@ schar ftyp, btyp;
         }
 
         /* continue straight on? */
-        crm = &levl[xx + dx][yy + dy];
-        if (crm->typ == btyp || crm->typ == ftyp || crm->typ == SCORR)
+        
+        if (lev_get(xx + dx, yy + dy).typ == btyp || lev_get(xx + dx, yy + dy).typ == ftyp || lev_get(xx + dx, yy + dy).typ == SCORR)
             continue;
 
         /* no, what must we do now?? */
@@ -2312,8 +2310,8 @@ schar ftyp, btyp;
             dy = 0;
             dx = (tx < xx) ? -1 : 1;
         }
-        crm = &levl[xx + dx][yy + dy];
-        if (crm->typ == btyp || crm->typ == ftyp || crm->typ == SCORR)
+        
+        if (lev_get(xx + dx, yy + dy).typ == btyp || lev_get(xx + dx, yy + dy).typ == ftyp || lev_get(xx + dx, yy + dy).typ == SCORR)
             continue;
         dy = -dy;
         dx = -dx;
@@ -2531,7 +2529,6 @@ region *tmpregion;
     register boolean litstate = tmpregion->rlit ? 1 : 0;
     register int hiy = tmpregion->y2;
     register int x, y;
-    register struct rm *lev;
     int lowy = tmpregion->y1;
     int lowx = tmpregion->x1, hix = tmpregion->x2;
 
@@ -2543,11 +2540,9 @@ region *tmpregion;
         hiy = min(hiy + 1, ROWNO - 1);
     }
     for (x = lowx; x <= hix; x++) {
-        lev = &levl[x][lowy];
         for (y = lowy; y <= hiy; y++) {
-            if (lev->typ != LAVAPOOL) /* this overrides normal lighting */
-                lev->lit = litstate;
-            lev++;
+            if (lev_get(x, y).typ != LAVAPOOL) /* this overrides normal lighting */
+                ({ int _lv = (litstate); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.lit = _lv; lev_put(_lx, _ly, _lr); _lr.lit; });
         }
     }
 }
@@ -2566,15 +2561,15 @@ int x1, y1, x2, y2;
         lo_yy = (y > 0) ? y - 1 : 0;
         hi_yy = (y < y2) ? y + 1 : y2;
         for (x = x1; x <= x2; x++) {
-            if (levl[x][y].typ != STONE)
+            if (lev_get(x, y).typ != STONE)
                 continue;
             lo_xx = (x > 1) ? x - 1 : 1;
             hi_xx = (x < x2) ? x + 1 : x2;
             for (yy = lo_yy; yy <= hi_yy; yy++)
                 for (xx = lo_xx; xx <= hi_xx; xx++)
-                    if (IS_ROOM(levl[xx][yy].typ)
-                        || levl[xx][yy].typ == CROSSWALL) {
-                        levl[x][y].typ = (yy != y) ? HWALL : VWALL;
+                    if (IS_ROOM(lev_get(xx, yy).typ)
+                        || lev_get(xx, yy).typ == CROSSWALL) {
+                        ({ int _lv = ((yy != y) ? HWALL : VWALL); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
                         yy = hi_yy; /* end `yy' loop */
                         break;      /* end `xx' loop */
                     }
@@ -3504,16 +3499,16 @@ struct sp_coder *coder;
 
     get_location_coord(&x, &y, DRY, coder->croom, OV_i(lcoord));
 
-    levl[x][y].typ = LADDER;
+    ({ int _lv = (LADDER); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
     SpLev_Map[x][y] = 1;
     if (OV_i(up)) {
         xupladder = x;
         yupladder = y;
-        levl[x][y].ladder = LA_UP;
+        ({ int _lv = (LA_UP); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.ladder = _lv; lev_put(_lx, _ly, _lr); _lr.ladder; });
     } else {
         xdnladder = x;
         ydnladder = y;
-        levl[x][y].ladder = LA_DOWN;
+        ({ int _lv = (LA_DOWN); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.ladder = _lv; lev_put(_lx, _ly, _lr); _lr.ladder; });
     }
     opvar_free(lcoord);
     opvar_free(up);
@@ -3533,7 +3528,7 @@ struct sp_coder *coder;
     get_location_coord(&x, &y, DRY, coder->croom, OV_i(gcoord));
 
     if (isok(x, y) && !t_at(x, y)) {
-        levl[x][y].typ = GRAVE;
+        ({ int _lv = (GRAVE); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
         switch (OV_i(typ)) {
         case 2:
             make_grave(x, y, OV_s(txt));
@@ -3755,7 +3750,7 @@ struct opvar *mc;
     lit = SP_MAPCHAR_LIT(OV_i(mc));
     for (x = 0; x < COLNO; x++)
         for (y = 0; y < ROWNO; y++)
-            if (selection_getpoint(x, y, ov) && (levl[x][y].typ == mapc)) {
+            if (selection_getpoint(x, y, ov) && (lev_get(x, y).typ == mapc)) {
                 switch (lit) {
                 default:
                 case -2:
@@ -3766,7 +3761,7 @@ struct opvar *mc;
                     break;
                 case 0:
                 case 1:
-                    if (levl[x][y].lit == lit)
+                    if (lev_get(x, y).lit == lit)
                         selection_setpoint(x, y, ret, 1);
                     break;
                 }
@@ -3879,16 +3874,16 @@ STATIC_OVL int
 floodfillchk_match_under(x,y)
 int x,y;
 {
-    return (floodfillchk_match_under_typ == levl[x][y].typ);
+    return (floodfillchk_match_under_typ == lev_get(x, y).typ);
 }
 
 STATIC_OVL int
 floodfillchk_match_accessible(x, y)
 int x, y;
 {
-    return (ACCESSIBLE(levl[x][y].typ)
-            || levl[x][y].typ == SDOOR
-            || levl[x][y].typ == SCORR);
+    return (ACCESSIBLE(lev_get(x, y).typ)
+            || lev_get(x, y).typ == SDOOR
+            || lev_get(x, y).typ == SCORR);
 }
 
 /* check whethere <x,y> is already in xs[],ys[] */
@@ -4254,11 +4249,11 @@ genericptr_t arg;
     terr = *(terrain *) arg;
     SET_TYPLIT(x, y, terr.ter, terr.tlit);
     /* handle doors and secret doors */
-    if (levl[x][y].typ == SDOOR || IS_DOOR(levl[x][y].typ)) {
-        if (levl[x][y].typ == SDOOR)
-            levl[x][y].doormask = D_CLOSED;
-        if (x && (IS_WALL(levl[x - 1][y].typ) || levl[x - 1][y].horizontal))
-            levl[x][y].horizontal = 1;
+    if (lev_get(x, y).typ == SDOOR || IS_DOOR(lev_get(x, y).typ)) {
+        if (lev_get(x, y).typ == SDOOR)
+            ({ int _lv = (D_CLOSED); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
+        if (x && (IS_WALL(lev_get(x - 1, y).typ) || lev_get(x - 1, y).horizontal))
+            ({ int _lv = (1); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.horizontal = _lv; lev_put(_lx, _ly, _lr); _lr.horizontal; });
     }
 }
 
@@ -4267,9 +4262,9 @@ sel_set_feature(x, y, arg)
 int x, y;
 genericptr_t arg;
 {
-    if (IS_FURNITURE(levl[x][y].typ))
+    if (IS_FURNITURE(lev_get(x, y).typ))
         return;
-    levl[x][y].typ = (*(int *) arg);
+    ({ int _lv = ((*(int *) arg)); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
 }
 
 void
@@ -4280,15 +4275,15 @@ genericptr_t arg;
     xchar typ = *(xchar *) arg;
     xchar x = dx, y = dy;
 
-    if (!IS_DOOR(levl[x][y].typ) && levl[x][y].typ != SDOOR)
-        levl[x][y].typ = (typ & D_SECRET) ? SDOOR : DOOR;
+    if (!IS_DOOR(lev_get(x, y).typ) && lev_get(x, y).typ != SDOOR)
+        ({ int _lv = ((typ & D_SECRET) ? SDOOR : DOOR); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
     if (typ & D_SECRET) {
         typ &= ~D_SECRET;
         if (typ < D_CLOSED)
             typ = D_CLOSED;
     }
     set_door_orientation(x, y); /* set/clear levl[x][y].horizontal */
-    levl[x][y].doormask = typ;
+    ({ int _lv = (typ); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
     SpLev_Map[x][y] = 1;
 }
 
@@ -4411,31 +4406,31 @@ struct opvar *ov;
     /* try to make a secret door */
     while (selection_rndcoord(ov3, &x, &y, TRUE)) {
         if (isok(x+1, y) && !selection_getpoint(x+1, y, ov)
-            && IS_WALL(levl[x+1][y].typ)
+            && IS_WALL(lev_get(x+1, y).typ)
             && isok(x+2, y) &&  selection_getpoint(x+2, y, ov)
-            && ACCESSIBLE(levl[x+2][y].typ)) {
-            levl[x+1][y].typ = SDOOR;
+            && ACCESSIBLE(lev_get(x+2, y).typ)) {
+            ({ int _lv = (SDOOR); int _lx = (x+1), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
             goto gotitdone;
         }
         if (isok(x-1, y) && !selection_getpoint(x-1, y, ov)
-            && IS_WALL(levl[x-1][y].typ)
+            && IS_WALL(lev_get(x-1, y).typ)
             && isok(x-2, y) &&  selection_getpoint(x-2, y, ov)
-            && ACCESSIBLE(levl[x-2][y].typ)) {
-            levl[x-1][y].typ = SDOOR;
+            && ACCESSIBLE(lev_get(x-2, y).typ)) {
+            ({ int _lv = (SDOOR); int _lx = (x-1), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
             goto gotitdone;
         }
         if (isok(x, y+1) && !selection_getpoint(x, y+1, ov)
-            && IS_WALL(levl[x][y+1].typ)
+            && IS_WALL(lev_get(x, y+1).typ)
             && isok(x, y+2) &&  selection_getpoint(x, y+2, ov)
-            && ACCESSIBLE(levl[x][y+2].typ)) {
-            levl[x][y+1].typ = SDOOR;
+            && ACCESSIBLE(lev_get(x, y+2).typ)) {
+            ({ int _lv = (SDOOR); int _lx = (x), _ly = (y+1); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
             goto gotitdone;
         }
         if (isok(x, y-1) && !selection_getpoint(x, y-1, ov)
-            && IS_WALL(levl[x][y-1].typ)
+            && IS_WALL(lev_get(x, y-1).typ)
             && isok(x, y-2) &&  selection_getpoint(x, y-2, ov)
-            && ACCESSIBLE(levl[x][y-2].typ)) {
-            levl[x][y-1].typ = SDOOR;
+            && ACCESSIBLE(lev_get(x, y-2).typ)) {
+            ({ int _lv = (SDOOR); int _lx = (x), _ly = (y-1); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
             goto gotitdone;
         }
     }
@@ -4495,7 +4490,7 @@ ensure_way_out()
         ret = TRUE;
         for (x = 0; x < COLNO; x++)
             for (y = 0; y < ROWNO; y++)
-                if (ACCESSIBLE(levl[x][y].typ)
+                if (ACCESSIBLE(lev_get(x, y).typ)
                     && !selection_getpoint(x, y, ov)) {
                     if (generate_way_out_method(x,y, ov))
                         selection_floodfill(ov, x,y, TRUE);
@@ -4755,9 +4750,9 @@ struct sp_coder *coder;
         impossible("spo_mazewalk: Bad MAZEWALK direction");
     }
 
-    if (!IS_DOOR(levl[x][y].typ)) {
-        levl[x][y].typ = OV_i(ftyp);
-        levl[x][y].flags = 0;
+    if (!IS_DOOR(lev_get(x, y).typ)) {
+        ({ int _lv = (OV_i(ftyp)); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
+        ({ int _lv = (0); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.flags = _lv; lev_put(_lx, _ly, _lr); _lr.flags; });
     }
 
     /*
@@ -4772,8 +4767,8 @@ struct sp_coder *coder;
             x--;
 
         /* no need for IS_DOOR check; out of map bounds */
-        levl[x][y].typ = OV_i(ftyp);
-        levl[x][y].flags = 0;
+        ({ int _lv = (OV_i(ftyp)); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
+        ({ int _lv = (0); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.flags = _lv; lev_put(_lx, _ly, _lr); _lr.flags; });
     }
 
     if (!(y % 2)) {
@@ -4996,36 +4991,36 @@ struct sp_coder *coder;
                                                   + (x - xstart)] - 1);
                 if (mptyp >= MAX_TYPE)
                     continue;
-                levl[x][y].typ = mptyp;
-                levl[x][y].lit = FALSE;
+                ({ int _lv = (mptyp); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
+                ({ int _lv = (FALSE); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.lit = _lv; lev_put(_lx, _ly, _lr); _lr.lit; });
                 /* clear out levl: load_common_data may set them */
-                levl[x][y].flags = 0;
-                levl[x][y].horizontal = 0;
-                levl[x][y].roomno = 0;
-                levl[x][y].edge = 0;
+                ({ int _lv = (0); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.flags = _lv; lev_put(_lx, _ly, _lr); _lr.flags; });
+                ({ int _lv = (0); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.horizontal = _lv; lev_put(_lx, _ly, _lr); _lr.horizontal; });
+                ({ int _lv = (0); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.roomno = _lv; lev_put(_lx, _ly, _lr); _lr.roomno; });
+                ({ int _lv = (0); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.edge = _lv; lev_put(_lx, _ly, _lr); _lr.edge; });
                 SpLev_Map[x][y] = 1;
                 /*
                  *  Set secret doors to closed (why not trapped too?).  Set
                  *  the horizontal bit.
                  */
-                if (levl[x][y].typ == SDOOR || IS_DOOR(levl[x][y].typ)) {
-                    if (levl[x][y].typ == SDOOR)
-                        levl[x][y].doormask = D_CLOSED;
+                if (lev_get(x, y).typ == SDOOR || IS_DOOR(lev_get(x, y).typ)) {
+                    if (lev_get(x, y).typ == SDOOR)
+                        ({ int _lv = (D_CLOSED); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
                     /*
                      *  If there is a wall to the left that connects to a
                      *  (secret) door, then it is horizontal.  This does
                      *  not allow (secret) doors to be corners of rooms.
                      */
-                    if (x != xstart && (IS_WALL(levl[x - 1][y].typ)
-                                        || levl[x - 1][y].horizontal))
-                        levl[x][y].horizontal = 1;
-                } else if (levl[x][y].typ == HWALL
-                           || levl[x][y].typ == IRONBARS)
-                    levl[x][y].horizontal = 1;
-                else if (levl[x][y].typ == LAVAPOOL)
-                    levl[x][y].lit = 1;
-                else if (splev_init_present && levl[x][y].typ == ICE)
-                    levl[x][y].icedpool = icedpools ? ICED_POOL : ICED_MOAT;
+                    if (x != xstart && (IS_WALL(lev_get(x - 1, y).typ)
+                                        || lev_get(x - 1, y).horizontal))
+                        ({ int _lv = (1); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.horizontal = _lv; lev_put(_lx, _ly, _lr); _lr.horizontal; });
+                } else if (lev_get(x, y).typ == HWALL
+                           || lev_get(x, y).typ == IRONBARS)
+                    ({ int _lv = (1); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.horizontal = _lv; lev_put(_lx, _ly, _lr); _lr.horizontal; });
+                else if (lev_get(x, y).typ == LAVAPOOL)
+                    ({ int _lv = (1); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.lit = _lv; lev_put(_lx, _ly, _lr); _lr.lit; });
+                else if (splev_init_present && lev_get(x, y).typ == ICE)
+                    ({ int _lv = (icedpools ? ICED_POOL : ICED_MOAT); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.icedpool = _lv; lev_put(_lx, _ly, _lr); _lr.icedpool; });
             }
         if (coder->lvl_is_joined)
             remove_rooms(xstart, ystart, xstart + xsize, ystart + ysize);
@@ -5894,7 +5889,7 @@ sp_lev *lvl;
                 struct opvar *pt = selection_opvar((char *) 0);
 
                 set_selection_floodfillchk(floodfillchk_match_under);
-                floodfillchk_match_under_typ = levl[x][y].typ;
+                floodfillchk_match_under_typ = lev_get(x, y).typ;
                 selection_floodfill(pt, x, y, FALSE);
                 splev_stack_push(coder->stack, pt);
             }

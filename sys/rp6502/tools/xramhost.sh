@@ -1,8 +1,10 @@
 #!/bin/sh
-# Build the host game with the monster table at a fake XRAM address, to test
-# the pm_get() conversion without the target. Every module except monst.c
-# sees mons as an unmapped address (direct accesses crash) and reads records
-# through rp6502xram_host.c, which aborts on a non-table pointer.
+# Build the host game with the monster, object and level tables behind checked
+# XRAM accessors, to test the pm_get(), oc_get() and lev_get() conversions
+# without the target. Every module except the table sources sees the tables as
+# unmapped addresses (direct accesses crash). Reads and writes go through
+# rp6502xram_host.c, which aborts on a non-table pointer or a cell outside the
+# level map.
 #
 #   xramhost.sh [OUTDIR]      default OUTDIR: build/hostxram
 #
@@ -20,7 +22,7 @@ OUT=$(cd "$OUT" && pwd)
 
 "$TOOLS/hostgen.sh" "$SRC" "$OUT/gen" data
 
-CFLAGS="-O1 -g -w -DRP6502 -DRP6502_HOST -DRP6502_MONS_XRAM -DMSG_CHECK -fno-pie"
+CFLAGS="-O1 -g -w -DRP6502 -DRP6502_HOST -DRP6502_MONS_XRAM -DRP6502_LEV_XRAM -DMSG_CHECK -fno-pie"
 CFLAGS="$CFLAGS -I$OUT/gen/include -I$SRC/include"
 # String literals in function bodies are read from msg.idx/msg.dat, and every
 # fetch is checked against its literal (see include/msg.h).
