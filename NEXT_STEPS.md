@@ -147,20 +147,16 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
    the target `nethack_objs` build pass with the flag off.
 
    Still to do before the flag can be turned on for the game:
-   - Direct permonst accesses: about 330 `->` sites left in `src/` (after
-     mondata.c, makemon.c, mon.c, mhitu.c, and uhitm.c). Most of the rest are
-     in polyself.c, sounds.c, monmove.c, trap.c, mhitm.c, dogmove.c, eat.c,
-     role.c, hack.c, apply.c, muse.c, read.c, and similar files.
+   - Direct permonst and objclass accesses are converted across `src/`
+     (`pm_get()`, `pm_name()`, and `oc_get()`/`oc_set()`). Remaining direct
+     reads are intentional local copies, `#if 0` blocks, or comments. With
+     `-DRP6502_XRAM_TABLES=ON`, all 117 modules compile for llvm-mos.
    - Local copies of a permonst (for example `pm_copy` in passive() and
      passive_obj(), and `ymon` in attack()) must never be passed to pm_get().
      The XRAM image base overlaps program RAM, so a range check cannot tell
      a local copy from a table pointer. Only table pointers may reach pm_get().
-   - Verification gap: the full game is not linked for the target, and the
-     host build never uses XRAM, so nothing runs the converted code with the
-     table in XRAM. Before converting more, add a host build mode where mons
-     lives at an unmapped fake base and pm_get() asserts its argument is in
-     the fake range. Then autoplay will catch any missed direct access.
-   - The 9 permonst writes need write-back (`pm_put`) or a RAM-side design.
+     The host harness aborts on any such pointer, and autoplay runs it.
+   - The 9 permonst writes use `pm_put`; `role.c` is the only caller.
    - The XRAM image rule exists and is proven by `xramtest`. The map is
      [xram.h](include/xram.h), CMake reads `MONS_XRAM_ADDR` from it, and the
      link writes `mons.bin` (a byproduct, `rp6502_byproduct`) with
@@ -179,10 +175,10 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
      `mons.bin` is 382 records of 52 bytes. The target `xramtest` output
      (monster sums with names, flags, and objects) matches the host run.
      `pm_index()` aborts in the host harness on a non-table pointer.
-   - Harness status: the XRAM host harness passes role_init and stops at
-     polyself.c:77 (set_uasmon). `polyself.c` has about 74 sites, several
-     through local `mdat`/`mptr` pointers, so convert the whole file in one
-     pass, then rerun the harness.
+   - Harness status: the XRAM host harness (`xramhost.sh`) builds the whole game
+     with the tables at fake addresses, and autoplay runs it without aborts
+     (normal, wizard-mode, and seed 5 runs). Its aborts name any direct access
+     that was missed.
    - objclass (`objects[]`): converted to `oc_get()`/`oc_put()`/`oc_set()`
      across `src/` and `include/obj.h`, `objclass.h`, and `hack.h`. The table
      is a plain extern; with `RP6502_MONS_XRAM` the link gives the symbol

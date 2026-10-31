@@ -6,6 +6,10 @@ include(${CMAKE_CURRENT_LIST_DIR}/tools/rp6502.cmake)
 
 project(NETHACK-RP6502 C ASM)
 
+# Build the game with mons[] and objects[] in XRAM (see include/rp6502xram.h).
+# The game does not link yet; this compiles the modules with the accessors.
+option(RP6502_XRAM_TABLES "Compile the game with mons[] and objects[] in XRAM" OFF)
+
 # Milestone 1: console/DECgraphics/keyboard test ROM.
 add_executable(dectest)
 rp6502_asset(dectest help sys/rp6502/dectest.txt)
@@ -60,6 +64,16 @@ if(DEFINED LLVM_MOS_PLATFORM)
     # out of line, so no function is too big for an overlay slot.
     target_compile_options(nethack_objs PRIVATE -Oz -fno-inline -fno-lto
         -ffunction-sections -fdata-sections)
+    if(RP6502_XRAM_TABLES)
+        # The two table sources define their arrays under RAM names, which
+        # only the image tools (xramtest) use, and the rest of the game sees
+        # the XRAM views.
+        set_source_files_properties(src/monst.c PROPERTIES COMPILE_DEFINITIONS
+            "RP6502_MONS_RAM;mons=rp6502_ram_mons")
+        set_source_files_properties(src/objects.c PROPERTIES COMPILE_DEFINITIONS
+            "RP6502_MONS_RAM;objects=rp6502_ram_objects")
+        target_compile_definitions(nethack_objs PRIVATE RP6502_MONS_XRAM)
+    endif()
 
     # Prototype: mons[] copied to XRAM and read back through the fetch cache.
     # monst.c is built with mons renamed, so the test has a RAM copy to load.
