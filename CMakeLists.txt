@@ -142,4 +142,20 @@ if(DEFINED LLVM_MOS_PLATFORM)
     target_compile_definitions(xramtest PRIVATE RP6502 RP6502_MONS_XRAM)
     target_compile_options(xramtest PRIVATE -Oz -fno-inline -fno-lto
         -ffunction-sections -fdata-sections)
+
+    # The whole game as one program, to measure what the link needs. There are
+    # no data assets yet, so it cannot run; the link reports what does not fit.
+    add_executable(nethack EXCLUDE_FROM_ALL)
+    add_dependencies(nethack nethack_objs)
+    target_sources(nethack PRIVATE $<TARGET_OBJECTS:nethack_objs>)
+    target_include_directories(nethack PRIVATE ${NH_GEN}/include include)
+    target_compile_definitions(nethack PRIVATE RP6502)
+    target_compile_options(nethack PRIVATE -Oz -fno-inline -fno-lto
+        -ffunction-sections -fdata-sections)
+    rp6502_executable(nethack DATA default RESET default)
+    if(RP6502_XRAM_TABLES)
+        target_sources(nethack PRIVATE sys/rp6502/rp6502xram.c)
+        target_compile_definitions(nethack PRIVATE RP6502_MONS_XRAM)
+        target_link_options(nethack PRIVATE -Wl,--defsym,objects=${OBJS_XRAM_ADDR})
+    endif()
 endif()

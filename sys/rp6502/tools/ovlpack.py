@@ -629,7 +629,7 @@ def cmd_emit(argv):
     asmdir, planfile, out = argv[0], argv[1], argv[2]
     with open(planfile) as f:
         plan = json.load(f)
-    cfg = {'desc_xram': int(str(plan.get('desc_xram', 0x8000)), 0),
+    cfg = {'desc_xram': int(str(plan.get('desc_xram', 0xA000)), 0),
            'dir_xram': int(str(plan.get('dir_xram', 0xC000)), 0)}
     prog = Program(load_modules(asmdir))
     ovls = load_plan(prog, plan)

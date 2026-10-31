@@ -3,8 +3,21 @@
 #include "permonst.h"
 #include "objclass.h"
 #include "rp6502xram.h"
+#include "pm.h"     /* NUMMONS */
+#include "onames.h" /* NUM_OBJECTS */
 #include <rp6502.h>
 #include <stdint.h>
+
+/* The XRAM map (include/xram.h) must keep the tables apart. Each array has a
+ * terminator record past NUMMONS / NUM_OBJECTS. */
+_Static_assert(MONS_XRAM_ADDR + (NUMMONS + 1) * sizeof(struct permonst)
+                   <= OBJS_XRAM_ADDR,
+               "mons[] overlaps objects[] in XRAM");
+_Static_assert(OBJS_XRAM_ADDR + (NUM_OBJECTS + 1) * sizeof(struct objclass)
+                   <= OVL_DESC_XRAM,
+               "objects[] overlaps the overlay descriptor in XRAM");
+_Static_assert(OVL_DESC_XRAM < OVL_DIR_XRAM,
+               "overlay descriptor overlaps the directory in XRAM");
 
 #define PM_SLOTS 4
 

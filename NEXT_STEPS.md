@@ -184,21 +184,32 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
      is a plain extern; with `RP6502_MONS_XRAM` the link gives the symbol
      `OBJS_XRAM_ADDR` (`--defsym`), and the host harness does the same with
      `-no-pie`. `xramtest` also writes `objects.bin` and checks it on target.
-   - Still open: there is no game executable target in CMake yet, only
-     `nethack_objs` and the XRAM test targets. Linking the game is part of
-     priorities 3 and 4 (memory budget and overlays), and the flag-on game
-     needs the two `--defsym` links and both image assets.
+   - Measured by linking the whole game (`--target nethack`, excluded from
+     `all` because it cannot link yet). Both configurations fail only on
+     region overflow, with no undefined symbols. Sum of the modules' sections,
+     before placement:
+       flag off: .text 2605019, .rodata 292845, .data 40690, .bss 67137
+       XRAM tables: .text 2665371 (+60 KB accessor code), .rodata 292729,
+         .data 40690 in the objects (the table copies are dropped by the
+         link, which the placement overflow confirms: 31668 bytes less data),
+         .bss 67451.
+     So the game needs about 2.6 MB of code (overlays) and about 293 KB of
+     rodata, most of it strings. The rodata is the next RAM problem to plan
+     for: it would need XRAM placement or a smaller string set.
 3. **Budget the rest of memory.** Moving both tables alone will not make the
    measured unlinked data fit. Investigate `level`, room and display buffers,
    vision data, heap, stack, resident code, and overlay slots; measure the
    actual linked footprint as sections are eliminated or moved.
-   Measured on the object files (llvm-size, `nethack_objs`): `.data` totals
-   40542 bytes with the tables in RAM, and 8874 bytes without them (the
-   monster table is 19864 bytes and the object table 11804 bytes; in the
-   XRAM build these rename copies are unreferenced, and `xramtest` already
-   shows the linker drops them). `.bss` is 65931 bytes in both builds, and
-   `.rodata` strings (about 11.7 KB) stay in RAM. The game link is the real
-   test of these numbers.
+   XRAM map (defined in [xram.h](include/xram.h)): `mons[]` at $1000
+   (19864 bytes), `objects[]` at $6100 (11804 bytes, ending at $8F1B). The
+   overlay descriptor default was $8000, which overlapped `objects[]`; it is
+   now $A000 in `ovlpack.py`, with the directory at $C000. Compile-time checks
+   in [rp6502xram.c](sys/rp6502/rp6502xram.c) keep the tables apart. The SDK
+   reserves no XRAM; device areas (keyboard, sound, video) must be added to
+   the map before the program maps them.
+   Measured with the whole-game link (see priority 2): the game needs about
+   2.6 MB of code and about 293 KB of rodata, mostly strings, and the XRAM
+   tables remove 31668 bytes of linked data (`.bss` is about 67 KB in both).
 4. **Complete overlay packing and integration.** Implement a profile-guided
    partitioner for `ovlpack.py`, choose a RAM/slot budget, and split functions
    that exceed the chosen slot size. Test relocation, pointer lifetimes,
