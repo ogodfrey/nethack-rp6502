@@ -1080,7 +1080,17 @@ boolean ghostly;
     restcemetery(fd, &level.bonesinfo);
     rest_levl(fd,
               (boolean) ((sfrestinfo.sfi1 & SFI1_RLECOMP) == SFI1_RLECOMP));
-    mread(fd, (genericptr_t) lastseentyp, sizeof(lastseentyp));
+    {
+        /* one column at a time: the same bytes as the whole array */
+        schar col[ROWNO];
+        int x, y;
+
+        for (x = 0; x < COLNO; x++) {
+            mread(fd, (genericptr_t) col, sizeof col);
+            for (y = 0; y < ROWNO; y++)
+                lst_put(x, y, col[y]);
+        }
+    }
     mread(fd, (genericptr_t) &omoves, sizeof(omoves));
     elapsed = monstermoves - omoves;
     mread(fd, (genericptr_t) &upstair, sizeof(stairway));

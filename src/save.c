@@ -534,7 +534,17 @@ int mode;
         goto skip_lots;
 
     savelevl(fd, (boolean) ((sfsaveinfo.sfi1 & SFI1_RLECOMP) == SFI1_RLECOMP));
-    bwrite(fd, (genericptr_t) lastseentyp, sizeof lastseentyp);
+    {
+        /* one column at a time: the same bytes as the whole array */
+        schar col[ROWNO];
+        int x, y;
+
+        for (x = 0; x < COLNO; x++) {
+            for (y = 0; y < ROWNO; y++)
+                col[y] = lst_get(x, y);
+            bwrite(fd, (genericptr_t) col, sizeof col);
+        }
+    }
     bwrite(fd, (genericptr_t) &monstermoves, sizeof monstermoves);
     bwrite(fd, (genericptr_t) &upstair, sizeof (stairway));
     bwrite(fd, (genericptr_t) &dnstair, sizeof (stairway));

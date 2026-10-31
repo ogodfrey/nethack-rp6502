@@ -192,7 +192,9 @@ extern struct engr *head_engr;
 extern int min_rx, max_rx, min_ry, max_ry; /* from mkmap.c */
 
 /* positions touched by level elements explicitly defined in the des-file */
+#ifndef RP6502_LEV_XRAM
 static char SpLev_Map[COLNO][ROWNO];
+#endif
 
 static aligntyp ralign[3] = { AM_CHAOTIC, AM_NEUTRAL, AM_LAWFUL };
 static NEARDATA xchar xstart, ystart;
@@ -219,7 +221,7 @@ solidify_map()
 
     for (x = 0; x < COLNO; x++)
         for (y = 0; y < ROWNO; y++)
-            if (IS_STWALL(lev_get(x, y).typ) && !SpLev_Map[x][y])
+            if (IS_STWALL(lev_get(x, y).typ) && !splm_get(x, y))
                 ({ int _lv = ((W_NONDIGGABLE | W_NONPASSWALL)); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.wall_info |= _lv; lev_put(_lx, _ly, _lr); _lr.wall_info; });
 }
 
@@ -711,7 +713,7 @@ remove_boundary_syms()
     if (has_bounds) {
         for (x = 0; x < x_maze_max; x++)
             for (y = 0; y < y_maze_max; y++)
-                if ((lev_get(x, y).typ == CROSSWALL) && SpLev_Map[x][y])
+                if ((lev_get(x, y).typ == CROSSWALL) && splm_get(x, y))
                     ({ int _lv = (ROOM); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
     }
 }
@@ -2598,7 +2600,7 @@ int humidity;
         y = rn1(y_maze_max - 3, 3);
         if (--tryct < 0)
             break; /* give up */
-    } while (!(x % 2) || !(y % 2) || SpLev_Map[x][y]
+    } while (!(x % 2) || !(y % 2) || splm_get(x, y)
              || !is_ok_location((schar) x, (schar) y, humidity));
 
     m->x = (xchar) x, m->y = (xchar) y;
@@ -2623,7 +2625,7 @@ fill_empty_maze()
 
     for (x = 2; x < x_maze_max; x++)
         for (y = 0; y < y_maze_max; y++)
-            if (SpLev_Map[x][y])
+            if (splm_get(x, y))
                 mapcount--;
 
     if ((mapcount > (int) (mapcountmax / 10))) {
@@ -3480,7 +3482,7 @@ struct sp_coder *coder;
     if ((badtrap = t_at(x, y)) != 0)
         deltrap(badtrap);
     mkstairs(x, y, (char) OV_i(up), coder->croom);
-    SpLev_Map[x][y] = 1;
+    splm_put(x, y, 1);
 
     opvar_free(scoord);
     opvar_free(up);
@@ -3500,7 +3502,7 @@ struct sp_coder *coder;
     get_location_coord(&x, &y, DRY, coder->croom, OV_i(lcoord));
 
     ({ int _lv = (LADDER); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
-    SpLev_Map[x][y] = 1;
+    splm_put(x, y, 1);
     if (OV_i(up)) {
         xupladder = x;
         yupladder = y;
@@ -4284,7 +4286,7 @@ genericptr_t arg;
     }
     set_door_orientation(x, y); /* set/clear levl[x][y].horizontal */
     ({ int _lv = (typ); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.doormask = _lv; lev_put(_lx, _ly, _lr); _lr.doormask; });
-    SpLev_Map[x][y] = 1;
+    splm_put(x, y, 1);
 }
 
 void
@@ -4702,7 +4704,7 @@ struct sp_coder *coder;
         dopen = !rn2(2);
     if (!create_drawbridge(x, y, OV_i(dir), dopen ? TRUE : FALSE))
         impossible("Cannot create drawbridge.");
-    SpLev_Map[x][y] = 1;
+    splm_put(x, y, 1);
 
     opvar_free(dcoord);
     opvar_free(db_open);
@@ -4998,7 +5000,7 @@ struct sp_coder *coder;
                 ({ int _lv = (0); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.horizontal = _lv; lev_put(_lx, _ly, _lr); _lr.horizontal; });
                 ({ int _lv = (0); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.roomno = _lv; lev_put(_lx, _ly, _lr); _lr.roomno; });
                 ({ int _lv = (0); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.edge = _lv; lev_put(_lx, _ly, _lr); _lr.edge; });
-                SpLev_Map[x][y] = 1;
+                splm_put(x, y, 1);
                 /*
                  *  Set secret doors to closed (why not trapped too?).  Set
                  *  the horizontal bit.
@@ -5335,7 +5337,7 @@ sp_lev *lvl;
 
     invent_carrying_monster = NULL;
 
-    (void) memset((genericptr_t) &SpLev_Map[0][0], 0, sizeof SpLev_Map);
+    splm_clear();
 
     level.flags.is_maze_lev = 0;
 

@@ -138,4 +138,47 @@ rpl_clear(void)
 {
     memset(rp6502_lev_image, 0, sizeof rp6502_lev_image);
 }
+
+static schar rp6502_lst_image[COLNO][ROWNO];
+static char rp6502_splm_image[COLNO][ROWNO];
+
+schar
+rpl_lst_get(int x, int y)
+{
+    lev_check(x, y, "lst_get");
+    return rp6502_lst_image[x][y];
+}
+
+void
+rpl_lst_put(int x, int y, schar v)
+{
+    lev_check(x, y, "lst_put");
+    rp6502_lst_image[x][y] = v;
+}
+
+void
+rpl_lst_clear(void)
+{
+    memset(rp6502_lst_image, 0, sizeof rp6502_lst_image);
+}
+
+char
+rpl_splm_get(int x, int y)
+{
+    lev_check(x, y, "splm_get");
+    return rp6502_splm_image[x][y];
+}
+
+void
+rpl_splm_put(int x, int y, char v)
+{
+    lev_check(x, y, "splm_put");
+    rp6502_splm_image[x][y] = v;
+}
+
+void
+rpl_splm_clear(void)
+{
+    memset(rp6502_splm_image, 0, sizeof rp6502_splm_image);
+}
 #endif /* RP6502_LEV_XRAM */

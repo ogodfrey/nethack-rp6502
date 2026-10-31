@@ -10,8 +10,12 @@
 #include <rp6502.h>
 
 _Static_assert(LEV_XRAM_ADDR + COLNO * ROWNO * sizeof(struct rm)
-                   <= OVL_DESC_XRAM,
-               "the level map overlaps the overlay descriptor in XRAM");
+                   <= LST_XRAM_ADDR,
+               "the level map overlaps lastseentyp in XRAM");
+_Static_assert(LST_XRAM_ADDR + COLNO * ROWNO <= SPLM_XRAM_ADDR,
+               "lastseentyp overlaps SpLev_Map in XRAM");
+_Static_assert(SPLM_XRAM_ADDR + COLNO * ROWNO <= OVL_DESC_XRAM,
+               "SpLev_Map overlaps the overlay descriptor in XRAM");
 
 #define LEV_ADDR(x, y) \
     ((unsigned) (LEV_XRAM_ADDR + ((x) * ROWNO + (y)) * sizeof(struct rm)))
@@ -41,4 +45,56 @@ rpl_clear(void)
 
     for (x = 0; x < COLNO; x++)
         xram0_write(LEV_ADDR(x, 0), zero, sizeof zero);
+}
+
+#define BYTE_ADDR(base, x, y) ((unsigned) ((base) + (x) * ROWNO + (y)))
+
+schar
+rpl_lst_get(int x, int y)
+{
+    schar v;
+
+    xram0_read(&v, BYTE_ADDR(LST_XRAM_ADDR, x, y), 1);
+    return v;
+}
+
+void
+rpl_lst_put(int x, int y, schar v)
+{
+    xram0_write(BYTE_ADDR(LST_XRAM_ADDR, x, y), &v, 1);
+}
+
+void
+rpl_lst_clear(void)
+{
+    static const unsigned char zero[ROWNO];
+    int x;
+
+    for (x = 0; x < COLNO; x++)
+        xram0_write(BYTE_ADDR(LST_XRAM_ADDR, x, 0), zero, sizeof zero);
+}
+
+char
+rpl_splm_get(int x, int y)
+{
+    char v;
+
+    xram0_read(&v, BYTE_ADDR(SPLM_XRAM_ADDR, x, y), 1);
+    return v;
+}
+
+void
+rpl_splm_put(int x, int y, char v)
+{
+    xram0_write(BYTE_ADDR(SPLM_XRAM_ADDR, x, y), &v, 1);
+}
+
+void
+rpl_splm_clear(void)
+{
+    static const unsigned char zero[ROWNO];
+    int x;
+
+    for (x = 0; x < COLNO; x++)
+        xram0_write(BYTE_ADDR(SPLM_XRAM_ADDR, x, 0), zero, sizeof zero);
 }

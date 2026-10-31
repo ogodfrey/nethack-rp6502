@@ -676,11 +676,11 @@ int x, y;
     portcullis = (is_drawbridge_wall(cc.x, cc.y) >= 0);
     if (Blind) {
         int oldglyph = lev_get(cc.x, cc.y).glyph;
-        schar oldlastseentyp = lastseentyp[cc.x][cc.y];
+        schar oldlastseentyp = lst_get(cc.x, cc.y);
 
         feel_location(cc.x, cc.y);
         if (lev_get(cc.x, cc.y).glyph != oldglyph
-            || lastseentyp[cc.x][cc.y] != oldlastseentyp)
+            || lst_get(cc.x, cc.y) != oldlastseentyp)
             res = 1; /* learned something */
     }
 
@@ -822,10 +822,10 @@ doclose()
     portcullis = (is_drawbridge_wall(x, y) >= 0);
     if (Blind) {
         int oldglyph = lev_get(x, y).glyph;
-        schar oldlastseentyp = lastseentyp[x][y];
+        schar oldlastseentyp = lst_get(x, y);
 
         feel_location(x, y);
-        if (lev_get(x, y).glyph != oldglyph || lastseentyp[x][y] != oldlastseentyp)
+        if (lev_get(x, y).glyph != oldglyph || lst_get(x, y) != oldlastseentyp)
             res = 1; /* learned something */
     }
 

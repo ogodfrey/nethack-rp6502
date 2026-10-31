@@ -632,8 +632,6 @@ typedef struct {
     struct levelflags flags;
 } dlevel_t;
 
-extern schar lastseentyp[COLNO][ROWNO]; /* last seen/touched dungeon typ */
-
 extern dlevel_t level; /* structure describing the current level */
 
 /*
@@ -641,16 +639,40 @@ extern dlevel_t level; /* structure describing the current level */
  * so the map can live in RAM or in XRAM (RP6502_LEV_XRAM, see
  * sys/rp6502/rp6502lev.c). Use a local copy of the cell for several accesses:
  *     struct rm r = lev_get(x, y);  ...  lev_put(x, y, r);
+ * The same goes for the two byte maps: lst_get()/lst_put() for
+ * lastseentyp[][] and splm_get()/splm_put() for SpLev_Map[][]; lst_clear()
+ * and splm_clear() zero them.
  */
 #ifdef RP6502_LEV_XRAM
 struct rm rpl_get(int x, int y);
 void rpl_put(int x, int y, struct rm v);
 void rpl_clear(void);
+schar rpl_lst_get(int x, int y);
+void rpl_lst_put(int x, int y, schar v);
+void rpl_lst_clear(void);
+char rpl_splm_get(int x, int y);
+void rpl_splm_put(int x, int y, char v);
+void rpl_splm_clear(void);
 #define lev_get(x, y) rpl_get((x), (y))
 #define lev_put(x, y, v) rpl_put((x), (y), (v))
+#define lst_get(x, y) rpl_lst_get((x), (y))
+#define lst_put(x, y, v) rpl_lst_put((x), (y), (v))
+#define lst_clear() rpl_lst_clear()
+#define splm_get(x, y) rpl_splm_get((x), (y))
+#define splm_put(x, y, v) rpl_splm_put((x), (y), (v))
+#define splm_clear() rpl_splm_clear()
 #else
 #define lev_get(x, y) (level.locations[(x)][(y)])
 #define lev_put(x, y, v) (level.locations[(x)][(y)] = (v))
+extern schar lastseentyp[COLNO][ROWNO]; /* last seen/touched dungeon typ */
+#define lst_get(x, y) (lastseentyp[(x)][(y)])
+#define lst_put(x, y, v) (lastseentyp[(x)][(y)] = (v))
+#define lst_clear() \
+    (void) memset((genericptr_t) lastseentyp, 0, sizeof lastseentyp)
+#define splm_get(x, y) (SpLev_Map[(x)][(y)])
+#define splm_put(x, y, v) (SpLev_Map[(x)][(y)] = (v))
+#define splm_clear() \
+    (void) memset((genericptr_t) SpLev_Map, 0, sizeof SpLev_Map)
 #endif
 
 /*

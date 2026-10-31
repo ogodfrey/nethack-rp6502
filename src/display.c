@@ -146,7 +146,7 @@ STATIC_DCL void FDECL(set_seenv, (int, int, int, int));
 STATIC_DCL void FDECL(t_warn, (int, int));
 STATIC_DCL int FDECL(wall_angle, (int, int));
 
-#define remember_topology(x, y) (lastseentyp[x][y] = lev_get(x, y).typ)
+#define remember_topology(x, y) lst_put((x), (y), lev_get((x), (y)).typ)
 
 /*
  * magic_map_background()
@@ -440,7 +440,7 @@ xchar worm_tail;            /* mon is actually a worm tail */
             if (!sensed) {
                 show_glyph(x, y, glyph);
                 /* override real topology with mimic's fake one */
-                lastseentyp[x][y] = cmap_to_type(sym);
+                lst_put(x, y, cmap_to_type(sym));
             }
             break;
         }

@@ -2337,7 +2337,7 @@ d_level *lev;
     init->final_resting_place = 0;
     /* lastseentyp[][] is reused for each level, so get rid of
        previous level's data */
-    (void) memset((genericptr_t) lastseentyp, 0, sizeof lastseentyp);
+    lst_clear();
 
     init->lev.dnum = lev->dnum;
     init->lev.dlevel = lev->dlevel;
@@ -2528,10 +2528,10 @@ recalc_mapseen()
                 if ((mtmp = m_at(x, y)) != 0
                     && M_AP_TYPE(mtmp) == M_AP_FURNITURE && canseemon(mtmp))
                     ltyp = cmap_to_type(mtmp->mappearance);
-                lastseentyp[x][y] = ltyp;
+                lst_put(x, y, ltyp);
             }
 
-            switch (lastseentyp[x][y]) {
+            switch (lst_get(x, y)) {
 #if 0
             case ICE:
                 count = mptr->feat.ice + 1;
@@ -2655,7 +2655,7 @@ recalc_mapseen()
        guarantee of either a grave or a ghost, so we go by whether the
        current hero has seen the map location where each old one died */
     for (bp = mptr->final_resting_place; bp; bp = bp->next)
-        if (lastseentyp[bp->frpx][bp->frpy]) {
+        if (lst_get(bp->frpx, bp->frpy)) {
             bp->bonesknown = TRUE;
             mptr->flags.knownbones = 1;
         }

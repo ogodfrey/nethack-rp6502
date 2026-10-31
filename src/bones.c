@@ -491,7 +491,7 @@ struct obj *corpse;
             ({ int _lv = (0); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.seenv = _lv; lev_put(_lx, _ly, _lr); _lr.seenv; });
             ({ int _lv = (0); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.waslit = _lv; lev_put(_lx, _ly, _lr); _lr.waslit; });
             ({ int _lv = (cmap_to_glyph(S_stone)); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.glyph = _lv; lev_put(_lx, _ly, _lr); _lr.glyph; });
-            lastseentyp[x][y] = 0;
+            lst_put(x, y, 0);
         }
 
     /* Attach bones info to the current level before saving. */

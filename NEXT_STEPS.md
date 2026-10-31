@@ -228,8 +228,9 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
    type changes).
    XRAM map (defined in [xram.h](include/xram.h)): `mons[]` at $1000
    (19864 bytes), `objects[]` at $6100 (11804 bytes, ending at $8F1B), the
-   level map at $9000 (10080 bytes), the overlay directory at $0000 and the
-   overlay descriptor at $D200. The earlier overlay defaults ($8000 for the
+   level map at $9000 (10080 bytes), `lastseentyp` at $B7A0 and `SpLev_Map`
+   at $BE30 (1680 bytes each), the overlay directory at $0000 and the overlay
+   descriptor at $D200. The earlier overlay defaults ($8000 for the
    descriptor, $A000/$C000 for the directory and descriptor) overlapped the
    tables, so they moved. Compile-time checks in
    [rp6502xram.c](sys/rp6502/rp6502xram.c) and
@@ -250,11 +251,15 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
    state). Verified: the host RAM build, the XRAM host harness (autoplay seeds
    1, 2, 4, 5, 6 without aborts), and the target objects with the XRAM tables
    (`nethack_objs`, `nethack` compile; link fails only on region overflow).
-   `.bss` for the XRAM tables is about 58 KB (was 67 KB). The `level` symbol is
-   now 6735 bytes: the per-cell object and monster list heads (3360 bytes each,
-   pointers to RAM structures) remain in RAM and need a separate design. The
-   overlay descriptor moved to $D200 and the directory to $0000 (ovlpack.py
-   checks both fit).
+   `.bss` for the XRAM tables is about 55 KB (was 67 KB). `lastseentyp[][]`
+   ($B7A0) and `SpLev_Map[][]` ($BE30) also moved, one byte per cell, through
+   `lst_get`/`lst_put` and `splm_get`/`splm_put`. Save and restore write and
+   read the maps one column at a time, the same bytes as before; a save and a
+   restore round trip on the XRAM host build works. Still in RAM: `gbuf`
+   (5 KB), the vision arrays (`could_see`, `viz_clear`, `left_ptrs`,
+   `right_ptrs`, `cs_rows0/1`, about 12 KB), `rooms` (5 KB), `obufs` (3 KB) and
+   `status_hilites` (2 KB), and the per-cell object and monster list heads
+   (3360 bytes each, pointers to RAM structures, which need a separate design).
    2.6 MB of code and about 293 KB of rodata, mostly strings, and the XRAM
    tables remove 31668 bytes of linked data (`.bss` is about 67 KB in both).
 4. **Complete overlay packing and integration.** Implement a profile-guided

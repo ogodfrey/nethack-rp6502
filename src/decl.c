@@ -142,9 +142,11 @@ NEARDATA struct you u = DUMMY;
 NEARDATA time_t ubirthday = DUMMY;
 NEARDATA struct u_realtime urealtime = DUMMY;
 
+#ifndef RP6502_LEV_XRAM
 schar lastseentyp[COLNO][ROWNO] = {
     DUMMY
 }; /* last seen/touched dungeon typ */
+#endif
 
 NEARDATA struct obj
     *invent = (struct obj *) 0,

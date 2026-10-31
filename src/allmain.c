@@ -584,6 +584,8 @@ newgame()
 #endif
 #ifdef RP6502_LEV_XRAM
     rpl_clear(); /* the level map starts zeroed, as RAM does */
+    rpl_lst_clear();
+    rpl_splm_clear();
 #endif
 
     context.botlx = TRUE;

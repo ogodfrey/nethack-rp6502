@@ -809,7 +809,7 @@ int howmuch;
                 ({ int _lv = (0); int _lx = (zx), _ly = (zy); struct rm _lr = lev_get(_lx, _ly); _lr.seenv = _lv; lev_put(_lx, _ly, _lr); _lr.seenv; });
                 ({ int _lv = (0); int _lx = (zx), _ly = (zy); struct rm _lr = lev_get(_lx, _ly); _lr.waslit = _lv; lev_put(_lx, _ly, _lr); _lr.waslit; });
                 ({ int _lv = (cmap_to_glyph(S_stone)); int _lx = (zx), _ly = (zy); struct rm _lr = lev_get(_lx, _ly); _lr.glyph = _lv; lev_put(_lx, _ly, _lr); _lr.glyph; });
-                lastseentyp[zx][zy] = STONE;
+                lst_put(zx, zy, STONE);
             }
     /* forget overview data for this level */
     forget_mapseen(ledger_no(&u.uz));

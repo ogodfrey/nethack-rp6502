@@ -1882,7 +1882,7 @@ int default_glyph, which_subset;
             || glyph_is_invisible(glyph)) {
             if (!seenv) {
                 glyph = default_glyph;
-            } else if (lastseentyp[x][y] == lev_get(x, y).typ) {
+            } else if (lst_get(x, y) == lev_get(x, y).typ) {
                 glyph = back_to_glyph(x, y);
             } else {
                 /* look for a mimic here posing as furniture;
@@ -1900,7 +1900,7 @@ int default_glyph, which_subset;
                        but we've got no other choice) */
                     schar save_typ = lev_get(x, y).typ;
 
-                    ({ int _lv = (lastseentyp[x][y]); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
+                    ({ int _lv = (lst_get(x, y)); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
                     glyph = back_to_glyph(x, y);
                     ({ int _lv = (save_typ); int _lx = (x), _ly = (y); struct rm _lr = lev_get(_lx, _ly); _lr.typ = _lv; lev_put(_lx, _ly, _lr); _lr.typ; });
                 }
