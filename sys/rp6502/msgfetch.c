@@ -2,9 +2,9 @@
  *
  * The tables are msg.idx (little-endian uint32 offsets into msg.dat, one more
  * entry than there are strings) and msg.dat (the strings, each with its NUL).
- * The files are opened from MSG_DIR, which is "" on the target (the program's
- * directory) and the play directory in host builds. Only POSIX calls are used,
- * so the same code runs on both.
+ * The files are opened from the play directory (NETHACKDIR) on the host, and
+ * from MSG_DIR on the target (for example the null drive ":"). Only POSIX
+ * calls are used, so the same code runs on both.
  */
 #include "config.h"
 #include "msg.h"
@@ -15,7 +15,7 @@
 #include <unistd.h>
 
 #ifndef MSG_DIR
-#define MSG_DIR ""
+#define MSG_DIR "" /* the target sets this, for example to the null drive ":" */
 #endif
 #define MSG_SLOTS 8
 #define MSG_MAX 128 /* longest string in the table is 119 characters */
@@ -24,6 +24,7 @@ static int idx_fd = -1;
 static int dat_fd = -1;
 static char slot[MSG_SLOTS][MSG_MAX];
 static unsigned char next_slot;
+static unsigned msg_total;
 
 static void
 msg_fatal(const char *what, unsigned id)
@@ -32,19 +33,48 @@ msg_fatal(const char *what, unsigned id)
     abort();
 }
 
+/* The path of a table file: the play directory on the host, MSG_DIR on the
+ * target (which has no environment). */
+static void
+msg_path(char *path, const char *name)
+{
+#ifdef RP6502_HOST
+    const char *dir = getenv("NETHACKDIR");
+
+    strcpy(path, (dir && *dir) ? dir : ".");
+    strcat(path, "/");
+#else
+    strcpy(path, MSG_DIR);
+#endif
+    strcat(path, name);
+}
+
 static void
 msg_open(void)
 {
-    char path[80];
+    char path[128];
+    long idx_size;
 
-    strcpy(path, MSG_DIR);
-    strcat(path, "msg.idx");
+    msg_path(path, "msg.idx");
     idx_fd = open(path, O_RDONLY);
-    strcpy(path, MSG_DIR);
-    strcat(path, "msg.dat");
+    msg_path(path, "msg.dat");
     dat_fd = open(path, O_RDONLY);
     if (idx_fd < 0 || dat_fd < 0)
         msg_fatal("cannot open the message tables", 0);
+    idx_size = (long) lseek(idx_fd, 0, SEEK_END);
+    lseek(idx_fd, 0, SEEK_SET);
+    if (idx_size < 8)
+        msg_fatal("message index is empty", 0);
+    msg_total = (unsigned) (idx_size / 4 - 1);
+}
+
+/* The number of strings in the tables. */
+unsigned
+msg_count(void)
+{
+    if (idx_fd < 0)
+        msg_open();
+    return msg_total;
 }
 
 /* Byte offsets of string id and of the string after it, in msg.dat. */

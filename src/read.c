@@ -78,7 +78,7 @@ tshirt_text(tshirt, buf)
 struct obj *tshirt;
 char *buf;
 {
-    static const char *shirt_msgs[] = {
+    static const msgid_t shirt_msgs[] = {
         /* Scott Bigham */
       "I explored the Dungeons of Doom and all I got was this lousy T-shirt!",
         "Is that Mjollnir in your pocket or are you just happy to see me?",
@@ -158,7 +158,7 @@ char *buf;
         "/Valar morghulis/ -- /Valar dohaeris/",
     };
 
-    Strcpy(buf, shirt_msgs[tshirt->o_id % SIZE(shirt_msgs)]);
+    Strcpy(buf, MSGTXT(shirt_msgs[tshirt->o_id % SIZE(shirt_msgs)]));
     return erode_obj_text(tshirt, buf);
 }
 

@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 """Rewrite the string literals of NetHack's C sources to MSG(id, "text") calls.
 
+    strtab.py SRCROOT OUTDIR --sources SOURCES.txt
     strtab.py SRCROOT OUTDIR LISTFILE
 
-LISTFILE names the sources to rewrite, relative to SRCROOT. Each one is
-written to OUTDIR/<same path> with a leading #include "msg.h". Literals in
-function bodies become MSG(id, "text"). Identical strings share an id. The
-strings are written to OUTDIR/msg.dat (each with its NUL) and their offsets
-to OUTDIR/msg.idx (little-endian uint32, one more entry than strings). The
-run-time reader is sys/rp6502/msgfetch.c.
+--sources takes the src/ files of sources.txt, except the monster and object
+tables. LISTFILE names the sources explicitly. Each one is written to
+OUTDIR/<same path> with a leading #include "msg.h". Literals in function bodies
+become MSG(id, "text"). The static declarations named in msgids.txt have their
+literals become MSGID(id) constants, for tables of msgid_t. Identical strings
+share an id. The strings are written to OUTDIR/msg.dat (each with its NUL) and
+their offsets to OUTDIR/msg.idx (little-endian uint32, one more entry than
+strings). The run-time reader is sys/rp6502/msgfetch.c.
 
 Literals that must stay constants are left alone: file-scope and static
 initializers (tables), char-array initializers, #define bodies, and #if 0
@@ -141,13 +144,17 @@ class Stats:
         self.rewritten = 0
         self.kept = {}
         self.kept_bytes = 0
+        self.by_decl = {}
 
-    def keep(self, why, nbytes):
+    def keep(self, why, nbytes, decl):
         self.kept[why] = self.kept.get(why, 0) + 1
         self.kept_bytes += nbytes
+        self.by_decl[decl] = self.by_decl.get(decl, 0) + nbytes
 
 
-def rewrite(text, table, stats):
+def rewrite(text, table, stats, ids=frozenset()):
+    """Rewrite one source. ids: names of static declarations whose literals
+    become MSGID(n) constants (the declaration's type must be msgid_t)."""
     out = []
     n = len(text)
     i = 0
@@ -161,6 +168,8 @@ def rewrite(text, table, stats):
     stmt_struct = False   # file scope: this statement has struct/union/enum
     cond = []             # braces open at each #if, restored at #else/#elif
     last = ''             # last significant token
+    stmt_ident = ''       # last identifier seen
+    stmt_decl = ''        # identifier before the '=' of this statement (the declared name)
 
     while i < n:
         c = text[i]
@@ -245,9 +254,12 @@ def rewrite(text, table, stats):
             if why is None:
                 out.append('MSG(%d, "%s")' % (table.id_for(decode(body)), body))
                 stats.rewritten += 1
+            elif stmt_decl in ids and why in ('static-initializer', 'static-local', 'file-scope'):
+                out.append('MSGID(%d)' % table.id_for(decode(body)))
+                stats.rewritten += 1
             else:
                 out.append(text[start:j])
-                stats.keep(why, len(body) + 1)
+                stats.keep(why, len(body) + 1, stmt_decl)
             i = j
             last = 'STR'
             continue
@@ -266,6 +278,7 @@ def rewrite(text, table, stats):
                 stmt_static = True
             if not stack and word in ('struct', 'union', 'enum'):
                 stmt_struct = True
+            stmt_ident = word
             last = word
             continue
         m = NUMBER.match(text, i)
@@ -324,6 +337,9 @@ def rewrite(text, table, stats):
             stmt_bracket = True
         elif c == '=' and not stack:
             stmt_eq = True
+            stmt_decl = stmt_ident
+        elif c == '=' and stmt_static:
+            stmt_decl = stmt_ident
         out.append(c)
         i += 1
         last = c
@@ -343,20 +359,44 @@ def write_tables(outdir, table):
         f.write(b''.join(struct.pack('<I', v) for v in idx))
 
 
+NOT_REWRITTEN = ('src/monst.c', 'src/monnames.c', 'src/objects.c')
+
+
+def sources_list(sources_file):
+    """The src/ files of sources.txt, minus the monster and object tables."""
+    with open(sources_file) as f:
+        lines = [l.strip() for l in f if l.strip() and not l.startswith('#')]
+    return [l for l in lines if l.startswith('src/') and l not in NOT_REWRITTEN]
+
+
 def main(argv):
-    if len(argv) != 4:
+    args = argv[1:]
+    ids = frozenset()
+    default_ids = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'msgids.txt')
+    if os.path.exists(default_ids):
+        with open(default_ids) as f:
+            ids = frozenset(l.strip() for l in f
+                            if l.strip() and not l.startswith('#'))
+    if len(args) == 5 and args[3] == '--ids':
+        ids = frozenset(args[4].split(','))
+        args = args[:3]
+    if len(args) == 4 and args[2] == '--sources':
+        srcroot, outdir = args[0], args[1]
+        names = sources_list(args[3])
+    elif len(args) == 3:
+        srcroot, outdir, listfile = args
+        with open(listfile) as f:
+            names = [l.strip() for l in f if l.strip() and not l.startswith('#')]
+    else:
         print(__doc__, file=sys.stderr)
         return 2
-    srcroot, outdir, listfile = argv[1:]
-    with open(listfile) as f:
-        names = [l.strip() for l in f if l.strip() and not l.startswith('#')]
     table = Table()
     stats = Stats()
     for name in names:
         with open(os.path.join(srcroot, name), 'rb') as f:
             text = f.read().decode('latin-1')
         try:
-            new = rewrite(text, table, stats)
+            new = rewrite(text, table, stats, ids)
         except (ValueError, IndexError) as e:
             raise SystemExit('strtab: %s: %s' % (name, e))
         dest = os.path.join(outdir, name)
@@ -370,6 +410,8 @@ def main(argv):
     for why in sorted(stats.kept):
         print('  kept %-24s %d' % (why, stats.kept[why]))
     print('  kept literal bytes (stay in RAM): %d' % stats.kept_bytes)
+    for decl, nbytes in sorted(stats.by_decl.items(), key=lambda kv: -kv[1])[:40]:
+        print('    %7d  %s' % (nbytes, decl or '(no name)'))
     return 0
 
 

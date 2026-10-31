@@ -12,6 +12,15 @@
 #define RP6502_MSG_H
 
 const char *msg_get(unsigned id);
+unsigned msg_count(void);
+
+/* Tables of text ids: a msgid_t is a string number, MSGID(n) is a constant
+ * for a static initializer, and MSGTXT(x) is the text of the id x (valid
+ * until MSG_SLOTS more strings are fetched). MSGNULL ends a table. */
+typedef unsigned short msgid_t;
+#define MSGID(n) ((msgid_t) (n))
+#define MSGNULL ((msgid_t) 0xFFFF)
+#define MSGTXT(x) msg_get((unsigned) (x))
 
 #ifdef MSG_CHECK
 const char *msg_check(unsigned id, const char *lit);

@@ -20,7 +20,7 @@ STATIC_DCL void FDECL(center, (int, char *));
 
 #ifndef NH320_DEDICATION
 /* A normal tombstone for end of game display. */
-static const char *rip_txt[] = {
+static const msgid_t rip_txt[] = {
     "                       ----------",
     "                      /          \\",
     "                     /    REST    \\",
@@ -35,12 +35,12 @@ static const char *rip_txt[] = {
     "                  |                  |", /* . */
     "                  |       1001       |", /* Real year of death */
     "                 *|     *  *  *      | *",
-    "        _________)/\\\\_//(\\/(/\\)/\\//\\/|_)_______", 0
+    "_________)/\\\\_//(\\/(/\\)/\\//\\/|_)_______", MSGNULL
 };
 #define STONE_LINE_CENT 28 /* char[] element of center of stone face */
 #else                      /* NH320_DEDICATION */
 /* NetHack 3.2.x displayed a dual tombstone as a tribute to Izchak. */
-static const char *rip_txt[] = {
+static const msgid_t rip_txt[] = {
     "              ----------                      ----------",
     "             /          \\                    /          \\",
     "            /    REST    \\                  /    This    \\",
@@ -56,7 +56,7 @@ static const char *rip_txt[] = {
     "         |       1001       |            |                  |",
     "      *  |     *  *  *      | *        * |      *  *  *     | *",
     " _____)/\\|\\__//(\\/(/\\)/\\//\\/|_)________)/|\\\\_/_/(\\/(/\\)/\\/\\/|_)____",
-    0
+    MSGNULL
 };
 #define STONE_LINE_CENT 19 /* char[] element of center of stone face */
 #endif                     /* NH320_DEDICATION */
@@ -96,9 +96,9 @@ time_t when;
     register int x;
     int line;
 
-    rip = dp = (char **) alloc(sizeof(rip_txt));
-    for (x = 0; rip_txt[x]; ++x)
-        dp[x] = dupstr(rip_txt[x]);
+    rip = dp = (char **) alloc(sizeof(char *) * SIZE(rip_txt));
+    for (x = 0; rip_txt[x] != MSGNULL; ++x)
+        dp[x] = dupstr(MSGTXT(rip_txt[x]));
     dp[x] = (char *) 0;
 
     /* Put name on stone */
@@ -157,7 +157,7 @@ time_t when;
 #endif
         putstr(tmpwin, 0, "");
 
-    for (x = 0; rip_txt[x]; x++) {
+    for (x = 0; rip_txt[x] != MSGNULL; x++) {
         free((genericptr_t) rip[x]);
     }
     free((genericptr_t) rip);

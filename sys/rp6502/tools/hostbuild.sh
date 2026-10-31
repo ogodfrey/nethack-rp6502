@@ -22,7 +22,12 @@ OUT=$(cd "$OUT" && pwd)
 
 "$TOOLS/hostgen.sh" "$SRC" "$OUT/gen" data
 
-CFLAGS="${CFLAGS:--O1 -g} -w -DRP6502 -DRP6502_HOST"
+# String literals in function bodies are read from msg.idx/msg.dat (see
+# msgfetch.c). The rewritten copies are compiled with MSG_CHECK, which compares
+# every fetched string with the literal it replaced.
+python3 "$TOOLS/strtab.py" "$SRC" "$OUT/msgsrc" --sources "$TOOLS/../sources.txt" > /dev/null
+
+CFLAGS="${CFLAGS:--O1 -g} -w -DRP6502 -DRP6502_HOST -DMSG_CHECK"
 CFLAGS="$CFLAGS -I$OUT/gen/include -I$SRC/include"
 LIBS=
 if [ -n "$PROFILE" ]; then
@@ -34,7 +39,8 @@ fi
 export CC CFLAGS SRC OUT
 grep -v '^#' "$TOOLS/../sources.txt" | grep . |
     xargs -P "$JOBS" -I{} sh -c \
-        'o="$OUT/obj/$(basename {} .c).o"; $CC $CFLAGS -c "$SRC/{}" -o "$o"'
+        'f="$SRC/{}"; [ -f "$OUT/msgsrc/{}" ] && f="$OUT/msgsrc/{}"; o="$OUT/obj/$(basename {} .c).o"; $CC $CFLAGS -c "$f" -o "$o"'
+$CC $CFLAGS -c "$TOOLS/../msgfetch.c" -o "$OUT/obj/msgfetch.o"
 $CC -o "$OUT/nethack" "$OUT"/obj/*.o $LIBS
 
 rm -rf "$OUT/play"
@@ -43,5 +49,6 @@ cd "$OUT/gen/dat"
 cp ./*.lev bogusmon cmdhelp data dungeon engrave epitaph help hh history \
     keyhelp license opthelp options oracles quest.dat rumors symbols \
     tribute wizhelp "$OUT/play/"
+cp "$OUT/msgsrc/msg.dat" "$OUT/msgsrc/msg.idx" "$OUT/play/"
 touch "$OUT/play/record"
 echo "Built $OUT/nethack; run: NETHACKDIR=$OUT/play $OUT/nethack"

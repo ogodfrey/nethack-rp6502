@@ -1,0 +1,5 @@
+# Static declarations whose string literals become MSGID(n) constants (tables of msgid_t).
+# strtab.py reads this list by default; each name is a static declaration in a
+# source that strtab.py rewrites. The declaration's type must be msgid_t.
+rip_txt
+shirt_msgs
