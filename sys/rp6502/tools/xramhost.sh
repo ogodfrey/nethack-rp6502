@@ -22,11 +22,24 @@ OUT=$(cd "$OUT" && pwd)
 
 CFLAGS="-O1 -g -w -DRP6502 -DRP6502_HOST -DRP6502_MONS_XRAM -fno-pie"
 CFLAGS="$CFLAGS -I$OUT/gen/include -I$SRC/include"
-export CC CFLAGS SRC OUT
+# MSG=1: string literals in function bodies are read from msg.idx/msg.dat,
+# and every fetch is checked against its literal (see include/msg.h).
+MSGDEF=""
+if [ -n "${MSG:-}" ]; then
+    grep '^src/' "$TOOLS/../sources.txt" | grep -v -E '^src/(monst|monnames|objects)\.c$' \
+        > "$OUT/msglist.txt"
+    python3 "$TOOLS/strtab.py" "$SRC" "$OUT/msgsrc" "$OUT/msglist.txt"
+    MSGDEF='-DMSG_CHECK -DMSG_DIR="play/"'
+    CFLAGS="$CFLAGS $MSGDEF"
+fi
+export CC CFLAGS SRC OUT MSG
 grep -v '^#' "$TOOLS/../sources.txt" | grep . |
     xargs -P "$JOBS" -I{} sh -c \
-        'extra=""; case "{}" in src/monst.c) extra="-DRP6502_MONS_RAM -Dmons=rp6502_ram_mons";; src/objects.c) extra="-DRP6502_MONS_RAM -Dobjects=rp6502_ram_objects";; esac; o="$OUT/obj/$(basename {} .c).o"; $CC $CFLAGS $extra -c "$SRC/{}" -o "$o"'
+        'f="$SRC/{}"; [ -n "${MSG:-}" ] && [ -f "$OUT/msgsrc/{}" ] && f="$OUT/msgsrc/{}"; extra=""; case "{}" in src/monst.c) extra="-DRP6502_MONS_RAM -Dmons=rp6502_ram_mons";; src/objects.c) extra="-DRP6502_MONS_RAM -Dobjects=rp6502_ram_objects";; esac; o="$OUT/obj/$(basename {} .c).o"; $CC $CFLAGS $extra -c "$f" -o "$o"'
 $CC $CFLAGS -c "$TOOLS/../rp6502xram_host.c" -o "$OUT/obj/rp6502xram_host.o"
+if [ -n "${MSG:-}" ]; then
+    $CC $CFLAGS -c "$TOOLS/../msgfetch.c" -o "$OUT/obj/msgfetch.o"
+fi
 # objects[] has no RAM copy here: the link gives the symbol the fake XRAM
 # address, so &objects[i] is an address that rpo_get() can map back.
 OBJS_ADDR=$(sed -n 's/^#define OBJS_XRAM_ADDR[[:space:]]*//p' "$SRC/include/xram.h")
@@ -39,4 +52,7 @@ cp ./*.lev bogusmon cmdhelp data dungeon engrave epitaph help hh history \
     keyhelp license opthelp options oracles quest.dat rumors symbols \
     tribute wizhelp "$OUT/play/"
 touch "$OUT/play/record"
+if [ -n "${MSG:-}" ]; then
+    cp "$OUT/msgsrc/msg.dat" "$OUT/msgsrc/msg.idx" "$OUT/play/"
+fi
 echo "Built $OUT/nethack (monster table at a fake XRAM address)"

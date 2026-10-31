@@ -200,6 +200,21 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
    measured unlinked data fit. Investigate `level`, room and display buffers,
    vision data, heap, stack, resident code, and overlay slots; measure the
    actual linked footprint as sections are eliminated or moved.
+   Strings (in progress, opt-in): string literals total 265 KB, almost all
+   short messages (10.5k under 20 characters, 4.9k at 20–59, 71 longer), so
+   they go to storage, not XRAM. [strtab.py](sys/rp6502/tools/strtab.py)
+   rewrites each function-body literal to `MSG(id, "text")`; the text is in
+   `msg.dat`/`msg.idx`, read by [msgfetch.c](sys/rp6502/msgfetch.c) through
+   open/lseek/read, the same calls on host and target. `MSG_CHECK` (host
+   tests) compares every fetch with its literal. `MSG=1
+   sys/rp6502/tools/xramhost.sh` builds the checked host game: 13239 uses of
+   9205 distinct strings move out (193785 bytes). Autoplay passes (seeds 1, 2,
+   4), and a corrupted table aborts with `msg: id N is ... but the source says`.
+   Still in RAM: 54 KB of literals in static initializers (option, command,
+   role and similar tables, 3918 literals), the objects and monster names, and
+   the strings of the files not rewritten yet (win/, util/, sys/rp6502/).
+   Next: give those tables id fields instead of pointers, rewrite the other
+   sources, and add the msg files to the target build (CMake and the SD card).
    XRAM map (defined in [xram.h](include/xram.h)): `mons[]` at $1000
    (19864 bytes), `objects[]` at $6100 (11804 bytes, ending at $8F1B). The
    overlay descriptor default was $8000, which overlapped `objects[]`; it is
