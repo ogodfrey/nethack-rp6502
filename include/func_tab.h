@@ -6,6 +6,8 @@
 #ifndef FUNC_TAB_H
 #define FUNC_TAB_H
 
+#include "msg.h"
+
 /* extended command flags */
 #define IFBURIED     0x01 /* can do command when buried */
 #define AUTOCOMPLETE 0x02 /* command autocompletes */
@@ -15,7 +17,8 @@
 
 struct ext_func_tab {
     uchar key;
-    const char *ef_txt, *ef_desc;
+    const char *ef_txt;
+    msgid_t ef_desc;
     int NDECL((*ef_funct));
     int flags;
     const char *f_text;

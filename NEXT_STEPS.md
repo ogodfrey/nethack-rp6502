@@ -215,12 +215,14 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
    emulator from the null drive and matches the host checksum. The `compopt`
    option descriptions now use `MSG_ST("text")` markers (rewritten to
    `MSGID(n)`), read with `MSGTXT`; names stay in RAM because they are matched
-   at runtime. Still in RAM: about 46 KB of literals in static tables (largest:
-   command descriptions in `extcmdlist` 3.9 KB, then `loadsyms`, `roles`,
-   `boolopt`, `propertynames`), plus `mons_names` and the object names, which
-   are outside the rewrite. Next: convert those tables the same way (the
-   compiler lists each use once the type changes), then install
-   `msg.dat`/`msg.idx` with the target game.
+   at runtime. The `extcmdlist` descriptions use the same marker and are read
+   with `MSGTXT`; the one caller that returns a description (`key2extcmddesc`)
+   copies it into a static buffer first. Still in RAM: about 44 KB of literals
+   in static tables, mostly names that are matched at runtime, and the largest
+   others are `loadsyms`, `roles`, `boolopt`, `propertynames`; `mons_names` and
+   the object names are outside the rewrite. Next: convert the remaining
+   description-type tables the same way (the compiler lists each use once the
+   type changes), then install `msg.dat`/`msg.idx` with the target game.
    XRAM map (defined in [xram.h](include/xram.h)): `mons[]` at $1000
    (19864 bytes), `objects[]` at $6100 (11804 bytes, ending at $8F1B). The
    overlay descriptor default was $8000, which overlapped `objects[]`; it is

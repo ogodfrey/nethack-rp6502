@@ -453,11 +453,11 @@ doextlist(VOID_ARGS)
                 if (*searchbuf
                     /* first try case-insensitive substring match */
                     && !strstri(efp->ef_txt, searchbuf)
-                    && !strstri(efp->ef_desc, searchbuf)
+                    && !strstri(MSGTXT(efp->ef_desc), searchbuf)
                     /* wildcard support; most interfaces use case-insensitve
                        pmatch rather than regexp for menu searching */
                     && !pmatchi(searchbuf, efp->ef_txt)
-                    && !pmatchi(searchbuf, efp->ef_desc))
+                    && !pmatchi(searchbuf, MSGTXT(efp->ef_desc)))
                     continue;
                 /* skip wizard mode commands if not in wizard mode;
                    when showing two sections, skip wizard mode commands
@@ -481,7 +481,7 @@ doextlist(VOID_ARGS)
                 Sprintf(buf, " %-14s %-3s %s",
                         efp->ef_txt,
                         (efp->flags & AUTOCOMPLETE) ? "[A]" : " ",
-                        efp->ef_desc);
+                        MSGTXT(efp->ef_desc));
                 add_menu(menuwin, NO_GLYPH, &any, 0, 0, ATR_NONE,
                          buf, MENU_UNSELECTED);
                 ++n;
@@ -581,7 +581,7 @@ extcmd_via_menu()
                 continue;
             if (!matchlevel || !strncmp(efp->ef_txt, cbuf, matchlevel)) {
                 choices[i] = efp;
-                if ((len = (int) strlen(efp->ef_desc)) > biggest)
+                if ((len = (int) strlen(MSGTXT(efp->ef_desc))) > biggest)
                     biggest = len;
                 if (++i > MAX_EXT_CMD) {
 #if (NH_DEVEL_STATUS != NH_STATUS_RELEASED)
@@ -638,7 +638,7 @@ extcmd_via_menu()
             prevaccelerator = accelerator;
             if (!acount || one_per_line) {
                 Sprintf(prompt, "%s%s [%s]", wastoolong ? "or " : "",
-                        choices[i]->ef_txt, choices[i]->ef_desc);
+                        choices[i]->ef_txt, MSGTXT(choices[i]->ef_desc));
             } else if (acount == 1) {
                 Sprintf(prompt, "%s%s or %s", wastoolong ? "or " : "",
                         choices[i - 1]->ef_txt, choices[i]->ef_txt);
@@ -3353,198 +3353,198 @@ int final;
 
 /* ordered by command name */
 struct ext_func_tab extcmdlist[] = {
-    { '#', "#", "perform an extended command",
+    { '#', "#", MSG_ST("perform an extended command"),
             doextcmd, IFBURIED | GENERALCMD },
-    { M('?'), "?", "list all extended commands",
+    { M('?'), "?", MSG_ST("list all extended commands"),
             doextlist, IFBURIED | AUTOCOMPLETE | GENERALCMD },
-    { M('a'), "adjust", "adjust inventory letters",
+    { M('a'), "adjust", MSG_ST("adjust inventory letters"),
             doorganize, IFBURIED | AUTOCOMPLETE },
-    { M('A'), "annotate", "name current level",
+    { M('A'), "annotate", MSG_ST("name current level"),
             donamelevel, IFBURIED | AUTOCOMPLETE },
-    { 'a', "apply", "apply (use) a tool (pick-axe, key, lamp...)",
+    { 'a', "apply", MSG_ST("apply (use) a tool (pick-axe, key, lamp...)"),
             doapply },
-    { C('x'), "attributes", "show your attributes",
+    { C('x'), "attributes", MSG_ST("show your attributes"),
             doattributes, IFBURIED },
-    { '@', "autopickup", "toggle the pickup option on/off",
+    { '@', "autopickup", MSG_ST("toggle the pickup option on/off"),
             dotogglepickup, IFBURIED },
-    { 'C', "call", "call (name) something", docallcmd, IFBURIED },
-    { 'Z', "cast", "zap (cast) a spell", docast, IFBURIED },
-    { M('c'), "chat", "talk to someone", dotalk, IFBURIED | AUTOCOMPLETE },
-    { 'c', "close", "close a door", doclose },
-    { M('C'), "conduct", "list voluntary challenges you have maintained",
+    { 'C', "call", MSG_ST("call (name) something"), docallcmd, IFBURIED },
+    { 'Z', "cast", MSG_ST("zap (cast) a spell"), docast, IFBURIED },
+    { M('c'), "chat", MSG_ST("talk to someone"), dotalk, IFBURIED | AUTOCOMPLETE },
+    { 'c', "close", MSG_ST("close a door"), doclose },
+    { M('C'), "conduct", MSG_ST("list voluntary challenges you have maintained"),
             doconduct, IFBURIED | AUTOCOMPLETE },
-    { M('d'), "dip", "dip an object into something", dodip, AUTOCOMPLETE },
-    { '>', "down", "go down a staircase", dodown },
-    { 'd', "drop", "drop an item", dodrop },
-    { 'D', "droptype", "drop specific item types", doddrop },
-    { 'e', "eat", "eat something", doeat },
-    { 'E', "engrave", "engrave writing on the floor", doengrave },
-    { M('e'), "enhance", "advance or check weapon and spell skills",
+    { M('d'), "dip", MSG_ST("dip an object into something"), dodip, AUTOCOMPLETE },
+    { '>', "down", MSG_ST("go down a staircase"), dodown },
+    { 'd', "drop", MSG_ST("drop an item"), dodrop },
+    { 'D', "droptype", MSG_ST("drop specific item types"), doddrop },
+    { 'e', "eat", MSG_ST("eat something"), doeat },
+    { 'E', "engrave", MSG_ST("engrave writing on the floor"), doengrave },
+    { M('e'), "enhance", MSG_ST("advance or check weapon and spell skills"),
             enhance_weapon_skill, IFBURIED | AUTOCOMPLETE },
-    { '\0', "exploremode", "enter explore (discovery) mode",
+    { '\0', "exploremode", MSG_ST("enter explore (discovery) mode"),
             enter_explore_mode, IFBURIED },
-    { 'f', "fire", "fire ammunition from quiver", dofire },
-    { M('f'), "force", "force a lock", doforce, AUTOCOMPLETE },
-    { ';', "glance", "show what type of thing a map symbol corresponds to",
+    { 'f', "fire", MSG_ST("fire ammunition from quiver"), dofire },
+    { M('f'), "force", MSG_ST("force a lock"), doforce, AUTOCOMPLETE },
+    { ';', "glance", MSG_ST("show what type of thing a map symbol corresponds to"),
             doquickwhatis, IFBURIED | GENERALCMD },
-    { '?', "help", "give a help message", dohelp, IFBURIED | GENERALCMD },
-    { '\0', "herecmdmenu", "show menu of commands you can do here",
+    { '?', "help", MSG_ST("give a help message"), dohelp, IFBURIED | GENERALCMD },
+    { '\0', "herecmdmenu", MSG_ST("show menu of commands you can do here"),
             doherecmdmenu, IFBURIED },
-    { 'V', "history", "show long version and game history",
+    { 'V', "history", MSG_ST("show long version and game history"),
             dohistory, IFBURIED | GENERALCMD },
-    { 'i', "inventory", "show your inventory", ddoinv, IFBURIED },
-    { 'I', "inventtype", "inventory specific item types",
+    { 'i', "inventory", MSG_ST("show your inventory"), ddoinv, IFBURIED },
+    { 'I', "inventtype", MSG_ST("inventory specific item types"),
             dotypeinv, IFBURIED },
-    { M('i'), "invoke", "invoke an object's special powers",
+    { M('i'), "invoke", MSG_ST("invoke an object's special powers"),
             doinvoke, IFBURIED | AUTOCOMPLETE },
-    { M('j'), "jump", "jump to another location", dojump, AUTOCOMPLETE },
-    { C('d'), "kick", "kick something", dokick },
-    { '\\', "known", "show what object types have been discovered",
+    { M('j'), "jump", MSG_ST("jump to another location"), dojump, AUTOCOMPLETE },
+    { C('d'), "kick", MSG_ST("kick something"), dokick },
+    { '\\', "known", MSG_ST("show what object types have been discovered"),
             dodiscovered, IFBURIED | GENERALCMD },
-    { '`', "knownclass", "show discovered types for one class of objects",
+    { '`', "knownclass", MSG_ST("show discovered types for one class of objects"),
             doclassdisco, IFBURIED | GENERALCMD },
-    { '\0', "levelchange", "change experience level",
+    { '\0', "levelchange", MSG_ST("change experience level"),
             wiz_level_change, IFBURIED | AUTOCOMPLETE | WIZMODECMD },
-    { '\0', "lightsources", "show mobile light sources",
+    { '\0', "lightsources", MSG_ST("show mobile light sources"),
             wiz_light_sources, IFBURIED | AUTOCOMPLETE | WIZMODECMD },
-    { ':', "look", "look at what is here", dolook, IFBURIED },
-    { M('l'), "loot", "loot a box on the floor", doloot, AUTOCOMPLETE },
+    { ':', "look", MSG_ST("look at what is here"), dolook, IFBURIED },
+    { M('l'), "loot", MSG_ST("loot a box on the floor"), doloot, AUTOCOMPLETE },
 #ifdef DEBUG_MIGRATING_MONS
-    { '\0', "migratemons", "migrate N random monsters",
+    { '\0', "migratemons", MSG_ST("migrate N random monsters"),
             wiz_migrate_mons, IFBURIED | AUTOCOMPLETE | WIZMODECMD },
 #endif
-    { M('m'), "monster", "use monster's special ability",
+    { M('m'), "monster", MSG_ST("use monster's special ability"),
             domonability, IFBURIED | AUTOCOMPLETE },
-    { 'N', "name", "name a monster or an object",
+    { 'N', "name", MSG_ST("name a monster or an object"),
             docallcmd, IFBURIED | AUTOCOMPLETE },
-    { M('o'), "offer", "offer a sacrifice to the gods",
+    { M('o'), "offer", MSG_ST("offer a sacrifice to the gods"),
             dosacrifice, AUTOCOMPLETE },
-    { 'o', "open", "open a door", doopen },
-    { 'O', "options", "show option settings, possibly change them",
+    { 'o', "open", MSG_ST("open a door"), doopen },
+    { 'O', "options", MSG_ST("show option settings, possibly change them"),
             doset, IFBURIED | GENERALCMD },
-    { C('o'), "overview", "show a summary of the explored dungeon",
+    { C('o'), "overview", MSG_ST("show a summary of the explored dungeon"),
             dooverview, IFBURIED | AUTOCOMPLETE },
-    { '\0', "panic", "test panic routine (fatal to game)",
+    { '\0', "panic", MSG_ST("test panic routine (fatal to game)"),
             wiz_panic, IFBURIED | AUTOCOMPLETE | WIZMODECMD },
-    { 'p', "pay", "pay your shopping bill", dopay },
-    { ',', "pickup", "pick up things at the current location", dopickup },
-    { '\0', "polyself", "polymorph self",
+    { 'p', "pay", MSG_ST("pay your shopping bill"), dopay },
+    { ',', "pickup", MSG_ST("pick up things at the current location"), dopickup },
+    { '\0', "polyself", MSG_ST("polymorph self"),
             wiz_polyself, IFBURIED | AUTOCOMPLETE | WIZMODECMD },
-    { M('p'), "pray", "pray to the gods for help",
+    { M('p'), "pray", MSG_ST("pray to the gods for help"),
             dopray, IFBURIED | AUTOCOMPLETE },
-    { C('p'), "prevmsg", "view recent game messages",
+    { C('p'), "prevmsg", MSG_ST("view recent game messages"),
             doprev_message, IFBURIED | GENERALCMD },
-    { 'P', "puton", "put on an accessory (ring, amulet, etc)", doputon },
-    { 'q', "quaff", "quaff (drink) something", dodrink },
-    { M('q'), "quit", "exit without saving current game",
+    { 'P', "puton", MSG_ST("put on an accessory (ring, amulet, etc)"), doputon },
+    { 'q', "quaff", MSG_ST("quaff (drink) something"), dodrink },
+    { M('q'), "quit", MSG_ST("exit without saving current game"),
             done2, IFBURIED | AUTOCOMPLETE | GENERALCMD },
-    { 'Q', "quiver", "select ammunition for quiver", dowieldquiver },
-    { 'r', "read", "read a scroll or spellbook", doread },
-    { C('r'), "redraw", "redraw screen", doredraw, IFBURIED | GENERALCMD },
-    { 'R', "remove", "remove an accessory (ring, amulet, etc)", doremring },
-    { M('R'), "ride", "mount or dismount a saddled steed",
+    { 'Q', "quiver", MSG_ST("select ammunition for quiver"), dowieldquiver },
+    { 'r', "read", MSG_ST("read a scroll or spellbook"), doread },
+    { C('r'), "redraw", MSG_ST("redraw screen"), doredraw, IFBURIED | GENERALCMD },
+    { 'R', "remove", MSG_ST("remove an accessory (ring, amulet, etc)"), doremring },
+    { M('R'), "ride", MSG_ST("mount or dismount a saddled steed"),
             doride, AUTOCOMPLETE },
-    { M('r'), "rub", "rub a lamp or a stone", dorub, AUTOCOMPLETE },
-    { 'S', "save", "save the game and exit", dosave, IFBURIED | GENERALCMD },
-    { 's', "search", "search for traps and secret doors",
+    { M('r'), "rub", MSG_ST("rub a lamp or a stone"), dorub, AUTOCOMPLETE },
+    { 'S', "save", MSG_ST("save the game and exit"), dosave, IFBURIED | GENERALCMD },
+    { 's', "search", MSG_ST("search for traps and secret doors"),
             dosearch, IFBURIED, "searching" },
-    { '*', "seeall", "show all equipment in use", doprinuse, IFBURIED },
-    { AMULET_SYM, "seeamulet", "show the amulet currently worn",
+    { '*', "seeall", MSG_ST("show all equipment in use"), doprinuse, IFBURIED },
+    { AMULET_SYM, "seeamulet", MSG_ST("show the amulet currently worn"),
             dopramulet, IFBURIED },
-    { ARMOR_SYM, "seearmor", "show the armor currently worn",
+    { ARMOR_SYM, "seearmor", MSG_ST("show the armor currently worn"),
             doprarm, IFBURIED },
-    { GOLD_SYM, "seegold", "count your gold", doprgold, IFBURIED },
-    { '\0', "seenv", "show seen vectors",
+    { GOLD_SYM, "seegold", MSG_ST("count your gold"), doprgold, IFBURIED },
+    { '\0', "seenv", MSG_ST("show seen vectors"),
             wiz_show_seenv, IFBURIED | AUTOCOMPLETE | WIZMODECMD },
-    { RING_SYM, "seerings", "show the ring(s) currently worn",
+    { RING_SYM, "seerings", MSG_ST("show the ring(s) currently worn"),
             doprring, IFBURIED },
-    { SPBOOK_SYM, "seespells", "list and reorder known spells",
+    { SPBOOK_SYM, "seespells", MSG_ST("list and reorder known spells"),
             dovspell, IFBURIED },
-    { TOOL_SYM, "seetools", "show the tools currently in use",
+    { TOOL_SYM, "seetools", MSG_ST("show the tools currently in use"),
             doprtool, IFBURIED },
-    { '^', "seetrap", "show the type of adjacent trap", doidtrap, IFBURIED },
-    { WEAPON_SYM, "seeweapon", "show the weapon currently wielded",
+    { '^', "seetrap", MSG_ST("show the type of adjacent trap"), doidtrap, IFBURIED },
+    { WEAPON_SYM, "seeweapon", MSG_ST("show the weapon currently wielded"),
             doprwep, IFBURIED },
-    { '!', "shell", "do a shell escape",
+    { '!', "shell", MSG_ST("do a shell escape"),
             dosh_core, IFBURIED | GENERALCMD
 #ifndef SHELL
                        | CMD_NOT_AVAILABLE
 #endif /* SHELL */
     },
-    { M('s'), "sit", "sit down", dosit, AUTOCOMPLETE },
-    { '\0', "stats", "show memory statistics",
+    { M('s'), "sit", MSG_ST("sit down"), dosit, AUTOCOMPLETE },
+    { '\0', "stats", MSG_ST("show memory statistics"),
             wiz_show_stats, IFBURIED | AUTOCOMPLETE | WIZMODECMD },
-    { C('z'), "suspend", "suspend the game",
+    { C('z'), "suspend", MSG_ST("suspend the game"),
             dosuspend_core, IFBURIED | GENERALCMD
 #ifndef SUSPEND
                             | CMD_NOT_AVAILABLE
 #endif /* SUSPEND */
     },
-    { 'x', "swap", "swap wielded and secondary weapons", doswapweapon },
-    { 'T', "takeoff", "take off one piece of armor", dotakeoff },
-    { 'A', "takeoffall", "remove all armor", doddoremarm },
-    { C('t'), "teleport", "teleport around the level", dotelecmd, IFBURIED },
-    { '\0', "terrain", "show map without obstructions",
+    { 'x', "swap", MSG_ST("swap wielded and secondary weapons"), doswapweapon },
+    { 'T', "takeoff", MSG_ST("take off one piece of armor"), dotakeoff },
+    { 'A', "takeoffall", MSG_ST("remove all armor"), doddoremarm },
+    { C('t'), "teleport", MSG_ST("teleport around the level"), dotelecmd, IFBURIED },
+    { '\0', "terrain", MSG_ST("show map without obstructions"),
             doterrain, IFBURIED | AUTOCOMPLETE },
     { '\0', "therecmdmenu",
-            "menu of commands you can do from here to adjacent spot",
+            MSG_ST("menu of commands you can do from here to adjacent spot"),
             dotherecmdmenu },
-    { 't', "throw", "throw something", dothrow },
-    { '\0', "timeout", "look at timeout queue and hero's timed intrinsics",
+    { 't', "throw", MSG_ST("throw something"), dothrow },
+    { '\0', "timeout", MSG_ST("look at timeout queue and hero's timed intrinsics"),
             wiz_timeout_queue, IFBURIED | AUTOCOMPLETE | WIZMODECMD },
-    { M('T'), "tip", "empty a container", dotip, AUTOCOMPLETE },
-    { '_', "travel", "travel to a specific location on the map", dotravel },
-    { M('t'), "turn", "turn undead away", doturn, IFBURIED | AUTOCOMPLETE },
-    { 'X', "twoweapon", "toggle two-weapon combat",
+    { M('T'), "tip", MSG_ST("empty a container"), dotip, AUTOCOMPLETE },
+    { '_', "travel", MSG_ST("travel to a specific location on the map"), dotravel },
+    { M('t'), "turn", MSG_ST("turn undead away"), doturn, IFBURIED | AUTOCOMPLETE },
+    { 'X', "twoweapon", MSG_ST("toggle two-weapon combat"),
             dotwoweapon, AUTOCOMPLETE },
-    { M('u'), "untrap", "untrap something", dountrap, AUTOCOMPLETE },
-    { '<', "up", "go up a staircase", doup },
-    { '\0', "vanquished", "list vanquished monsters",
+    { M('u'), "untrap", MSG_ST("untrap something"), dountrap, AUTOCOMPLETE },
+    { '<', "up", MSG_ST("go up a staircase"), doup },
+    { '\0', "vanquished", MSG_ST("list vanquished monsters"),
             dovanquished, IFBURIED | AUTOCOMPLETE | WIZMODECMD },
     { M('v'), "version",
-            "list compile time options for this version of NetHack",
+            MSG_ST("list compile time options for this version of NetHack"),
             doextversion, IFBURIED | AUTOCOMPLETE | GENERALCMD },
-    { 'v', "versionshort", "show version", doversion, IFBURIED | GENERALCMD },
-    { '\0', "vision", "show vision array",
+    { 'v', "versionshort", MSG_ST("show version"), doversion, IFBURIED | GENERALCMD },
+    { '\0', "vision", MSG_ST("show vision array"),
             wiz_show_vision, IFBURIED | AUTOCOMPLETE | WIZMODECMD },
-    { '.', "wait", "rest one move while doing nothing",
+    { '.', "wait", MSG_ST("rest one move while doing nothing"),
             donull, IFBURIED, "waiting" },
-    { 'W', "wear", "wear a piece of armor", dowear },
-    { '&', "whatdoes", "tell what a command does", dowhatdoes, IFBURIED },
-    { '/', "whatis", "show what type of thing a symbol corresponds to",
+    { 'W', "wear", MSG_ST("wear a piece of armor"), dowear },
+    { '&', "whatdoes", MSG_ST("tell what a command does"), dowhatdoes, IFBURIED },
+    { '/', "whatis", MSG_ST("show what type of thing a symbol corresponds to"),
             dowhatis, IFBURIED | GENERALCMD },
-    { 'w', "wield", "wield (put in use) a weapon", dowield },
-    { M('w'), "wipe", "wipe off your face", dowipe, AUTOCOMPLETE },
+    { 'w', "wield", MSG_ST("wield (put in use) a weapon"), dowield },
+    { M('w'), "wipe", MSG_ST("wipe off your face"), dowipe, AUTOCOMPLETE },
 #ifdef DEBUG
-    { '\0', "wizbury", "bury objs under and around you",
+    { '\0', "wizbury", MSG_ST("bury objs under and around you"),
             wiz_debug_cmd_bury, IFBURIED | AUTOCOMPLETE | WIZMODECMD },
 #endif
-    { C('e'), "wizdetect", "reveal hidden things within a small radius",
+    { C('e'), "wizdetect", MSG_ST("reveal hidden things within a small radius"),
             wiz_detect, IFBURIED | AUTOCOMPLETE | WIZMODECMD },
-    { C('g'), "wizgenesis", "create a monster",
+    { C('g'), "wizgenesis", MSG_ST("create a monster"),
             wiz_genesis, IFBURIED | AUTOCOMPLETE | WIZMODECMD },
-    { C('i'), "wizidentify", "identify all items in inventory",
+    { C('i'), "wizidentify", MSG_ST("identify all items in inventory"),
             wiz_identify, IFBURIED | AUTOCOMPLETE | WIZMODECMD },
-    { '\0', "wizintrinsic", "set an intrinsic",
+    { '\0', "wizintrinsic", MSG_ST("set an intrinsic"),
             wiz_intrinsic, IFBURIED | AUTOCOMPLETE | WIZMODECMD },
-    { C('v'), "wizlevelport", "teleport to another level",
+    { C('v'), "wizlevelport", MSG_ST("teleport to another level"),
             wiz_level_tele, IFBURIED | AUTOCOMPLETE | WIZMODECMD },
-    { '\0', "wizmakemap", "recreate the current level",
+    { '\0', "wizmakemap", MSG_ST("recreate the current level"),
             wiz_makemap, IFBURIED | WIZMODECMD },
-    { C('f'), "wizmap", "map the level",
+    { C('f'), "wizmap", MSG_ST("map the level"),
             wiz_map, IFBURIED | AUTOCOMPLETE | WIZMODECMD },
-    { '\0', "wizrumorcheck", "verify rumor boundaries",
+    { '\0', "wizrumorcheck", MSG_ST("verify rumor boundaries"),
             wiz_rumor_check, IFBURIED | AUTOCOMPLETE | WIZMODECMD },
-    { '\0', "wizsmell", "smell monster",
+    { '\0', "wizsmell", MSG_ST("smell monster"),
             wiz_smell, IFBURIED | AUTOCOMPLETE | WIZMODECMD },
-    { '\0', "wizwhere", "show locations of special levels",
+    { '\0', "wizwhere", MSG_ST("show locations of special levels"),
             wiz_where, IFBURIED | AUTOCOMPLETE | WIZMODECMD },
-    { C('w'), "wizwish", "wish for something",
+    { C('w'), "wizwish", MSG_ST("wish for something"),
             wiz_wish, IFBURIED | AUTOCOMPLETE | WIZMODECMD },
-    { '\0', "wmode", "show wall modes",
+    { '\0', "wmode", MSG_ST("show wall modes"),
             wiz_show_wmodes, IFBURIED | AUTOCOMPLETE | WIZMODECMD },
-    { 'z', "zap", "zap a wand", dozap },
-    { '\0', (char *) 0, (char *) 0, donull, 0, (char *) 0 } /* sentinel */
+    { 'z', "zap", MSG_ST("zap a wand"), dozap },
+    { '\0', (char *) 0, 0, donull, 0, (char *) 0 } /* sentinel */
 };
 
 /* for key2extcmddesc() to support dowhatdoes() */
@@ -3570,7 +3570,7 @@ const char *
 key2extcmddesc(key)
 uchar key;
 {
-    static char key2cmdbuf[48];
+    static char key2cmdbuf[BUFSZ];
     const struct movcmd *mov;
     int k, c;
     uchar M_5 = (uchar) M('5'), M_0 = (uchar) M('0');
@@ -3608,9 +3608,10 @@ uchar key;
             return key2cmdbuf;
     }
     if (Cmd.commands[key]) {
-        if (Cmd.commands[key]->ef_txt)
-            return Cmd.commands[key]->ef_desc;
-
+        if (Cmd.commands[key]->ef_txt) {
+            Strcpy(key2cmdbuf, MSGTXT(Cmd.commands[key]->ef_desc));
+            return key2cmdbuf;
+        }
     }
     return (char *) 0;
 }
@@ -3709,7 +3710,7 @@ boolean *keys_used; /* boolean keys_used[256] */
             }
             Sprintf(buf, "%-8s %-12s %s", key2txt(key, buf2),
                     extcmd->ef_txt,
-                    extcmd->ef_desc);
+                    MSGTXT(extcmd->ef_desc));
             putstr(datawin, 0, buf);
             keys_used[i] = TRUE;
         }
