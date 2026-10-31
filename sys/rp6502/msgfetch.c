@@ -3,8 +3,8 @@
  * The tables are msg.idx (little-endian uint32 offsets into msg.dat, one more
  * entry than there are strings) and msg.dat (the strings, each with its NUL).
  * The files are opened from the play directory (NETHACKDIR) on the host, and
- * from MSG_DIR on the target (for example the null drive ":"). Only POSIX
- * calls are used, so the same code runs on both.
+ * from MSG_DIR on the target, which is ROM: for the tables packaged as ROM
+ * assets. Only POSIX calls are used, so the same code runs on both.
  */
 #include "config.h"
 #include "msg.h"
@@ -15,7 +15,7 @@
 #include <unistd.h>
 
 #ifndef MSG_DIR
-#define MSG_DIR "" /* the target sets this, for example to the null drive ":" */
+#define MSG_DIR "" /* the target sets this to "ROM:" */
 #endif
 #define MSG_SLOTS 8
 #define MSG_MAX 128 /* longest string in the table is 119 characters */

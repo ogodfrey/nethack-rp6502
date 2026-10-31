@@ -211,10 +211,13 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
    (generated sources in the build directory), `hostbuild.sh`, and
    `xramhost.sh`, all compiled with `MSG_CHECK`, which compares each fetch with
    its literal. Verified: the full verification passes; autoplay runs; the
-   storage test [msgtest.c](sys/rp6502/msgtest.c) reads all 9389 strings in the
-   emulator from the null drive and matches the host checksum. The `compopt`
-   option descriptions now use `MSG_ST("text")` markers (rewritten to
-   `MSGID(n)`), read with `MSGTXT`; names stay in RAM because they are matched
+   storage test [msgtest.c](sys/rp6502/msgtest.c) reads all 9502 strings in the
+   emulator from the ROM's named assets and matches the host checksum. The
+   tables are packaged with `rp6502_asset` as `ROM:msg.dat` and `ROM:msg.idx`
+   (the SDK's named-asset path, which the game opens like any file); the
+   `nethack` and `msgtest` targets both carry them. The `compopt` option
+   descriptions now use `MSG_ST("text")` markers (rewritten to `MSGID(n)`),
+   read with `MSGTXT`; names stay in RAM because they are matched
    at runtime. The `extcmdlist` descriptions use the same marker and are read
    with `MSGTXT`; the one caller that returns a description (`key2extcmddesc`)
    copies it into a static buffer first. Still in RAM: about 44 KB of literals
@@ -222,7 +225,7 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
    others are `loadsyms`, `roles`, `boolopt`, `propertynames`; `mons_names` and
    the object names are outside the rewrite. Next: convert the remaining
    description-type tables the same way (the compiler lists each use once the
-   type changes), then install `msg.dat`/`msg.idx` with the target game.
+   type changes).
    XRAM map (defined in [xram.h](include/xram.h)): `mons[]` at $1000
    (19864 bytes), `objects[]` at $6100 (11804 bytes, ending at $8F1B). The
    overlay descriptor default was $8000, which overlapped `objects[]`; it is

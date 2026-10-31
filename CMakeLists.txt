@@ -89,7 +89,7 @@ if(DEFINED LLVM_MOS_PLATFORM)
                 sys/rp6502/msgfetch.c)
     add_dependencies(nethack_objs nethack_gen nethack_msg)
     target_include_directories(nethack_objs PRIVATE ${NH_GEN}/include include)
-    target_compile_definitions(nethack_objs PRIVATE RP6502 "MSG_DIR=\":\"")
+    target_compile_definitions(nethack_objs PRIVATE RP6502 "MSG_DIR=\"ROM:\"")
     # -Oz -fno-inline is ~4% smaller than -Os and keeps single-caller statics
     # out of line, so no function is too big for an overlay slot.
     target_compile_options(nethack_objs PRIVATE -Oz -fno-inline -fno-lto
@@ -177,6 +177,10 @@ if(DEFINED LLVM_MOS_PLATFORM)
     # no data assets yet, so it cannot run; the link reports what does not fit.
     add_executable(nethack EXCLUDE_FROM_ALL)
     add_dependencies(nethack nethack_objs)
+    # The message tables are named assets, opened by the game as ROM:msg.idx
+    # and ROM:msg.dat (see sys/rp6502/msgfetch.c).
+    rp6502_asset(nethack msg.dat ${NH_MSG_DIR}/msg.dat)
+    rp6502_asset(nethack msg.idx ${NH_MSG_DIR}/msg.idx)
     target_sources(nethack PRIVATE $<TARGET_OBJECTS:nethack_objs>)
     target_include_directories(nethack PRIVATE ${NH_GEN}/include include)
     target_compile_definitions(nethack PRIVATE RP6502)
@@ -190,13 +194,15 @@ if(DEFINED LLVM_MOS_PLATFORM)
     endif()
 
     # Storage test for the message tables: msgtest reads every string through
-    # msgfetch.c and prints a checksum. Run it with msg.dat and msg.idx installed
-    # (see sys/rp6502/msgtest.c).
+    # msgfetch.c and prints a checksum. The tables are its ROM assets (see
+    # sys/rp6502/msgtest.c).
     add_executable(msgtest)
-    add_dependencies(msgtest nethack_gen)
+    add_dependencies(msgtest nethack_gen nethack_msg)
+    rp6502_asset(msgtest msg.dat ${NH_MSG_DIR}/msg.dat)
+    rp6502_asset(msgtest msg.idx ${NH_MSG_DIR}/msg.idx)
     target_sources(msgtest PRIVATE sys/rp6502/msgtest.c sys/rp6502/msgfetch.c)
     target_include_directories(msgtest PRIVATE ${NH_GEN}/include include)
-    target_compile_definitions(msgtest PRIVATE RP6502 "MSG_DIR=\":\"")
+    target_compile_definitions(msgtest PRIVATE RP6502 "MSG_DIR=\"ROM:\"")
     target_compile_options(msgtest PRIVATE -Oz -fno-inline -fno-lto
         -ffunction-sections -fdata-sections)
     rp6502_executable(msgtest DATA default RESET default)
