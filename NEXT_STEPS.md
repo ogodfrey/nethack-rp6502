@@ -351,8 +351,14 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
      no run-time symbol-option test has been done yet. `boolopt[]` (options.c,
      about 40 names) is converted through `msgids.txt`: `name` is a `msgid_t`,
      the sentinel is `MSGNULL`, and `BOOLNAME(i)` gives the text (0 past the
-     end). A valid name in `NETHACKOPTIONS` is accepted, and an unknown one
-     reaches the config-error prompt (`config_error_done`). `roles[]` rank names
+     end) only for immediate uses. A name held across other fetches must be
+     copied with `msg_copy()` (`opt_name_at()` and the parse and do-set
+     sites do this). The first version held `MSGTXT` pointers across the
+     `is_wc_option()`/`wc_supported()` loops, which fetch up to 46 names, so
+     the checks compared against overwritten text. The full `O` menu was then
+     checked by driving the host game (all six pages render). A valid name in
+     `NETHACKOPTIONS` is accepted, and an unknown one reaches the config-error
+     prompt (`config_error_done`). `roles[]` rank names
      (117 pairs, 17 characters at most) are converted to `struct RankName`
      (`msgid_t`, `MSGNULL` for no female title). `rank_of()` copies the title
      into a static 20-byte buffer, the same way `clr2colorname()` does, so the

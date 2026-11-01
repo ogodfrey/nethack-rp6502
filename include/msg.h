@@ -12,6 +12,7 @@
 #define RP6502_MSG_H
 
 const char *msg_get(unsigned id);
+char *msg_copy(char *buf, unsigned size, unsigned id);
 unsigned msg_count(void);
 
 /* Tables of text ids: a msgid_t is a string number, MSGID(n) is a constant

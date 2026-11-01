@@ -259,9 +259,12 @@ static struct Bool_Opt {
     { MSGNULL, (boolean *) 0, FALSE, 0 }
 };
 
-/* Text of boolopt[i].name, or 0 past the end of the table. */
+/* Text of boolopt[i].name, or 0 past the end of the table. Use it at once:
+   a name held across other fetches must be copied (msg_copy). */
 #define BOOLNAME(i) \
     (boolopt[i].name == MSGNULL ? (const char *) 0 : MSGTXT(boolopt[i].name))
+/* Room for one option name copied out of storage. */
+#define OPTNAME_LEN 40
 
 /* compound options, for option_help() and external programs like Amiga
  * frontend */
@@ -2044,6 +2047,7 @@ boolean tinitial, tfrom_file;
     int i;
     const char *fullname;
     boolean retval = TRUE;
+    static char optnm[OPTNAME_LEN]; /* a boolopt name held across the checks */
 
     initial = tinitial;
     from_file = tfrom_file;
@@ -4098,8 +4102,9 @@ boolean tinitial, tfrom_file;
             *(boolopt[i].addr) = !negated;
 
             /* 0 means boolean opts */
-            if (duplicate_opt_detection(BOOLNAME(i), 0))
-                complain_about_duplicate(BOOLNAME(i), 0);
+            msg_copy(optnm, sizeof optnm, boolopt[i].name);
+            if (duplicate_opt_detection(optnm, 0))
+                complain_about_duplicate(optnm, 0);
 #ifdef RLECOMP
             if (boolopt[i].addr == &iflags.rlecomp)
                 set_savepref(iflags.rlecomp ? "rlecomp" : "!rlecomp");
@@ -4529,11 +4534,29 @@ static struct other_opts {
     { (char *) 0, 0, (enum opt_other_enums) 0 },
 };
 
+/* Name i of the pass-th option table as text, or 0 past its end: pass 0 is
+   boolopt (copied into buf), 1 is compopt and 2 is othropt (their own text). */
+static const char *
+opt_name_at(pass, i, buf)
+int pass, i;
+char *buf;
+{
+    if (pass == 0) {
+        if (boolopt[i].name == MSGNULL)
+            return (const char *) 0;
+        return msg_copy(buf, OPTNAME_LEN, boolopt[i].name);
+    }
+    if (pass == 1)
+        return compopt[i].name;
+    return othropt[i].name;
+}
+
 /* the 'O' command */
 int
 doset() /* changing options via menu by Per Liboriussen */
 {
     static boolean made_fmtstr = FALSE;
+    static char nmbuf[OPTNAME_LEN]; /* a boolopt name held across checks */
     char buf[BUFSZ];
     const char *name;
     int i = 0, pass, boolcount, pick_cnt, pick_idx, opt_indx;
@@ -4563,9 +4586,7 @@ doset() /* changing options via menu by Per Liboriussen */
            and adjust the format string accordingly */
         longest_name_len = 0;
         for (pass = 0; pass <= 2; pass++)
-            for (i = 0; (name = ((pass == 0) ? BOOLNAME(i)
-                                 : (pass == 1) ? compopt[i].name
-                                   : othropt[i].name)) != 0; i++) {
+            for (i = 0; (name = opt_name_at(pass, i, nmbuf)) != 0; i++) {
                 if (pass == 0 && !boolopt[i].addr)
                     continue;
                 optflags = (pass == 0) ? boolopt[i].optflags
@@ -4590,7 +4611,7 @@ doset() /* changing options via menu by Per Liboriussen */
     any.a_int = 0;
     /* first list any other non-modifiable booleans, then modifiable ones */
     for (pass = 0; pass <= 1; pass++)
-        for (i = 0; (name = BOOLNAME(i)) != 0; i++)
+        for (i = 0; (name = opt_name_at(0, i, nmbuf)) != 0; i++)
             if ((bool_p = boolopt[i].addr) != 0
                 && ((boolopt[i].optflags <= DISP_IN_GAME && pass == 0)
                     || (boolopt[i].optflags >= SET_IN_GAME && pass == 1))) {
@@ -4697,12 +4718,12 @@ doset() /* changing options via menu by Per Liboriussen */
                     (void) special_handling("msgtype", setinitial, fromfile);
             } else if (opt_indx < boolcount) {
                 /* boolean option */
+                opt_name_at(0, opt_indx, nmbuf);
                 Sprintf(buf, "%s%s", *boolopt[opt_indx].addr ? "!" : "",
-                        BOOLNAME(opt_indx));
+                        nmbuf);
                 (void) parseoptions(buf, setinitial, fromfile);
-                if (wc_supported(BOOLNAME(opt_indx))
-                    || wc2_supported(BOOLNAME(opt_indx)))
-                    preference_update(BOOLNAME(opt_indx));
+                if (wc_supported(nmbuf) || wc2_supported(nmbuf))
+                    preference_update(nmbuf);
             } else {
                 /* compound option */
                 opt_indx -= boolcount;

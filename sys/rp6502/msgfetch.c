@@ -112,6 +112,20 @@ msg_get(unsigned id)
     return s;
 }
 
+/* Copy the text of id into buf, which holds size bytes. A name that is held
+   across other fetches must be copied: a msg_get pointer is only valid for
+   MSG_SLOTS more fetches. Too long a text is a fatal error, not a truncation. */
+char *
+msg_copy(char *buf, unsigned size, unsigned id)
+{
+    const char *s = msg_get(id);
+
+    if (strlen(s) >= size)
+        msg_fatal("text too long for buffer", id);
+    strcpy(buf, s);
+    return buf;
+}
+
 #ifdef MSG_CHECK
 /* Host tests: the fetched text must equal the literal the source had. */
 const char *
