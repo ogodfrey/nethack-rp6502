@@ -194,6 +194,8 @@ if(DEFINED LLVM_MOS_PLATFORM)
         target_compile_definitions(nethack PRIVATE RP6502_MONS_XRAM
             RP6502_LEV_XRAM)
         target_link_options(nethack PRIVATE -Wl,--defsym,objects=${OBJS_XRAM_ADDR})
+        # The link map shows what the linker keeps from each module.
+        target_link_options(nethack PRIVATE -Wl,-Map=${CMAKE_CURRENT_BINARY_DIR}/nethack.map)
     endif()
 
     # Storage test for the message tables: msgtest reads every string through

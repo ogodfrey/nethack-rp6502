@@ -46,12 +46,13 @@ cannot execute code.
   the 64 KB XRAM: `mons[]` 19.9 KB, `objects[]` 11.8 KB, the level map 10.1 KB,
   `lastseentyp` and `SpLev_Map` 1.7 KB each, the glyph buffer 5.0 KB, and the
   vision planes 5.0 KB. The overlay directory and descriptor use the rest.
-  The remaining static data (about 87 KB of `.rodata`, 41 KB of `.data`, and
-  41 KB of `.bss` in the latest measurement) cannot go to XRAM, so it must
-  live in storage (read on demand, as `msg.dat` is) or be shrunk.
+  The static RAM that remains (about 138 KB: `.rodata` 85 KB, `.bss` 44 KB,
+  `.data` 9 KB, measured from the link map) cannot go to XRAM, so it lives in
+  storage (read on demand, as `msg.dat` is) or is shrunk.
 - **Consequence: overlays and storage streaming both fit a turn budget.** Code
-  overlays (priority 4) and streamed read-only tables are the main path. The
-  remaining `.bss` buffers are small next to that.
+  overlays (priority 4) and streamed read-only tables are the main path.
+- **Cleanup done:** the non-RP6502 port directories were removed (commit
+  3ee0142f3). `sys/share` and `win/tty` stay.
 
 ## Set up the new machine
 
@@ -304,28 +305,36 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
    after the glyph-buffer move). It has not reproduced in 14 further runs or
    under gdb, and no core file was written. If it recurs, take a core dump
    and check the glyph buffer and the prayer path first.
-   Budget plan (measured, XRAM-tables configuration, sums of the object
-   sections, latest: `.text` 2.75 MB, `.rodata` 87 KB, `.data` 41 KB, `.bss`
-   41 KB). The 64 KB CPU address space must hold the stack, the zero page and
-   system area, resident code, overlay slots and every RAM-resident datum, so
-   roughly 185 KB of static data has to move out of RAM or shrink. The
-   largest parts, in order:
-   - Literal names and text still in RAM: about 44 KB of `.rodata` (the
-     `compopt`, `extcmdlist`, `boolopt`, `roles` and similar tables keep their
-     names; `mons_names` and the object names are outside the rewrite). Names
-     are matched at run time, so they need an accessor with a fetch slot, not
-     a plain `MSGID`.
-   - Initialized `.data` tables (about 41 KB, role, race and similar).
-   - `.bss` buffers: `rooms` (5 KB, 199 uses), `obufs` (3 KB, used as `char *`
-     text buffers, so not XRAM-friendly), and `cs_rows0/1` with `could_see`
-     (3.4 KB, see the vision note above). `status_hilites` is off for this
-     port now.
-   - The per-cell object and monster list heads (6.7 KB, RAM pointers).
+   Budget plan (measured from the linker's kept sections with
+   [mapsizes.py](sys/rp6502/tools/mapsizes.py) on the map that CMake writes to
+   `build/.../nethack.map` in the XRAM-tables configuration):
+   `.text` 2,766,517 bytes (overlays), `.rodata` 85,122 bytes, `.data` 9,040
+   bytes, `.bss` 43,929 bytes. The earlier figure of 41 KB of `.data` counted
+   the RAM copies of `mons[]` and `objects[]` that the linker drops, so the
+   static RAM is about 138 KB, and `.rodata` is most of it. The 64 KB CPU
+   address space must also hold the stack, the zero page and system area,
+   resident code, and overlay slots, so the static data has to drop to a few
+   tens of KB. The largest parts, in order:
+   - `.rodata` (85 KB): about 44 KB of literal names and text still in RAM
+     (the `compopt`, `extcmdlist`, `boolopt`, `roles` and similar tables keep
+     their names; `mons_names` and the object names are outside the rewrite),
+     plus the const structure tables (`roles`, `races`, `defsyms`,
+     `def_monsyms`, `shtypes`, and others). Storage streaming is the plan
+     (decided 2026-11-01): packaged as ROM assets and read on demand. Names
+     are matched at run time, so they need a fetch slot and a copy-out, not a
+     plain `MSGID`.
+   - `.bss` (44 KB): `rooms` (5 KB, 199 uses), `obufs` (3 KB, `char *` text
+     buffers), `cs_rows0/1` with `could_see` (3.4 KB, see the vision note),
+     and the per-cell object and monster list heads (6.7 KB, RAM pointers).
+     `status_hilites` is off for this port.
+   - `.data` (9 KB): small; the `mons`/`objects` RAM mirrors are dropped at
+     link, and CMake still compiles them into `nethack_objs`. Removing those
+     copies from `nethack_objs` would make the object sums match the linked
+     sizes; it does not change the linked size.
    Each moved structure needs the same kind of accessor as the level map, and
-   each access costs an XRAM transfer. The per-access cost on the target is
-   estimated, not measured; measure it before choosing between XRAM and
-   storage for the hot tables. Priority 4 (overlays) is still required for the
-   code itself.
+   each access costs a storage or XRAM transfer. The per-access cost on the
+   target is estimated, not measured; measure a whole move, not one access.
+   Priority 4 (overlays) is still required for the code itself.
 4. **Complete overlay packing and integration.** Implement a profile-guided
    partitioner for `ovlpack.py`, choose a RAM/slot budget, and split functions
    that exceed the chosen slot size. Test relocation, pointer lifetimes,
