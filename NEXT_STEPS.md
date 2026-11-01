@@ -133,6 +133,30 @@ run reported 2,511 loads/1,250 forced evictions. Counts may vary with the
 compiler. Turn this into a maintained automated test and extend it for ABI
 preservation, callbacks, tail calls, and pointers to overlay-owned data.
 
+## Overlay integration status (2026-11-01)
+
+Measured on the whole game (`sys/rp6502/tools/ovlasm.py build/xramobj
+build/ovl/asm-xram`, then `ovlpack.py stats`):
+
+- Text is 2.77 MB. The largest functions are `readobjnam` (23.7 KB),
+  `hmon_hitmon` (17.9 KB) and `parseoptions` (16.9 KB), so a slot must hold
+  at least 24 KB unless those functions are split.
+- Static data is about 116 KB (rodata 64 KB, bss 43 KB, data 9 KB, the
+  linker's kept sections). It cannot coexist with 24 KB of slots in 64 KB of
+  RAM, so the overlay plan alone cannot make the game run.
+- `ovlpack.py plan ASMDIR OUTDIR SLOT_BYTES NSLOTS` (new) packs functions in
+  source order into overlays. With 24 KB slots it makes 123 overlays and
+  keeps only `main` and the `__` runtime resident. `emit` runs on it.
+- `link` fails: the packer emits 2,638 descriptors (3 bytes each, 7.9 KB),
+  placed at $F000, but only about 5 KB of XRAM is free there ($EC30 to
+  $FFFF after the tables). The `.short` addresses wrap. Descriptors are needed
+  for every cross-overlay call target and every address-taken function, so a
+  call-graph-aware plan (PROFILE=1 host cgprof edges) should cut them. The
+  planner ignores the call graph yet.
+- Still open: the call-graph input, a smaller descriptor encoding or a
+  smaller count, splitting the largest functions to shrink the slot, and the
+  static-data moves listed under priority 3.
+
 ## Priority next steps
 
 1. **Re-establish the baseline** using the builds and overlay test above.

@@ -6,8 +6,8 @@ Reads the llvm-mos assembly of every module (clang -S -ffunction-sections
 tables, or one data object), and rewrites it into a resident program plus
 overlays that run in the slots managed by sys/rp6502/ovl/ovlrt.s.
 
-    ovlpack.py stats ASMDIR [CALLGRAPH]
-    ovlpack.py plan  ASMDIR CALLGRAPH OUTDIR [options]
+    ovlpack.py stats ASMDIR
+    ovlpack.py plan  ASMDIR OUTDIR SLOT_BYTES NSLOTS
     ovlpack.py emit  ASMDIR PLAN.json OUTDIR
     ovlpack.py link  OUTDIR [resident link inputs]
 
@@ -401,6 +401,57 @@ def cmd_stats(argv):
     print('largest data objects:')
     for s, k, m, n in sorted(data, reverse=True)[:40]:
         print('  %6d %-6s %s/%s' % (s, k, m, n))
+
+
+def cmd_plan(argv):
+    """plan ASMDIR OUTDIR SLOT_BYTES NSLOTS
+
+    Packs the functions into overlays of at most SLOT_BYTES, in source order
+    (modules in name order), so a module's functions tend to share overlays.
+    The runtime (names starting with __) and main stay resident. A function
+    larger than SLOT_BYTES is an error: it must be split or made resident.
+    Writes OUTDIR/plan.json, which emit reads."""
+    asmdir, outdir = argv[0], argv[1]
+    slot, nslots = int(argv[2]), int(argv[3])
+    prog = Program(load_modules(asmdir))
+    items = []
+    for m in prog.mods:
+        for it in m.items:
+            if it.kind == 'text':
+                jt = sum(2 * sum(1 for ln in lines if '.short' in ln)
+                         for hdr, lines in it.blocks[1:])
+                it.size = text_size(it) + jt
+                items.append(it)
+    too_big = [it for it in items if it.size > slot
+               and not (it.name.startswith('__') or it.name == 'main')]
+    if too_big:
+        for it in sorted(too_big, key=lambda t: -t.size)[:20]:
+            print('too big for a %d-byte slot: %6d %s/%s' %
+                  (slot, it.size, it.mod, it.name))
+        raise SystemExit('%d functions do not fit a slot' % len(too_big))
+    bins, cur, used, resident = [], [], 0, []
+    for it in items:
+        if it.name.startswith('__') or it.name == 'main':
+            resident.append(it)
+            continue
+        if used + it.size > slot and cur:
+            bins.append(cur)
+            cur, used = [], 0
+        cur.append(it)
+        used += it.size
+    if cur:
+        bins.append(cur)
+    if len(bins) > 255:
+        raise SystemExit('%d overlays; the directory holds 255' % len(bins))
+    plan = {'nslots': nslots, 'slot_size': slot, 'file': 'nethack.ovl',
+            'overlays': [['%s/%s' % (it.mod, it.name) for it in b]
+                         for b in bins]}
+    os.makedirs(outdir, exist_ok=True)
+    with open(os.path.join(outdir, 'plan.json'), 'w') as f:
+        json.dump(plan, f, indent=1)
+    sizes = [sum(it.size for it in b) for b in bins]
+    print('%d overlays (largest %d, total %d bytes), %d functions resident' %
+          (len(bins), max(sizes or [0]), sum(sizes), len(resident)))
 
 
 # --------------------------------------------------------------------------
@@ -849,6 +900,8 @@ def main():
     cmd = sys.argv[1]
     if cmd == 'stats':
         cmd_stats(sys.argv[2:])
+    elif cmd == 'plan':
+        cmd_plan(sys.argv[2:])
     elif cmd == 'emit':
         cmd_emit(sys.argv[2:])
     elif cmd == 'link':
