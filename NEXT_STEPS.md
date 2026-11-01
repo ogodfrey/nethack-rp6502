@@ -308,8 +308,9 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
    Budget plan (measured from the linker's kept sections with
    [mapsizes.py](sys/rp6502/tools/mapsizes.py) on the map that CMake writes to
    `build/.../nethack.map` in the XRAM-tables configuration):
-   `.text` 2,771,730 bytes (overlays), `.rodata` 73,386 bytes, `.data` 9,040
-   bytes, `.bss` 43,972 bytes. The earlier figure of 41 KB of `.data` counted
+   `.text` 2,771,808 bytes (overlays), `.rodata` 71,220 bytes, `.data` 9,040
+   bytes, `.bss` 44,092 bytes (measured after the boolopt, compopt and
+   extcmdlist conversions; kept literal bytes 36,622). The earlier figure of 41 KB of `.data` counted
    the RAM copies of `mons[]` and `objects[]` that the linker drops, so the
    static RAM is about 138 KB, and `.rodata` is most of it. The 64 KB CPU
    address space must also hold the stack, the zero page and system area,
