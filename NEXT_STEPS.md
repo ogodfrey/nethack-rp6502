@@ -157,7 +157,33 @@ build/ovl/asm-xram`, then `ovlpack.py stats`):
   smaller count, splitting the largest functions to shrink the slot, and the
   static-data moves listed under priority 3.
 
+## Memory budget (2026-11-01): what must move
+
+Two 64 KB memories: CPU RAM and XRAM. Measured needs (XRAM-tables build):
+
+- XRAM fixed tables: about 55 KB (mons 19.9, objects 11.8, level map 10.1,
+  glyph buffer 5.0, vision planes 5.0, lastseentyp and SpLev 3.4). Free: about
+  5 KB at $EC30-$FFFF. Overlay descriptors need about 7.9 KB more. The level
+  list heads (`level.objects`/`level.monsters`, 6.7 KB) also need XRAM. XRAM
+  cannot take them.
+- CPU RAM: `.bss` 43 KB and `.data` 9 KB are mutable; `.rodata` 64 KB is
+  read-only. Overlay slots need at least 24 KB (readobjnam). The resident
+  code, stack and system area need more on top.
+
+So read-only data (rodata, about 64 KB) must move to storage (ROM assets,
+streamed on demand like `msg.dat`). Mutable state has no storage home, so
+`.bss` (43 KB) must shrink, and XRAM cannot absorb more. The largest `.bss`
+items: `level` list heads 6.7 KB, `rooms` 5.2 KB, `could_see` 3.4 KB, `obufs`
+3.1 KB, `fqn_filename_buffer` 2.0 KB, sp_lev stack 1.7 KB, `u` 1.4 KB,
+`nextmbuf` 1.3 KB, `mvitals` 1.1 KB, `blstats` 1.1 KB.
+
+Moves needing a decision: (1) a smaller slot (split readobjnam, hmon_hitmon,
+parseoptions to about 12 KB), (2) a paged or file-backed store for per-level
+state (the saves already write levels to files), (3) dropping features for
+the RP6502 build (special levels and the shop code are the largest text).
+
 ## Priority next steps
+
 
 1. **Re-establish the baseline** using the builds and overlay test above.
    Keep the host behavior working as target-specific changes are made. Fix the
