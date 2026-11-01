@@ -2807,48 +2807,48 @@ STATIC_OVL NEARDATA const struct o_range o_ranges[] = {
    vs "pick-axe") then there is no need for inclusion in this list;
    likewise for ``"of" inversions'' ("boots of speed" vs "speed boots") */
 static const struct alt_spellings {
-    const char *sp;
+    msgid_t sp;
     int ob;
 } spellings[] = {
-    { "pickax", PICK_AXE },
-    { "whip", BULLWHIP },
-    { "saber", SILVER_SABER },
-    { "silver sabre", SILVER_SABER },
-    { "smooth shield", SHIELD_OF_REFLECTION },
-    { "grey dragon scale mail", GRAY_DRAGON_SCALE_MAIL },
-    { "grey dragon scales", GRAY_DRAGON_SCALES },
-    { "iron ball", HEAVY_IRON_BALL },
-    { "lantern", BRASS_LANTERN },
-    { "mattock", DWARVISH_MATTOCK },
-    { "amulet of poison resistance", AMULET_VERSUS_POISON },
-    { "potion of sleep", POT_SLEEPING },
-    { "stone", ROCK },
-    { "camera", EXPENSIVE_CAMERA },
-    { "tee shirt", T_SHIRT },
-    { "can", TIN },
-    { "can opener", TIN_OPENER },
-    { "kelp", KELP_FROND },
-    { "eucalyptus", EUCALYPTUS_LEAF },
-    { "royal jelly", LUMP_OF_ROYAL_JELLY },
-    { "lembas", LEMBAS_WAFER },
-    { "cookie", FORTUNE_COOKIE },
-    { "pie", CREAM_PIE },
-    { "marker", MAGIC_MARKER },
-    { "hook", GRAPPLING_HOOK },
-    { "grappling iron", GRAPPLING_HOOK },
-    { "grapnel", GRAPPLING_HOOK },
-    { "grapple", GRAPPLING_HOOK },
-    { "protection from shape shifters", RIN_PROTECTION_FROM_SHAPE_CHAN },
+    { MSG_ST("pickax"), PICK_AXE },
+    { MSG_ST("whip"), BULLWHIP },
+    { MSG_ST("saber"), SILVER_SABER },
+    { MSG_ST("silver sabre"), SILVER_SABER },
+    { MSG_ST("smooth shield"), SHIELD_OF_REFLECTION },
+    { MSG_ST("grey dragon scale mail"), GRAY_DRAGON_SCALE_MAIL },
+    { MSG_ST("grey dragon scales"), GRAY_DRAGON_SCALES },
+    { MSG_ST("iron ball"), HEAVY_IRON_BALL },
+    { MSG_ST("lantern"), BRASS_LANTERN },
+    { MSG_ST("mattock"), DWARVISH_MATTOCK },
+    { MSG_ST("amulet of poison resistance"), AMULET_VERSUS_POISON },
+    { MSG_ST("potion of sleep"), POT_SLEEPING },
+    { MSG_ST("stone"), ROCK },
+    { MSG_ST("camera"), EXPENSIVE_CAMERA },
+    { MSG_ST("tee shirt"), T_SHIRT },
+    { MSG_ST("can"), TIN },
+    { MSG_ST("can opener"), TIN_OPENER },
+    { MSG_ST("kelp"), KELP_FROND },
+    { MSG_ST("eucalyptus"), EUCALYPTUS_LEAF },
+    { MSG_ST("royal jelly"), LUMP_OF_ROYAL_JELLY },
+    { MSG_ST("lembas"), LEMBAS_WAFER },
+    { MSG_ST("cookie"), FORTUNE_COOKIE },
+    { MSG_ST("pie"), CREAM_PIE },
+    { MSG_ST("marker"), MAGIC_MARKER },
+    { MSG_ST("hook"), GRAPPLING_HOOK },
+    { MSG_ST("grappling iron"), GRAPPLING_HOOK },
+    { MSG_ST("grapnel"), GRAPPLING_HOOK },
+    { MSG_ST("grapple"), GRAPPLING_HOOK },
+    { MSG_ST("protection from shape shifters"), RIN_PROTECTION_FROM_SHAPE_CHAN },
     /* if we ever add other sizes, move this to o_ranges[] with "bag" */
-    { "box", LARGE_BOX },
+    { MSG_ST("box"), LARGE_BOX },
     /* normally we wouldn't have to worry about unnecessary <space>, but
        " stone" will get stripped off, preventing a wishymatch; that actually
        lets "flint stone" be a match, so we also accept bogus "flintstone" */
-    { "luck stone", LUCKSTONE },
-    { "load stone", LOADSTONE },
-    { "touch stone", TOUCHSTONE },
-    { "flintstone", FLINT },
-    { (const char *) 0, 0 },
+    { MSG_ST("luck stone"), LUCKSTONE },
+    { MSG_ST("load stone"), LOADSTONE },
+    { MSG_ST("touch stone"), TOUCHSTONE },
+    { MSG_ST("flintstone"), FLINT },
+    { MSGNULL, 0 },
 };
 
 STATIC_OVL short
@@ -3341,8 +3341,8 @@ struct obj *no_wish;
     {
         const struct alt_spellings *as = spellings;
 
-        while (as->sp) {
-            if (fuzzymatch(bp, as->sp, " -", TRUE)) {
+        while (as->sp != MSGNULL) {
+            if (fuzzymatch(bp, MSGTXT(as->sp), " -", TRUE)) {
                 typ = as->ob;
                 goto typfnd;
             }
