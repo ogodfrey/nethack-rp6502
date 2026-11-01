@@ -87,11 +87,32 @@ static char *cs_rows0[ROWNO], *cs_rows1[ROWNO];
 static char cs_rmin0[ROWNO], cs_rmax0[ROWNO];
 static char cs_rmin1[ROWNO], cs_rmax1[ROWNO];
 
-static char viz_clear[ROWNO][COLNO]; /* vision clear/blocked map */
-static char *viz_clear_rows[ROWNO];
-
-static char left_ptrs[ROWNO][COLNO]; /* LOS algorithm helpers */
+/* The clear/blocked map and the LOS helpers. With RP6502_LEV_XRAM they live
+ * in XRAM (rp6502lev.c, rp6502xram_host.c); the accessors have the same
+ * names in both modes. */
+#ifndef RP6502_LEV_XRAM
+static char viz_clear[ROWNO][COLNO];
+static char left_ptrs[ROWNO][COLNO];
 static char right_ptrs[ROWNO][COLNO];
+#define vcl_get(r, c) (viz_clear[(r)][(c)])
+#define vcl_put(r, c, v) (viz_clear[(r)][(c)] = (v))
+#define lpt_get(r, c) (left_ptrs[(r)][(c)])
+#define lpt_put(r, c, v) (left_ptrs[(r)][(c)] = (v))
+#define rpt_get(r, c) (right_ptrs[(r)][(c)])
+#define rpt_put(r, c, v) (right_ptrs[(r)][(c)] = (v))
+#define vis_planes_clear()                                  \
+    (memset((genericptr_t) viz_clear, 0, sizeof viz_clear), \
+     memset((genericptr_t) left_ptrs, 0, sizeof left_ptrs), \
+     memset((genericptr_t) right_ptrs, 0, sizeof right_ptrs))
+#else
+#define vcl_get(r, c) rpv_vcl_get((r), (c))
+#define vcl_put(r, c, v) rpv_vcl_put((r), (c), (v))
+#define lpt_get(r, c) rpv_lpt_get((r), (c))
+#define lpt_put(r, c, v) rpv_lpt_put((r), (c), (v))
+#define rpt_get(r, c) rpv_rpt_get((r), (c))
+#define rpt_put(r, c, v) rpv_rpt_put((r), (c), (v))
+#define vis_planes_clear() rpv_planes_clear()
+#endif
 
 /* Forward declarations. */
 STATIC_DCL void FDECL(fill_point, (int, int));
@@ -124,8 +145,8 @@ vision_init()
     for (i = 0; i < ROWNO; i++) {
         cs_rows0[i] = could_see[0][i];
         cs_rows1[i] = could_see[1][i];
-        viz_clear_rows[i] = viz_clear[i];
     }
+    vis_planes_clear();
 
     /* Start out with cs0 as our current array */
     viz_array = cs_rows0;
@@ -204,7 +225,7 @@ vision_reset()
     (void) memset((genericptr_t) could_see, 0, sizeof(could_see));
 
     /* Reset the pointers and clear so that we have a "full" dungeon. */
-    (void) memset((genericptr_t) viz_clear, 0, sizeof(viz_clear));
+    vis_planes_clear();
 
     /* Dig the level */
     for (y = 0; y < ROWNO; y++) {
@@ -214,17 +235,17 @@ vision_reset()
             if (block != (IS_ROCK(lev_get(x, y).typ) || does_block(x, y))) {
                 if (block) {
                     for (i = dig_left; i < x; i++) {
-                        left_ptrs[y][i] = dig_left;
-                        right_ptrs[y][i] = x - 1;
+                        lpt_put(y, i, dig_left);
+                        rpt_put(y, i, x - 1);
                     }
                 } else {
                     i = dig_left;
                     if (dig_left)
                         dig_left--; /* point at first blocked point */
                     for (; i < x; i++) {
-                        left_ptrs[y][i] = dig_left;
-                        right_ptrs[y][i] = x;
-                        viz_clear[y][i] = 1;
+                        lpt_put(y, i, dig_left);
+                        rpt_put(y, i, x);
+                        vcl_put(y, i, 1);
                     }
                 }
                 dig_left = x;
@@ -235,9 +256,9 @@ vision_reset()
         if (!block && dig_left)
             dig_left--; /* point at first blocked point */
         for (; i < COLNO; i++) {
-            left_ptrs[y][i] = dig_left;
-            right_ptrs[y][i] = (COLNO - 1);
-            viz_clear[y][i] = !block;
+            lpt_put(y, i, dig_left);
+            rpt_put(y, i, (COLNO - 1));
+            vcl_put(y, i, !block);
         }
     }
 
@@ -410,27 +431,27 @@ int row, col;
     if (lev->typ >= CROSSWALL && lev->typ <= TRWALL) {
         switch (res) {
         case SV0:
-            if (col > 0 && viz_clear[row][col - 1])
+            if (col > 0 && vcl_get(row, col - 1))
                 res |= SV7;
-            if (row > 0 && viz_clear[row - 1][col])
+            if (row > 0 && vcl_get(row - 1, col))
                 res |= SV1;
             break;
         case SV2:
-            if (row > 0 && viz_clear[row - 1][col])
+            if (row > 0 && vcl_get(row - 1, col))
                 res |= SV1;
-            if (col < COLNO - 1 && viz_clear[row][col + 1])
+            if (col < COLNO - 1 && vcl_get(row, col + 1))
                 res |= SV3;
             break;
         case SV4:
-            if (col < COLNO - 1 && viz_clear[row][col + 1])
+            if (col < COLNO - 1 && vcl_get(row, col + 1))
                 res |= SV3;
-            if (row < ROWNO - 1 && viz_clear[row + 1][col])
+            if (row < ROWNO - 1 && vcl_get(row + 1, col))
                 res |= SV5;
             break;
         case SV6:
-            if (row < ROWNO - 1 && viz_clear[row + 1][col])
+            if (row < ROWNO - 1 && vcl_get(row + 1, col))
                 res |= SV5;
-            if (col > 0 && viz_clear[row][col - 1])
+            if (col > 0 && vcl_get(row, col - 1))
                 res |= SV7;
             break;
         }
@@ -747,7 +768,7 @@ int control;
                  * We see this position because it is lit.
                  */
                 if ((IS_DOOR(lev->typ) || lev->typ == SDOOR
-                     || IS_WALL(lev->typ)) && !viz_clear[row][col]) {
+                     || IS_WALL(lev->typ)) && !vcl_get(row, col)) {
                     /*
                      * Make sure doors, walls, boulders or mimics don't show
                      * up
@@ -931,82 +952,82 @@ int row, col;
 {
     int i;
 
-    if (viz_clear[row][col])
+    if (vcl_get(row, col))
         return; /* already done */
 
-    viz_clear[row][col] = 1;
+    vcl_put(row, col, 1);
 
     /*
      * Boundary cases first.
      */
     if (col == 0) { /* left edge */
-        if (viz_clear[row][1]) {
-            right_ptrs[row][0] = right_ptrs[row][1];
+        if (vcl_get(row, 1)) {
+            rpt_put(row, 0, rpt_get(row, 1));
         } else {
-            right_ptrs[row][0] = 1;
-            for (i = 1; i <= right_ptrs[row][1]; i++)
-                left_ptrs[row][i] = 1;
+            rpt_put(row, 0, 1);
+            for (i = 1; i <= rpt_get(row, 1); i++)
+                lpt_put(row, i, 1);
         }
     } else if (col == (COLNO - 1)) { /* right edge */
 
-        if (viz_clear[row][COLNO - 2]) {
-            left_ptrs[row][COLNO - 1] = left_ptrs[row][COLNO - 2];
+        if (vcl_get(row, COLNO - 2)) {
+            lpt_put(row, COLNO - 1, lpt_get(row, COLNO - 2));
         } else {
-            left_ptrs[row][COLNO - 1] = COLNO - 2;
-            for (i = left_ptrs[row][COLNO - 2]; i < COLNO - 1; i++)
-                right_ptrs[row][i] = COLNO - 2;
+            lpt_put(row, COLNO - 1, COLNO - 2);
+            for (i = lpt_get(row, COLNO - 2); i < COLNO - 1; i++)
+                rpt_put(row, i, COLNO - 2);
         }
 
     /*
      * At this point, we know we aren't on the boundaries.
      */
-    } else if (viz_clear[row][col - 1] && viz_clear[row][col + 1]) {
+    } else if (vcl_get(row, col - 1) && vcl_get(row, col + 1)) {
         /* Both sides clear */
-        for (i = left_ptrs[row][col - 1]; i <= col; i++) {
-            if (!viz_clear[row][i])
+        for (i = lpt_get(row, col - 1); i <= col; i++) {
+            if (!vcl_get(row, i))
                 continue; /* catch non-end case */
-            right_ptrs[row][i] = right_ptrs[row][col + 1];
+            rpt_put(row, i, rpt_get(row, col + 1));
         }
-        for (i = col; i <= right_ptrs[row][col + 1]; i++) {
-            if (!viz_clear[row][i])
+        for (i = col; i <= rpt_get(row, col + 1); i++) {
+            if (!vcl_get(row, i))
                 continue; /* catch non-end case */
-            left_ptrs[row][i] = left_ptrs[row][col - 1];
+            lpt_put(row, i, lpt_get(row, col - 1));
         }
 
-    } else if (viz_clear[row][col - 1]) {
+    } else if (vcl_get(row, col - 1)) {
         /* Left side clear, right side blocked. */
-        for (i = col + 1; i <= right_ptrs[row][col + 1]; i++)
-            left_ptrs[row][i] = col + 1;
+        for (i = col + 1; i <= rpt_get(row, col + 1); i++)
+            lpt_put(row, i, col + 1);
 
-        for (i = left_ptrs[row][col - 1]; i <= col; i++) {
-            if (!viz_clear[row][i])
+        for (i = lpt_get(row, col - 1); i <= col; i++) {
+            if (!vcl_get(row, i))
                 continue; /* catch non-end case */
-            right_ptrs[row][i] = col + 1;
+            rpt_put(row, i, col + 1);
         }
-        left_ptrs[row][col] = left_ptrs[row][col - 1];
+        lpt_put(row, col, lpt_get(row, col - 1));
 
-    } else if (viz_clear[row][col + 1]) {
+    } else if (vcl_get(row, col + 1)) {
         /* Right side clear, left side blocked. */
-        for (i = left_ptrs[row][col - 1]; i < col; i++)
-            right_ptrs[row][i] = col - 1;
+        for (i = lpt_get(row, col - 1); i < col; i++)
+            rpt_put(row, i, col - 1);
 
-        for (i = col; i <= right_ptrs[row][col + 1]; i++) {
-            if (!viz_clear[row][i])
+        for (i = col; i <= rpt_get(row, col + 1); i++) {
+            if (!vcl_get(row, i))
                 continue; /* catch non-end case */
-            left_ptrs[row][i] = col - 1;
+            lpt_put(row, i, col - 1);
         }
-        right_ptrs[row][col] = right_ptrs[row][col + 1];
+        rpt_put(row, col, rpt_get(row, col + 1));
 
     } else {
         /* Both sides blocked */
-        for (i = left_ptrs[row][col - 1]; i < col; i++)
-            right_ptrs[row][i] = col - 1;
+        for (i = lpt_get(row, col - 1); i < col; i++)
+            rpt_put(row, i, col - 1);
 
-        for (i = col + 1; i <= right_ptrs[row][col + 1]; i++)
-            left_ptrs[row][i] = col + 1;
+        for (i = col + 1; i <= rpt_get(row, col + 1); i++)
+            lpt_put(row, i, col + 1);
 
-        left_ptrs[row][col] = col - 1;
-        right_ptrs[row][col] = col + 1;
+        lpt_put(row, col, col - 1);
+        rpt_put(row, col, col + 1);
     }
 }
 
@@ -1016,78 +1037,78 @@ int row, col;
 {
     int i;
 
-    if (!viz_clear[row][col])
+    if (!vcl_get(row, col))
         return;
 
-    viz_clear[row][col] = 0;
+    vcl_put(row, col, 0);
 
     if (col == 0) {
-        if (viz_clear[row][1]) { /* adjacent is clear */
-            right_ptrs[row][0] = 0;
+        if (vcl_get(row, 1)) { /* adjacent is clear */
+            rpt_put(row, 0, 0);
         } else {
-            right_ptrs[row][0] = right_ptrs[row][1];
-            for (i = 1; i <= right_ptrs[row][1]; i++)
-                left_ptrs[row][i] = 0;
+            rpt_put(row, 0, rpt_get(row, 1));
+            for (i = 1; i <= rpt_get(row, 1); i++)
+                lpt_put(row, i, 0);
         }
     } else if (col == COLNO - 1) {
-        if (viz_clear[row][COLNO - 2]) { /* adjacent is clear */
-            left_ptrs[row][COLNO - 1] = COLNO - 1;
+        if (vcl_get(row, COLNO - 2)) { /* adjacent is clear */
+            lpt_put(row, COLNO - 1, COLNO - 1);
         } else {
-            left_ptrs[row][COLNO - 1] = left_ptrs[row][COLNO - 2];
-            for (i = left_ptrs[row][COLNO - 2]; i < COLNO - 1; i++)
-                right_ptrs[row][i] = COLNO - 1;
+            lpt_put(row, COLNO - 1, lpt_get(row, COLNO - 2));
+            for (i = lpt_get(row, COLNO - 2); i < COLNO - 1; i++)
+                rpt_put(row, i, COLNO - 1);
         }
 
     /*
      * Else we know that we are not on an edge.
      */
-    } else if (viz_clear[row][col - 1] && viz_clear[row][col + 1]) {
+    } else if (vcl_get(row, col - 1) && vcl_get(row, col + 1)) {
         /* Both sides clear */
-        for (i = left_ptrs[row][col - 1] + 1; i <= col; i++)
-            right_ptrs[row][i] = col;
+        for (i = lpt_get(row, col - 1) + 1; i <= col; i++)
+            rpt_put(row, i, col);
 
-        if (!left_ptrs[row][col - 1]) /* catch the end case */
-            right_ptrs[row][0] = col;
+        if (!lpt_get(row, col - 1)) /* catch the end case */
+            rpt_put(row, 0, col);
 
-        for (i = col; i < right_ptrs[row][col + 1]; i++)
-            left_ptrs[row][i] = col;
+        for (i = col; i < rpt_get(row, col + 1); i++)
+            lpt_put(row, i, col);
 
-        if (right_ptrs[row][col + 1] == COLNO - 1) /* catch the end case */
-            left_ptrs[row][COLNO - 1] = col;
+        if (rpt_get(row, col + 1) == COLNO - 1) /* catch the end case */
+            lpt_put(row, COLNO - 1, col);
 
-    } else if (viz_clear[row][col - 1]) {
+    } else if (vcl_get(row, col - 1)) {
         /* Left side clear, right side blocked. */
-        for (i = col; i <= right_ptrs[row][col + 1]; i++)
-            left_ptrs[row][i] = col;
+        for (i = col; i <= rpt_get(row, col + 1); i++)
+            lpt_put(row, i, col);
 
-        for (i = left_ptrs[row][col - 1] + 1; i < col; i++)
-            right_ptrs[row][i] = col;
+        for (i = lpt_get(row, col - 1) + 1; i < col; i++)
+            rpt_put(row, i, col);
 
-        if (!left_ptrs[row][col - 1]) /* catch the end case */
-            right_ptrs[row][i] = col;
+        if (!lpt_get(row, col - 1)) /* catch the end case */
+            rpt_put(row, i, col);
 
-        right_ptrs[row][col] = right_ptrs[row][col + 1];
+        rpt_put(row, col, rpt_get(row, col + 1));
 
-    } else if (viz_clear[row][col + 1]) {
+    } else if (vcl_get(row, col + 1)) {
         /* Right side clear, left side blocked. */
-        for (i = left_ptrs[row][col - 1]; i <= col; i++)
-            right_ptrs[row][i] = col;
+        for (i = lpt_get(row, col - 1); i <= col; i++)
+            rpt_put(row, i, col);
 
-        for (i = col + 1; i < right_ptrs[row][col + 1]; i++)
-            left_ptrs[row][i] = col;
+        for (i = col + 1; i < rpt_get(row, col + 1); i++)
+            lpt_put(row, i, col);
 
-        if (right_ptrs[row][col + 1] == COLNO - 1) /* catch the end case */
-            left_ptrs[row][i] = col;
+        if (rpt_get(row, col + 1) == COLNO - 1) /* catch the end case */
+            lpt_put(row, i, col);
 
-        left_ptrs[row][col] = left_ptrs[row][col - 1];
+        lpt_put(row, col, lpt_get(row, col - 1));
 
     } else {
         /* Both sides blocked */
-        for (i = left_ptrs[row][col - 1]; i <= col; i++)
-            right_ptrs[row][i] = right_ptrs[row][col + 1];
+        for (i = lpt_get(row, col - 1); i <= col; i++)
+            rpt_put(row, i, rpt_get(row, col + 1));
 
-        for (i = col; i <= right_ptrs[row][col + 1]; i++)
-            left_ptrs[row][i] = left_ptrs[row][col - 1];
+        for (i = col; i <= rpt_get(row, col + 1); i++)
+            lpt_put(row, i, lpt_get(row, col - 1));
     }
 }
 
@@ -1130,7 +1151,7 @@ static genericptr_t varg;
 #define set_max(z)      \
     if (*row_max < (z)) \
         *row_max = (z)
-#define is_clear(row, col) viz_clear_rows[row][col]
+#define is_clear(row, col) vcl_get(row, col)
 
 /*
  * clear_path()         expanded into 4 macros/functions:
@@ -1774,16 +1795,16 @@ char *limits;       /* points at range limit for current row, or NULL */
      * variable that gets the shadow.
      */
     while (left <= right_mark) {
-        loc_right = right_ptrs[row][left];
+        loc_right = rpt_get(row, left);
         if (loc_right > lim_max)
             loc_right = lim_max;
-        if (viz_clear_rows[row][left]) {
+        if (vcl_get(row, left)) {
             if (loc_right >= left_shadow) {
                 left = left_shadow; /* opening ends beyond shadow */
                 break;
             }
             left = loc_right;
-            loc_right = right_ptrs[row][left];
+            loc_right = rpt_get(row, left);
             if (loc_right > lim_max)
                 loc_right = lim_max;
             if (left == loc_right)
@@ -1832,7 +1853,7 @@ char *limits;       /* points at range limit for current row, or NULL */
      * the location is filled, then we want to see it, so we put the
      * right shadow back (same as fb_col).
      */
-    if (right_shadow < fb_col && !viz_clear_rows[row][fb_col])
+    if (right_shadow < fb_col && !vcl_get(row, fb_col))
         right_shadow = fb_col;
     if (right_shadow > lim_max)
         right_shadow = lim_max;
@@ -1843,11 +1864,11 @@ char *limits;       /* points at range limit for current row, or NULL */
      */
     while (left <= right_mark) {
         /* Get the far right of the opening or wall */
-        loc_right = right_ptrs[row][left];
+        loc_right = rpt_get(row, left);
         if (loc_right > lim_max)
             loc_right = lim_max;
 
-        if (!viz_clear_rows[row][left]) {
+        if (!vcl_get(row, left)) {
             hit_stone = 1; /* use stone on this row as close block */
             /*
              * We can see all of the wall until the next open spot or the
@@ -1871,7 +1892,7 @@ char *limits;       /* points at range limit for current row, or NULL */
             if (loc_right == right_mark)
                 return; /* hit the end */
             left = loc_right + 1;
-            loc_right = right_ptrs[row][left];
+            loc_right = rpt_get(row, left);
             if (loc_right > lim_max)
                 loc_right = lim_max;
             /* fall through... we know at least one position is visible */
@@ -2040,16 +2061,16 @@ char *limits;
     right_shadow = close_shadow(FROM_LEFT, row, cb_row, cb_col);
 
     while (right >= left_mark) {
-        loc_left = left_ptrs[row][right];
+        loc_left = lpt_get(row, right);
         if (loc_left < lim_min)
             loc_left = lim_min;
-        if (viz_clear_rows[row][right]) {
+        if (vcl_get(row, right)) {
             if (loc_left <= right_shadow) {
                 right = right_shadow; /* opening ends beyond shadow */
                 break;
             }
             right = loc_left;
-            loc_left = left_ptrs[row][right];
+            loc_left = lpt_get(row, right);
             if (loc_left < lim_min)
                 loc_left = lim_min;
             if (right == loc_left)
@@ -2082,15 +2103,15 @@ char *limits;
         left_shadow = 0;
 
     /* Do vertical walls as we want. */
-    if (left_shadow > fb_col && !viz_clear_rows[row][fb_col])
+    if (left_shadow > fb_col && !vcl_get(row, fb_col))
         left_shadow = fb_col;
     if (left_shadow < lim_min)
         left_shadow = lim_min;
 
     while (right >= left_mark) {
-        loc_left = left_ptrs[row][right];
+        loc_left = lpt_get(row, right);
 
-        if (!viz_clear_rows[row][right]) {
+        if (!vcl_get(row, right)) {
             hit_stone = 1; /* use stone on this row as close block */
 
             /* We can only see walls until the left mark */
@@ -2110,7 +2131,7 @@ char *limits;
             if (loc_left == left_mark)
                 return; /* hit end */
             right = loc_left - 1;
-            loc_left = left_ptrs[row][right];
+            loc_left = lpt_get(row, right);
             if (loc_left < lim_min)
                 loc_left = lim_min;
             /* fall through...*/
@@ -2226,16 +2247,16 @@ genericptr_t arg;
     varg = arg;
 
     /*  Find the left and right limits of sight on the starting row. */
-    if (viz_clear_rows[srow][scol]) {
-        left = left_ptrs[srow][scol];
-        right = right_ptrs[srow][scol];
+    if (vcl_get(srow, scol)) {
+        left = lpt_get(srow, scol);
+        right = rpt_get(srow, scol);
     } else {
-        left = (!scol) ? 0 : (viz_clear_rows[srow][scol - 1]
-                                  ? left_ptrs[srow][scol - 1]
+        left = (!scol) ? 0 : (vcl_get(srow, scol - 1)
+                                  ? lpt_get(srow, scol - 1)
                                   : scol - 1);
         right = (scol == COLNO - 1) ? COLNO - 1
-                                    : (viz_clear_rows[srow][scol + 1]
-                                           ? right_ptrs[srow][scol + 1]
+                                    : (vcl_get(srow, scol + 1)
+                                           ? rpt_get(srow, scol + 1)
                                            : scol + 1);
     }
 
@@ -2353,7 +2374,7 @@ char *limits;   /* points at range limit for current row, or NULL */
         lim_max = COLNO - 1;
 
     while (left <= right_mark) {
-        right_edge = right_ptrs[row][left];
+        right_edge = rpt_get(row, left);
         if (right_edge > lim_max)
             right_edge = lim_max;
 
@@ -2536,7 +2557,7 @@ char *limits;
         lim_min = 0;
 
     while (right >= left_mark) {
-        left_edge = left_ptrs[row][right];
+        left_edge = lpt_get(row, right);
         if (left_edge < lim_min)
             left_edge = lim_min;
 
@@ -2669,19 +2690,19 @@ genericptr_t arg;
      * Determine extent of sight on the starting row.
      */
     if (is_clear(srow, scol)) {
-        left = left_ptrs[srow][scol];
-        right = right_ptrs[srow][scol];
+        left = lpt_get(srow, scol);
+        right = rpt_get(srow, scol);
     } else {
         /*
          * When in stone, you can only see your adjacent squares, unless
          * you are on an array boundary or a stone/clear boundary.
          */
         left = (!scol) ? 0
-                       : (is_clear(srow, scol - 1) ? left_ptrs[srow][scol - 1]
+                       : (is_clear(srow, scol - 1) ? lpt_get(srow, scol - 1)
                                                    : scol - 1);
         right = (scol == COLNO - 1)
                     ? COLNO - 1
-                    : (is_clear(srow, scol + 1) ? right_ptrs[srow][scol + 1]
+                    : (is_clear(srow, scol + 1) ? rpt_get(srow, scol + 1)
                                                 : scol + 1);
     }
 

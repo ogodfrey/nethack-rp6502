@@ -213,4 +213,68 @@ rpg_clear(void)
 {
     memset(rp6502_gbuf_image, 0, sizeof rp6502_gbuf_image);
 }
+
+static char rp6502_vcl_image[ROWNO][COLNO];
+static char rp6502_lpt_image[ROWNO][COLNO];
+static char rp6502_rpt_image[ROWNO][COLNO];
+
+static void
+vis_check(int r, int c, const char *what)
+{
+    if (r < 0 || r >= ROWNO || c < 0 || c >= COLNO) {
+        fprintf(stderr, "%s: vision entry (%d,%d) is outside the map\n", what,
+                r, c);
+        abort();
+    }
+}
+
+char
+rpv_vcl_get(int r, int c)
+{
+    vis_check(r, c, "vcl_get");
+    return rp6502_vcl_image[r][c];
+}
+
+void
+rpv_vcl_put(int r, int c, char v)
+{
+    vis_check(r, c, "vcl_put");
+    rp6502_vcl_image[r][c] = v;
+}
+
+char
+rpv_lpt_get(int r, int c)
+{
+    vis_check(r, c, "lpt_get");
+    return rp6502_lpt_image[r][c];
+}
+
+void
+rpv_lpt_put(int r, int c, char v)
+{
+    vis_check(r, c, "lpt_put");
+    rp6502_lpt_image[r][c] = v;
+}
+
+char
+rpv_rpt_get(int r, int c)
+{
+    vis_check(r, c, "rpt_get");
+    return rp6502_rpt_image[r][c];
+}
+
+void
+rpv_rpt_put(int r, int c, char v)
+{
+    vis_check(r, c, "rpt_put");
+    rp6502_rpt_image[r][c] = v;
+}
+
+void
+rpv_planes_clear(void)
+{
+    memset(rp6502_vcl_image, 0, sizeof rp6502_vcl_image);
+    memset(rp6502_lpt_image, 0, sizeof rp6502_lpt_image);
+    memset(rp6502_rpt_image, 0, sizeof rp6502_rpt_image);
+}
 #endif /* RP6502_LEV_XRAM */

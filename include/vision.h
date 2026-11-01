@@ -43,6 +43,20 @@ extern char *viz_rmax;			/* max could see indices */
  */
 #define m_cansee(mtmp, x2, y2) clear_path((mtmp)->mx, (mtmp)->my, (x2), (y2))
 
+/*
+ * The vision planes (vision.c) live in XRAM with RP6502_LEV_XRAM; the
+ * accessors are defined in rp6502lev.c (target) and rp6502xram_host.c.
+ */
+#ifdef RP6502_LEV_XRAM
+char rpv_vcl_get(int, int);
+void rpv_vcl_put(int, int, char);
+char rpv_lpt_get(int, int);
+void rpv_lpt_put(int, int, char);
+char rpv_rpt_get(int, int);
+void rpv_rpt_put(int, int, char);
+void rpv_planes_clear(void);
+#endif
+
 #if 0
 #define m_canseeu(m) \
     ((!Invis || perceives((m)->data))                      \

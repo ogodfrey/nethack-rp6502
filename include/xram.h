@@ -11,7 +11,10 @@
  *   $B7A0-$BE2F  lastseentyp  80 x 21 bytes (see rm.h)
  *   $BE30-$C4BF  SpLev_Map    80 x 21 bytes (sp_lev.c, see rm.h)
  *   $C4C0-$D86F  glyph buffer 21 x 80 entries (display.c, see rm.h)
- *   $D900-$FFFF  overlay descriptor, see ovlpack.py (3 bytes per entry)
+ *   $D880-$DF0F  vision clear map 21 x 80 bytes (vision.c, vcl_*)
+ *   $DF10-$E59F  LOS left pointers 21 x 80 bytes (vision.c, lpt_*)
+ *   $E5A0-$EC2F  LOS right pointers 21 x 80 bytes (vision.c, rpt_*)
+ *   $F000-$FFFF  overlay descriptor, see ovlpack.py (3 bytes per entry)
  * The SDK does not reserve XRAM; a device (keyboard, sound, video) needs its
  * own area here before the program maps it.
  */
@@ -30,8 +33,12 @@
 #define SPLM_XRAM_ADDR 0xBE30
 /* Glyph buffer of the map window (display.c gbuf), one entry per cell. */
 #define GB_XRAM_ADDR 0xC4C0
+/* Vision planes (vision.c), one byte per cell. */
+#define VCL_XRAM_ADDR 0xD880
+#define LPT_XRAM_ADDR 0xDF10
+#define RPT_XRAM_ADDR 0xE5A0
 /* Overlay runtime: descriptor and directory (the packer's defaults). */
-#define OVL_DESC_XRAM 0xD900
+#define OVL_DESC_XRAM 0xF000
 #define OVL_DIR_XRAM 0x0000
 
 #endif /* RP6502_XRAM_H */

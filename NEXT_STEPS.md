@@ -230,7 +230,8 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
    (19864 bytes), `objects[]` at $6100 (11804 bytes, ending at $8F1B), the
    level map at $9000 (10080 bytes), `lastseentyp` at $B7A0 and `SpLev_Map`
    at $BE30 (1680 bytes each), the glyph buffer at $C4C0 (5040 bytes), the
-   overlay directory at $0000 and the overlay descriptor at $D900. The earlier
+   vision planes at $D880, $DF10 and $E5A0 (1680 bytes each), the overlay
+   directory at $0000 and the overlay descriptor at $F000. The earlier
    overlay defaults ($8000 for the descriptor, $A000/$C000 for the directory
    and descriptor) overlapped the tables, so they moved. Compile-time checks
    in [rp6502xram.c](sys/rp6502/rp6502xram.c) and
@@ -256,43 +257,55 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
    `lst_get`/`lst_put` and `splm_get`/`splm_put`. Save and restore write and
    read the maps one column at a time, the same bytes as before; a save and a
    restore round trip on the XRAM host build works. The glyph buffer `gbuf`
-   (5 KB, row-major, `gb_get(row, col)`/`gb_put`) moved too. Still in RAM:
-   the vision arrays (`could_see`, `viz_clear`, `left_ptrs`, `right_ptrs`,
-   `cs_rows0/1`, about 12 KB), `rooms` (5 KB), `obufs` (3 KB, `char *` text
-   buffers), and the per-cell object and monster list heads (3360 bytes each,
-   pointers to RAM structures). `STATUS_HILITES` is off for the RP6502 build
+   (5 KB, row-major, `gb_get(row, col)`/`gb_put`) moved too. The vision
+   planes moved as well: `viz_clear`, `left_ptrs` and `right_ptrs` (1680
+   bytes each) are read and written through `vcl_`, `lpt_` and `rpt_`
+   accessors in [vision.c](src/vision.c), converted by
+   [visrw.py](sys/rp6502/tools/visrw.py). `cs_rows0/1` and `could_see` (3360
+   bytes, the double-buffered visibility rows that `viz_array` points into)
+   stay in RAM: `cansee()` and `couldsee()` read them through row pointers
+   from about 30 places outside vision.c, so they need their own pass.
+   On the target, [planetest.c](sys/rp6502/planetest.c) writes a pattern to
+   every cell of every XRAM plane and reads it back: `planes: 0 bad of 16800`.
+   The accessors use the portal registers directly (`RIA.addr0`, `RIA.rw0`)
+   instead of `xram0_read`/`xram0_write`. The cost of those accessors is
+   estimated, not measured: each vision access is a portal access with address
+   setup, and vision runs on every move. Measure it on the target before
+   deciding whether the cs rows should follow. Still in RAM: `rooms` (5 KB),
+   `obufs` (3 KB, `char *` text buffers), `cs_rows0/1` and `could_see` (3.4 KB),
+   and the per-cell object and monster list heads (3360 bytes each, pointers
+   to RAM structures). `STATUS_HILITES` is off for the RP6502 build
    (`rp6502conf.h`): its entries are linked by pointers, and the feature is
    not worth its RAM here; `botl.c` skips the highlight-rule checks without
-   it. That also shrank `.text` by about 48 KB. `.bss` is now about 46 KB.
+   it. That also shrank `.text` by about 48 KB. `.bss` is now about 41 KB.
    Open: one SIGSEGV in the XRAM host harness (seed 1, during a prayer,
    after the glyph-buffer move). It has not reproduced in 14 further runs or
    under gdb, and no core file was written. If it recurs, take a core dump
    and check the glyph buffer and the prayer path first.
-   2.6 MB of code and about 293 KB of rodata, mostly strings, and the XRAM
-   tables remove 31668 bytes of linked data (`.bss` is about 67 KB in both).
    Budget plan (measured, XRAM-tables configuration, sums of the object
-   sections): `.text` 2.80 MB (must run from overlays), `.rodata` 89 KB,
-   `.data` 41 KB, `.bss` 55 KB. The 64 KB CPU address space must hold the
-   stack, the zero page and system area, resident code, overlay slots and
-   every RAM-resident datum, so roughly 185 KB of static data has to move out
-   of RAM or shrink. The largest parts, in order:
+   sections, latest: `.text` 2.75 MB, `.rodata` 87 KB, `.data` 41 KB, `.bss`
+   41 KB). The 64 KB CPU address space must hold the stack, the zero page and
+   system area, resident code, overlay slots and every RAM-resident datum, so
+   roughly 185 KB of static data has to move out of RAM or shrink. The
+   largest parts, in order:
    - Literal names and text still in RAM: about 44 KB of `.rodata` (the
      `compopt`, `extcmdlist`, `boolopt`, `roles` and similar tables keep their
      names; `mons_names` and the object names are outside the rewrite). Names
      are matched at run time, so they need an accessor with a fetch slot, not
      a plain `MSGID`.
    - Initialized `.data` tables (about 41 KB, role, race and similar).
-   - `.bss` buffers: the vision arrays (`could_see`,
-     `viz_clear`, `left_ptrs`, `right_ptrs`, `cs_rows0/1`, about 12 KB, hot
-     paths, with pointer swaps), `rooms` (5 KB, 199 uses), `obufs` (3 KB, used
-     as `char *` text buffers, so not XRAM-friendly); `status_hilites` is off
-     for this port now.
+   - `.bss` buffers: `rooms` (5 KB, 199 uses), `obufs` (3 KB, used as `char *`
+     text buffers, so not XRAM-friendly), and `cs_rows0/1` with `could_see`
+     (3.4 KB, see the vision note above). `status_hilites` is off for this
+     port now.
    - The per-cell object and monster list heads (6.7 KB, RAM pointers).
    Each moved structure needs the same kind of accessor as the level map, and
-   each access costs an XRAM transfer. The XRAM access cost is not measured on
-   the target yet; measure it with `xramtest` before choosing between XRAM and
+   each access costs an XRAM transfer. The per-access cost on the target is
+   estimated, not measured; measure it before choosing between XRAM and
    storage for the hot tables. Priority 4 (overlays) is still required for the
-   code itself. Implement a profile-guided   partitioner for `ovlpack.py`, choose a RAM/slot budget, and split functions
+   code itself.
+4. **Complete overlay packing and integration.** Implement a profile-guided
+   partitioner for `ovlpack.py`, choose a RAM/slot budget, and split functions
    that exceed the chosen slot size. Test relocation, pointer lifetimes,
    callbacks, nested/forced reloads, and target ABI behavior. Generate the
    game's assembly and assets reproducibly, initialize the overlay runtime

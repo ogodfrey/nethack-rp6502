@@ -209,4 +209,15 @@ if(DEFINED LLVM_MOS_PLATFORM)
     target_compile_options(msgtest PRIVATE -Oz -fno-inline -fno-lto
         -ffunction-sections -fdata-sections)
     rp6502_executable(msgtest DATA default RESET default)
+
+    # Self-check of the XRAM tables the game keeps in XRAM (planetest.c and
+    # rp6502lev.c). The expected output is "planes: 0 bad of N".
+    add_executable(planetest)
+    add_dependencies(planetest nethack_gen)
+    target_sources(planetest PRIVATE sys/rp6502/planetest.c sys/rp6502/rp6502lev.c)
+    target_include_directories(planetest PRIVATE ${NH_GEN}/include include)
+    target_compile_definitions(planetest PRIVATE RP6502 RP6502_LEV_XRAM)
+    target_compile_options(planetest PRIVATE -Oz -fno-inline -fno-lto
+        -ffunction-sections -fdata-sections)
+    rp6502_executable(planetest DATA default RESET default)
 endif()
