@@ -336,7 +336,12 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
      no-name entries are `MSGNULL`) is converted, and its one name comparison
      copies the text with `MSGTXT`. `colornames[]` (options.c, 26 names) is
      converted too; `clr2colorname()` copies its result into a static buffer,
-     since its callers keep the pointer past other messages. Menus are safe
+     since its callers keep the pointer past other messages. `wc_options[]`
+     and `wc2_options[]` (options.c, 46 names; `struct wc_Opt` in winprocs.h
+     now has a `msgid_t` name) are converted: each `set_option_mod_status`
+     call copies the name first (`opt_name_copy`), and the `strcmp` checks read
+     it with `MSGTXT`. They compile and pass the verification, but no test sets
+     a window option at run time. Menus are safe
      with `MSGTXT` pointers: the tty port copies the text in `add_menu`. The
      rest are next. Plain `const char *` arrays take the msgids
      route;

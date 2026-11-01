@@ -6,6 +6,7 @@
 #define WINPROCS_H
 
 #include "botl.h"
+#include "msg.h"
 #ifndef CLR_MAX
 #include "color.h"
 #endif
@@ -267,7 +268,7 @@ extern
 #endif
 
 struct wc_Opt {
-    const char *wc_name;
+    msgid_t wc_name;
     unsigned long wc_bit;
 };
 

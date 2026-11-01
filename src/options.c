@@ -6609,60 +6609,60 @@ char *class_select;
 }
 
 static struct wc_Opt wc_options[] = {
-    { "ascii_map", WC_ASCII_MAP },
-    { "color", WC_COLOR },
-    { "eight_bit_tty", WC_EIGHT_BIT_IN },
-    { "hilite_pet", WC_HILITE_PET },
-    { "popup_dialog", WC_POPUP_DIALOG },
-    { "player_selection", WC_PLAYER_SELECTION },
-    { "preload_tiles", WC_PRELOAD_TILES },
-    { "tiled_map", WC_TILED_MAP },
-    { "tile_file", WC_TILE_FILE },
-    { "tile_width", WC_TILE_WIDTH },
-    { "tile_height", WC_TILE_HEIGHT },
-    { "use_inverse", WC_INVERSE },
-    { "align_message", WC_ALIGN_MESSAGE },
-    { "align_status", WC_ALIGN_STATUS },
-    { "font_map", WC_FONT_MAP },
-    { "font_menu", WC_FONT_MENU },
-    { "font_message", WC_FONT_MESSAGE },
+    { MSG_ST("ascii_map"), WC_ASCII_MAP },
+    { MSG_ST("color"), WC_COLOR },
+    { MSG_ST("eight_bit_tty"), WC_EIGHT_BIT_IN },
+    { MSG_ST("hilite_pet"), WC_HILITE_PET },
+    { MSG_ST("popup_dialog"), WC_POPUP_DIALOG },
+    { MSG_ST("player_selection"), WC_PLAYER_SELECTION },
+    { MSG_ST("preload_tiles"), WC_PRELOAD_TILES },
+    { MSG_ST("tiled_map"), WC_TILED_MAP },
+    { MSG_ST("tile_file"), WC_TILE_FILE },
+    { MSG_ST("tile_width"), WC_TILE_WIDTH },
+    { MSG_ST("tile_height"), WC_TILE_HEIGHT },
+    { MSG_ST("use_inverse"), WC_INVERSE },
+    { MSG_ST("align_message"), WC_ALIGN_MESSAGE },
+    { MSG_ST("align_status"), WC_ALIGN_STATUS },
+    { MSG_ST("font_map"), WC_FONT_MAP },
+    { MSG_ST("font_menu"), WC_FONT_MENU },
+    { MSG_ST("font_message"), WC_FONT_MESSAGE },
 #if 0
-    {"perm_invent", WC_PERM_INVENT},
+    {MSG_ST("perm_invent"), WC_PERM_INVENT},
 #endif
-    { "font_size_map", WC_FONTSIZ_MAP },
-    { "font_size_menu", WC_FONTSIZ_MENU },
-    { "font_size_message", WC_FONTSIZ_MESSAGE },
-    { "font_size_status", WC_FONTSIZ_STATUS },
-    { "font_size_text", WC_FONTSIZ_TEXT },
-    { "font_status", WC_FONT_STATUS },
-    { "font_text", WC_FONT_TEXT },
-    { "map_mode", WC_MAP_MODE },
-    { "scroll_amount", WC_SCROLL_AMOUNT },
-    { "scroll_margin", WC_SCROLL_MARGIN },
-    { "splash_screen", WC_SPLASH_SCREEN },
-    { "vary_msgcount", WC_VARY_MSGCOUNT },
-    { "windowcolors", WC_WINDOWCOLORS },
-    { "mouse_support", WC_MOUSE_SUPPORT },
-    { (char *) 0, 0L }
+    { MSG_ST("font_size_map"), WC_FONTSIZ_MAP },
+    { MSG_ST("font_size_menu"), WC_FONTSIZ_MENU },
+    { MSG_ST("font_size_message"), WC_FONTSIZ_MESSAGE },
+    { MSG_ST("font_size_status"), WC_FONTSIZ_STATUS },
+    { MSG_ST("font_size_text"), WC_FONTSIZ_TEXT },
+    { MSG_ST("font_status"), WC_FONT_STATUS },
+    { MSG_ST("font_text"), WC_FONT_TEXT },
+    { MSG_ST("map_mode"), WC_MAP_MODE },
+    { MSG_ST("scroll_amount"), WC_SCROLL_AMOUNT },
+    { MSG_ST("scroll_margin"), WC_SCROLL_MARGIN },
+    { MSG_ST("splash_screen"), WC_SPLASH_SCREEN },
+    { MSG_ST("vary_msgcount"), WC_VARY_MSGCOUNT },
+    { MSG_ST("windowcolors"), WC_WINDOWCOLORS },
+    { MSG_ST("mouse_support"), WC_MOUSE_SUPPORT },
+    { MSGNULL, 0L }
 };
 static struct wc_Opt wc2_options[] = {
-    { "fullscreen", WC2_FULLSCREEN },
-    { "softkeyboard", WC2_SOFTKEYBOARD },
-    { "wraptext", WC2_WRAPTEXT },
-    { "use_darkgray", WC2_DARKGRAY },
-    { "hitpointbar", WC2_HITPOINTBAR },
-    { "hilite_status", WC2_HILITE_STATUS },
+    { MSG_ST("fullscreen"), WC2_FULLSCREEN },
+    { MSG_ST("softkeyboard"), WC2_SOFTKEYBOARD },
+    { MSG_ST("wraptext"), WC2_WRAPTEXT },
+    { MSG_ST("use_darkgray"), WC2_DARKGRAY },
+    { MSG_ST("hitpointbar"), WC2_HITPOINTBAR },
+    { MSG_ST("hilite_status"), WC2_HILITE_STATUS },
     /* name shown in 'O' menu is different */
-    { "status hilite rules", WC2_HILITE_STATUS },
+    { MSG_ST("status hilite rules"), WC2_HILITE_STATUS },
     /* statushilites doesn't have its own bit */
-    { "statushilites", WC2_HILITE_STATUS },
-    { "term_cols", WC2_TERM_SIZE },
-    { "term_rows", WC2_TERM_SIZE },
-    { "petattr", WC2_PETATTR },
-    { "guicolor", WC2_GUICOLOR },
-    { "statuslines", WC2_STATUSLINES },
-    { "windowborders", WC2_WINDOWBORDERS },
-    { (char *) 0, 0L }
+    { MSG_ST("statushilites"), WC2_HILITE_STATUS },
+    { MSG_ST("term_cols"), WC2_TERM_SIZE },
+    { MSG_ST("term_rows"), WC2_TERM_SIZE },
+    { MSG_ST("petattr"), WC2_PETATTR },
+    { MSG_ST("guicolor"), WC2_GUICOLOR },
+    { MSG_ST("statuslines"), WC2_STATUSLINES },
+    { MSG_ST("windowborders"), WC2_WINDOWBORDERS },
+    { MSGNULL, 0L }
 };
 
 /*
@@ -6706,21 +6706,37 @@ int status;
  *    example: set_wc_option_mod_status(WC_COLOR|WC_SCROLL_MARGIN,
  * SET_IN_GAME);
  */
+/* Longest window option name, with its NUL (wc_options and wc2_options). */
+#define OPTNAME_LEN 32
+
+/* Copy an option name from the message store into buf: the copy is what the
+ * caller keeps, since the store only holds a few texts at a time. */
+STATIC_OVL void
+opt_name_copy(id, buf)
+msgid_t id;
+char *buf;
+{
+    (void) strncpy(buf, MSGTXT(id), OPTNAME_LEN - 1);
+    buf[OPTNAME_LEN - 1] = '\0';
+}
+
 void
 set_wc_option_mod_status(optmask, status)
 unsigned long optmask;
 int status;
 {
     int k = 0;
+    char nbuf[OPTNAME_LEN];
 
     if (SET__IS_VALUE_VALID(status)) {
         impossible("set_wc_option_mod_status: status out of range %d.",
                    status);
         return;
     }
-    while (wc_options[k].wc_name) {
+    while (wc_options[k].wc_name != MSGNULL) {
         if (optmask & wc_options[k].wc_bit) {
-            set_option_mod_status(wc_options[k].wc_name, status);
+            opt_name_copy(wc_options[k].wc_name, nbuf);
+            set_option_mod_status(nbuf, status);
         }
         k++;
     }
@@ -6732,8 +6748,8 @@ const char *optnam;
 {
     int k = 0;
 
-    while (wc_options[k].wc_name) {
-        if (strcmp(wc_options[k].wc_name, optnam) == 0)
+    while (wc_options[k].wc_name != MSGNULL) {
+        if (strcmp(MSGTXT(wc_options[k].wc_name), optnam) == 0)
             return TRUE;
         k++;
     }
@@ -6746,8 +6762,8 @@ const char *optnam;
 {
     int k;
 
-    for (k = 0; wc_options[k].wc_name; ++k) {
-        if (!strcmp(wc_options[k].wc_name, optnam))
+    for (k = 0; wc_options[k].wc_name != MSGNULL; ++k) {
+        if (!strcmp(MSGTXT(wc_options[k].wc_name), optnam))
             return (windowprocs.wincap & wc_options[k].wc_bit) ? TRUE : FALSE;
     }
     return FALSE;
@@ -6770,15 +6786,17 @@ unsigned long optmask;
 int status;
 {
     int k = 0;
+    char nbuf[OPTNAME_LEN];
 
     if (SET__IS_VALUE_VALID(status)) {
         impossible("set_wc2_option_mod_status: status out of range %d.",
                    status);
         return;
     }
-    while (wc2_options[k].wc_name) {
+    while (wc2_options[k].wc_name != MSGNULL) {
         if (optmask & wc2_options[k].wc_bit) {
-            set_option_mod_status(wc2_options[k].wc_name, status);
+            opt_name_copy(wc2_options[k].wc_name, nbuf);
+            set_option_mod_status(nbuf, status);
         }
         k++;
     }
@@ -6790,8 +6808,8 @@ const char *optnam;
 {
     int k = 0;
 
-    while (wc2_options[k].wc_name) {
-        if (strcmp(wc2_options[k].wc_name, optnam) == 0)
+    while (wc2_options[k].wc_name != MSGNULL) {
+        if (strcmp(MSGTXT(wc2_options[k].wc_name), optnam) == 0)
             return TRUE;
         k++;
     }
@@ -6804,8 +6822,8 @@ const char *optnam;
 {
     int k;
 
-    for (k = 0; wc2_options[k].wc_name; ++k) {
-        if (!strcmp(wc2_options[k].wc_name, optnam))
+    for (k = 0; wc2_options[k].wc_name != MSGNULL; ++k) {
+        if (!strcmp(MSGTXT(wc2_options[k].wc_name), optnam))
             return (windowprocs.wincap2 & wc2_options[k].wc_bit) ? TRUE
                                                                  : FALSE;
     }
