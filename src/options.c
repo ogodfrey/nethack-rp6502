@@ -55,7 +55,7 @@ static char empty_optstr[] = { '\0' };
  */
 
 static struct Bool_Opt {
-    const char *name;
+    msgid_t name;
     boolean *addr, initvalue;
     int optflags;
 } boolopt[] = {
@@ -256,8 +256,12 @@ static struct Bool_Opt {
 #endif
       DISP_IN_GAME },
 #endif
-    { (char *) 0, (boolean *) 0, FALSE, 0 }
+    { MSGNULL, (boolean *) 0, FALSE, 0 }
 };
+
+/* Text of boolopt[i].name, or 0 past the end of the table. */
+#define BOOLNAME(i) \
+    (boolopt[i].name == MSGNULL ? (const char *) 0 : MSGTXT(boolopt[i].name))
 
 /* compound options, for option_help() and external programs like Amiga
  * frontend */
@@ -711,7 +715,7 @@ initoptions_init()
     /* for detection of configfile options specified multiple times */
     iflags.opt_booldup = iflags.opt_compdup = (int *) 0;
 
-    for (i = 0; boolopt[i].name; i++) {
+    for (i = 0; boolopt[i].name != MSGNULL; i++) {
         if (boolopt[i].addr)
             *(boolopt[i].addr) = boolopt[i].initvalue;
     }
@@ -1272,8 +1276,8 @@ int iscompound; /* 0 == boolean option, 1 == compound */
     int i, *optptr;
 
     if (!iscompound && iflags.opt_booldup && initial && from_file) {
-        for (i = 0; boolopt[i].name; i++) {
-            if (match_optname(opts, boolopt[i].name, 3, FALSE)) {
+        for (i = 0; boolopt[i].name != MSGNULL; i++) {
+            if (match_optname(opts, BOOLNAME(i), 3, FALSE)) {
                 optptr = iflags.opt_booldup + i;
                 *optptr += 1;
                 if (*optptr > 1)
@@ -4053,18 +4057,18 @@ boolean tinitial, tfrom_file;
      * OK, if we still haven't recognized the option, check the boolean
      * options list.
      */
-    for (i = 0; boolopt[i].name; i++) {
-        if (match_optname(opts, boolopt[i].name, 3, TRUE)) {
+    for (i = 0; boolopt[i].name != MSGNULL; i++) {
+        if (match_optname(opts, BOOLNAME(i), 3, TRUE)) {
             /* options that don't exist */
             if (!boolopt[i].addr) {
                 if (!initial && !negated)
                     pline_The("\"%s\" option is not available.",
-                              boolopt[i].name);
+                              BOOLNAME(i));
                 return retval;
             }
             /* options that must come from config file */
             if (!initial && (boolopt[i].optflags == SET_IN_FILE)) {
-                rejectoption(boolopt[i].name);
+                rejectoption(BOOLNAME(i));
                 return retval;
             }
 
@@ -4073,7 +4077,7 @@ boolean tinitial, tfrom_file;
                 if (negated) {
                     config_error_add(
                            "Negated boolean '%s' should not have a parameter",
-                                     boolopt[i].name);
+                                     BOOLNAME(i));
                     return FALSE;
                 }
                 if (!strcmp(op, "true") || !strcmp(op, "yes")) {
@@ -4094,8 +4098,8 @@ boolean tinitial, tfrom_file;
             *(boolopt[i].addr) = !negated;
 
             /* 0 means boolean opts */
-            if (duplicate_opt_detection(boolopt[i].name, 0))
-                complain_about_duplicate(boolopt[i].name, 0);
+            if (duplicate_opt_detection(BOOLNAME(i), 0))
+                complain_about_duplicate(BOOLNAME(i), 0);
 #ifdef RLECOMP
             if (boolopt[i].addr == &iflags.rlecomp)
                 set_savepref(iflags.rlecomp ? "rlecomp" : "!rlecomp");
@@ -4559,7 +4563,7 @@ doset() /* changing options via menu by Per Liboriussen */
            and adjust the format string accordingly */
         longest_name_len = 0;
         for (pass = 0; pass <= 2; pass++)
-            for (i = 0; (name = ((pass == 0) ? boolopt[i].name
+            for (i = 0; (name = ((pass == 0) ? BOOLNAME(i)
                                  : (pass == 1) ? compopt[i].name
                                    : othropt[i].name)) != 0; i++) {
                 if (pass == 0 && !boolopt[i].addr)
@@ -4586,7 +4590,7 @@ doset() /* changing options via menu by Per Liboriussen */
     any.a_int = 0;
     /* first list any other non-modifiable booleans, then modifiable ones */
     for (pass = 0; pass <= 1; pass++)
-        for (i = 0; (name = boolopt[i].name) != 0; i++)
+        for (i = 0; (name = BOOLNAME(i)) != 0; i++)
             if ((bool_p = boolopt[i].addr) != 0
                 && ((boolopt[i].optflags <= DISP_IN_GAME && pass == 0)
                     || (boolopt[i].optflags >= SET_IN_GAME && pass == 1))) {
@@ -4694,11 +4698,11 @@ doset() /* changing options via menu by Per Liboriussen */
             } else if (opt_indx < boolcount) {
                 /* boolean option */
                 Sprintf(buf, "%s%s", *boolopt[opt_indx].addr ? "!" : "",
-                        boolopt[opt_indx].name);
+                        BOOLNAME(opt_indx));
                 (void) parseoptions(buf, setinitial, fromfile);
-                if (wc_supported(boolopt[opt_indx].name)
-                    || wc2_supported(boolopt[opt_indx].name))
-                    preference_update(boolopt[opt_indx].name);
+                if (wc_supported(BOOLNAME(opt_indx))
+                    || wc2_supported(BOOLNAME(opt_indx)))
+                    preference_update(BOOLNAME(opt_indx));
             } else {
                 /* compound option */
                 opt_indx -= boolcount;
@@ -6295,13 +6299,13 @@ option_help()
         putstr(datawin, 0, opt_intro[i]);
 
     /* Boolean options */
-    for (i = 0; boolopt[i].name; i++) {
+    for (i = 0; boolopt[i].name != MSGNULL; i++) {
         if (boolopt[i].addr) {
             if (boolopt[i].addr == &iflags.sanity_check && !wizard)
                 continue;
             if (boolopt[i].addr == &iflags.menu_tab_sep && !wizard)
                 continue;
-            next_opt(datawin, boolopt[i].name);
+            next_opt(datawin, BOOLNAME(i));
         }
     }
     next_opt(datawin, "");
@@ -6685,8 +6689,8 @@ int status;
         impossible("set_option_mod_status: status out of range %d.", status);
         return;
     }
-    for (k = 0; boolopt[k].name; k++) {
-        if (!strncmpi(boolopt[k].name, optnam, strlen(optnam))) {
+    for (k = 0; boolopt[k].name != MSGNULL; k++) {
+        if (!strncmpi(BOOLNAME(k), optnam, strlen(optnam))) {
             boolopt[k].optflags = status;
             return;
         }

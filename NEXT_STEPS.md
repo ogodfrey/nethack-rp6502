@@ -348,7 +348,11 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
      `dupstr()` in `files.c` (about line 3377) fills a `struct symsetentry`,
      not a `symparse`, and all `symparse` entries are static. `match_sym`
      (options.c) reads the name with `MSGTXT`. The build and storage test pass;
-     no run-time symbol-option test has been done yet. `roles[]` rank names
+     no run-time symbol-option test has been done yet. `boolopt[]` (options.c,
+     about 40 names) is converted through `msgids.txt`: `name` is a `msgid_t`,
+     the sentinel is `MSGNULL`, and `BOOLNAME(i)` gives the text (0 past the
+     end). A valid name in `NETHACKOPTIONS` is accepted, and an unknown one
+     reaches the config-error prompt (`config_error_done`). `roles[]` rank names
      (117 pairs, 17 characters at most) are converted to `struct RankName`
      (`msgid_t`, `MSGNULL` for no female title). `rank_of()` copies the title
      into a static 20-byte buffer, the same way `clr2colorname()` does, so the
