@@ -265,11 +265,14 @@ static struct Bool_Opt {
     (boolopt[i].name == MSGNULL ? (const char *) 0 : MSGTXT(boolopt[i].name))
 /* Room for one option name copied out of storage. */
 #define OPTNAME_LEN 40
+/* Text of compopt[i].name, or 0 past the end. Immediate use only (see BOOLNAME). */
+#define COMPNAME(i) \
+    (compopt[i].name == MSGNULL ? (const char *) 0 : MSGTXT(compopt[i].name))
 
 /* compound options, for option_help() and external programs like Amiga
  * frontend */
 static struct Comp_Opt {
-    const char *name;
+    msgid_t name;
     msgid_t descr;
     int size; /* for frontends and such allocating space --
                * usually allowed size of data in game, but
@@ -463,7 +466,7 @@ static struct Comp_Opt {
     { "Macgraphics", MSG_ST("load MACGraphics display symbols"), 70, SET_IN_FILE },
 #endif
 #endif
-    { (char *) 0, 0, 0, 0 }
+    { MSGNULL, 0, 0, 0 }
 };
 
 #ifdef OPTION_LISTS_ONLY
@@ -1290,8 +1293,8 @@ int iscompound; /* 0 == boolean option, 1 == compound */
             }
         }
     } else if (iscompound && iflags.opt_compdup && initial && from_file) {
-        for (i = 0; compopt[i].name; i++) {
-            if (match_optname(opts, compopt[i].name, strlen(compopt[i].name),
+        for (i = 0; compopt[i].name != MSGNULL; i++) {
+            if (match_optname(opts, COMPNAME(i), strlen(COMPNAME(i)),
                               TRUE)) {
                 optptr = iflags.opt_compdup + i;
                 *optptr += 1;
@@ -4439,21 +4442,25 @@ const char *option; /* option name */
 int indexoffset;    /* value to add to index in compopt[], or zero
                        if option cannot be changed */
 {
+    static char optbuf[OPTNAME_LEN]; /* option, held across the name loop */
     const char *value = "unknown"; /* current value */
     char buf[BUFSZ], buf2[BUFSZ];
     anything any;
     int i;
 
+    /* the caller's name may be a text id that the loop below fetches over */
+    Strcpy(optbuf, option);
+    option = optbuf;
     any = zeroany;
     if (indexoffset == 0) {
         any.a_int = 0;
         value = get_compopt_value(option, buf2);
     } else {
-        for (i = 0; compopt[i].name; i++)
-            if (strcmp(option, compopt[i].name) == 0)
+        for (i = 0; compopt[i].name != MSGNULL; i++)
+            if (strcmp(option, COMPNAME(i)) == 0)
                 break;
 
-        if (compopt[i].name) {
+        if (compopt[i].name != MSGNULL) {
             any.a_int = i + 1 + indexoffset;
             value = get_compopt_value(option, buf2);
         } else {
@@ -4534,8 +4541,8 @@ static struct other_opts {
     { (char *) 0, 0, (enum opt_other_enums) 0 },
 };
 
-/* Name i of the pass-th option table as text, or 0 past its end: pass 0 is
-   boolopt (copied into buf), 1 is compopt and 2 is othropt (their own text). */
+/* Name i of the pass-th option table as text, or 0 past its end: passes 0
+   (boolopt) and 1 (compopt) are copied into buf, pass 2 (othropt) is plain. */
 static const char *
 opt_name_at(pass, i, buf)
 int pass, i;
@@ -4546,8 +4553,11 @@ char *buf;
             return (const char *) 0;
         return msg_copy(buf, OPTNAME_LEN, boolopt[i].name);
     }
-    if (pass == 1)
-        return compopt[i].name;
+    if (pass == 1) {
+        if (compopt[i].name == MSGNULL)
+            return (const char *) 0;
+        return msg_copy(buf, OPTNAME_LEN, compopt[i].name);
+    }
     return othropt[i].name;
 }
 
@@ -4651,7 +4661,7 @@ doset() /* changing options via menu by Per Liboriussen */
     doset_add_menu(tmpwin, "align", 0);
 
     for (pass = startpass; pass <= endpass; pass++)
-        for (i = 0; (name = compopt[i].name) != 0; i++)
+        for (i = 0; (name = opt_name_at(1, i, nmbuf)) != 0; i++)
             if (compopt[i].optflags == pass) {
                 if (!strcmp(name, "playmode")  || !strcmp(name, "name")
                     || !strcmp(name, "role")   || !strcmp(name, "race")
@@ -4727,25 +4737,24 @@ doset() /* changing options via menu by Per Liboriussen */
             } else {
                 /* compound option */
                 opt_indx -= boolcount;
+                opt_name_at(1, opt_indx, nmbuf);
 
-                if (!special_handling(compopt[opt_indx].name, setinitial,
-                                      fromfile)) {
+                if (!special_handling(nmbuf, setinitial, fromfile)) {
                     char abuf[BUFSZ];
 
-                    Sprintf(buf, "Set %s to what?", compopt[opt_indx].name);
+                    Sprintf(buf, "Set %s to what?", nmbuf);
                     abuf[0] = '\0';
                     getlin(buf, abuf);
                     if (abuf[0] == '\033')
                         continue;
-                    Sprintf(buf, "%s:", compopt[opt_indx].name);
+                    Sprintf(buf, "%s:", nmbuf);
                     (void) strncat(eos(buf), abuf,
                                    (sizeof buf - 1 - strlen(buf)));
                     /* pass the buck */
                     (void) parseoptions(buf, setinitial, fromfile);
                 }
-                if (wc_supported(compopt[opt_indx].name)
-                    || wc2_supported(compopt[opt_indx].name))
-                    preference_update(compopt[opt_indx].name);
+                if (wc_supported(nmbuf) || wc2_supported(nmbuf))
+                    preference_update(nmbuf);
             }
         }
         free((genericptr_t) pick_list), pick_list = (menu_item *) 0;
@@ -6333,10 +6342,10 @@ option_help()
 
     /* Compound options */
     putstr(datawin, 0, "Compound options:");
-    for (i = 0; compopt[i].name; i++) {
-        Sprintf(buf2, "`%s'", compopt[i].name);
+    for (i = 0; compopt[i].name != MSGNULL; i++) {
+        Sprintf(buf2, "`%s'", COMPNAME(i));
         Sprintf(buf, "%-20s - %s%c", buf2, MSGTXT(compopt[i].descr),
-                compopt[i + 1].name ? ',' : '.');
+                compopt[i + 1].name != MSGNULL ? ',' : '.');
         putstr(datawin, 0, buf);
     }
 
@@ -6716,8 +6725,8 @@ int status;
             return;
         }
     }
-    for (k = 0; compopt[k].name; k++) {
-        if (!strncmpi(compopt[k].name, optnam, strlen(optnam))) {
+    for (k = 0; compopt[k].name != MSGNULL; k++) {
+        if (!strncmpi(COMPNAME(k), optnam, strlen(optnam))) {
             compopt[k].optflags = status;
             return;
         }

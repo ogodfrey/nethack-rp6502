@@ -358,7 +358,12 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
      the checks compared against overwritten text. The full `O` menu was then
      checked by driving the host game (all six pages render). A valid name in
      `NETHACKOPTIONS` is accepted, and an unknown one reaches the config-error
-     prompt (`config_error_done`). `roles[]` rank names
+     prompt (`config_error_done`). `compopt[]` (options.c, 87 names) follows the
+     same pattern: `msgid_t name`, `MSGNULL` sentinel, `COMPNAME(i)` for
+     immediate uses, and copies (`opt_name_at`, the do-set branch, and a
+     buffer in `doset_add_menu`) where a name is held. Checked on the host:
+     the full `O` menu, and selecting `fruit` raises "Set fruit to what?".
+     The copy rule is the same as for boolopt (see the ring note above). `roles[]` rank names
      (117 pairs, 17 characters at most) are converted to `struct RankName`
      (`msgid_t`, `MSGNULL` for no female title). `rank_of()` copies the title
      into a static 20-byte buffer, the same way `clr2colorname()` does, so the

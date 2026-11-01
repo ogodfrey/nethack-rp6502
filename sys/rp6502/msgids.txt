@@ -5,3 +5,4 @@ rip_txt
 shirt_msgs
 developers
 boolopt
+compopt
