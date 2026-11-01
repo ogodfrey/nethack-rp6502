@@ -1361,36 +1361,36 @@ STATIC_VAR const struct paranoia_opts {
 extern struct menucoloring *menu_colorings;
 
 static const struct {
-    const char *name;
+    msgid_t name;
     const int color;
 } colornames[] = {
-    { "black", CLR_BLACK },
-    { "red", CLR_RED },
-    { "green", CLR_GREEN },
-    { "brown", CLR_BROWN },
-    { "blue", CLR_BLUE },
-    { "magenta", CLR_MAGENTA },
-    { "cyan", CLR_CYAN },
-    { "gray", CLR_GRAY },
-    { "orange", CLR_ORANGE },
-    { "light green", CLR_BRIGHT_GREEN },
-    { "yellow", CLR_YELLOW },
-    { "light blue", CLR_BRIGHT_BLUE },
-    { "light magenta", CLR_BRIGHT_MAGENTA },
-    { "light cyan", CLR_BRIGHT_CYAN },
-    { "white", CLR_WHITE },
-    { "no color", NO_COLOR },
-    { NULL, CLR_BLACK }, /* everything after this is an alias */
-    { "transparent", NO_COLOR },
-    { "purple", CLR_MAGENTA },
-    { "light purple", CLR_BRIGHT_MAGENTA },
-    { "bright purple", CLR_BRIGHT_MAGENTA },
-    { "grey", CLR_GRAY },
-    { "bright red", CLR_ORANGE },
-    { "bright green", CLR_BRIGHT_GREEN },
-    { "bright blue", CLR_BRIGHT_BLUE },
-    { "bright magenta", CLR_BRIGHT_MAGENTA },
-    { "bright cyan", CLR_BRIGHT_CYAN }
+    { MSG_ST("black"), CLR_BLACK },
+    { MSG_ST("red"), CLR_RED },
+    { MSG_ST("green"), CLR_GREEN },
+    { MSG_ST("brown"), CLR_BROWN },
+    { MSG_ST("blue"), CLR_BLUE },
+    { MSG_ST("magenta"), CLR_MAGENTA },
+    { MSG_ST("cyan"), CLR_CYAN },
+    { MSG_ST("gray"), CLR_GRAY },
+    { MSG_ST("orange"), CLR_ORANGE },
+    { MSG_ST("light green"), CLR_BRIGHT_GREEN },
+    { MSG_ST("yellow"), CLR_YELLOW },
+    { MSG_ST("light blue"), CLR_BRIGHT_BLUE },
+    { MSG_ST("light magenta"), CLR_BRIGHT_MAGENTA },
+    { MSG_ST("light cyan"), CLR_BRIGHT_CYAN },
+    { MSG_ST("white"), CLR_WHITE },
+    { MSG_ST("no color"), NO_COLOR },
+    { MSGNULL, CLR_BLACK }, /* everything after this is an alias */
+    { MSG_ST("transparent"), NO_COLOR },
+    { MSG_ST("purple"), CLR_MAGENTA },
+    { MSG_ST("light purple"), CLR_BRIGHT_MAGENTA },
+    { MSG_ST("bright purple"), CLR_BRIGHT_MAGENTA },
+    { MSG_ST("grey"), CLR_GRAY },
+    { MSG_ST("bright red"), CLR_ORANGE },
+    { MSG_ST("bright green"), CLR_BRIGHT_GREEN },
+    { MSG_ST("bright blue"), CLR_BRIGHT_BLUE },
+    { MSG_ST("bright magenta"), CLR_BRIGHT_MAGENTA },
+    { MSG_ST("bright cyan"), CLR_BRIGHT_CYAN }
 };
 
 static const struct {
@@ -1409,15 +1409,24 @@ static const struct {
     { "reverse", ATR_INVERSE },
 };
 
+/* longest colornames[] text, with its NUL */
+#define CLRNAME_LEN 24
+
+/* The name is copied into a static buffer: the message store only keeps a
+ * few texts, so a pointer into it would not last past the next messages. */
 const char *
 clr2colorname(clr)
 int clr;
 {
+    static char clrtxt[CLRNAME_LEN];
     int i;
 
     for (i = 0; i < SIZE(colornames); i++)
-        if (colornames[i].name && colornames[i].color == clr)
-            return colornames[i].name;
+        if (colornames[i].name != MSGNULL && colornames[i].color == clr) {
+            (void) strncpy(clrtxt, MSGTXT(colornames[i].name), CLRNAME_LEN - 1);
+            clrtxt[CLRNAME_LEN - 1] = '\0';
+            return clrtxt;
+        }
     return (char *) 0;
 }
 
@@ -1431,8 +1440,8 @@ char *str;
        (also junk like "_l i-gh_t---b l u e" but we won't worry about that);
        also copes with trailing space; caller has removed any leading space */
     for (i = 0; i < SIZE(colornames); i++)
-        if (colornames[i].name
-            && fuzzymatch(str, colornames[i].name, " -_", TRUE)) {
+        if (colornames[i].name != MSGNULL
+            && fuzzymatch(str, MSGTXT(colornames[i].name), " -_", TRUE)) {
             c = colornames[i].color;
             break;
         }
@@ -1492,10 +1501,11 @@ const char *prompt;
     start_menu(tmpwin);
     any = zeroany;
     for (i = 0; i < SIZE(colornames); i++) {
-        if (!colornames[i].name)
+        if (colornames[i].name == MSGNULL)
             break;
         any.a_int = i + 1;
-        add_menu(tmpwin, NO_GLYPH, &any, 0, 0, ATR_NONE, colornames[i].name,
+        add_menu(tmpwin, NO_GLYPH, &any, 0, 0, ATR_NONE,
+                 MSGTXT(colornames[i].name),
                  (colornames[i].color == NO_COLOR) ? MENU_SELECTED
                                                    : MENU_UNSELECTED);
     }

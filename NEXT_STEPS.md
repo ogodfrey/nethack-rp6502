@@ -334,8 +334,11 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
      way, and a wizard-mode wish for "silver sabre" returns the silver saber
      on the host (wishtest.py). `spkeys_binds[]` (cmd.c, 39 names; the
      no-name entries are `MSGNULL`) is converted, and its one name comparison
-     copies the text with `MSGTXT`. The rest are next. Plain `const char *`
-     arrays take the msgids
+     copies the text with `MSGTXT`. `colornames[]` (options.c, 26 names) is
+     converted too; `clr2colorname()` copies its result into a static buffer,
+     since its callers keep the pointer past other messages. Menus are safe
+     with `MSGTXT` pointers: the tty port copies the text in `add_menu`. The
+     rest are next. Plain `const char *` arrays take the msgids
      route;
      struct tables need a per-field `MSG_ST` marker (as `compopt` and
      `extcmdlist` do); char-array tables (`blind_writing[][21]`) need their
