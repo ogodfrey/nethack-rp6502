@@ -177,10 +177,19 @@ items: `level` list heads 6.7 KB, `rooms` 5.2 KB, `could_see` 3.4 KB, `obufs`
 3.1 KB, `fqn_filename_buffer` 2.0 KB, sp_lev stack 1.7 KB, `u` 1.4 KB,
 `nextmbuf` 1.3 KB, `mvitals` 1.1 KB, `blstats` 1.1 KB.
 
-Moves needing a decision: (1) a smaller slot (split readobjnam, hmon_hitmon,
-parseoptions to about 12 KB), (2) a paged or file-backed store for per-level
-state (the saves already write levels to files), (3) dropping features for
-the RP6502 build (special levels and the shop code are the largest text).
+Decisions (2026-11-01, user): do (1) split the functions over 12 KB, and (2)
+page the per-level data through a RAM cache, backed by per-level files on the
+card. Feature removal (3) is not in scope. Status: (1) is analyzed, not yet
+changed. The nine functions over 12 KB are readobjnam (23.7 KB; about 40
+shared locals and gotos across phases), hmon_hitmon (17.9), parseoptions
+(16.9), m_move (16.5), special_handling (15.0), hitmu (13.8), seffects
+(13.1), dokick (13.1), sp_level_coder (12.9). (2) is not yet changed: the
+per-level state is rooms (5.2 KB, 199 uses), the object and monster list heads
+(6.7 KB, 128 uses), and could_see (3.4 KB). Paging each in 512-byte pages with
+a small cache saves about 13 KB minus the cache; the cost is one card read per
+miss, which must be measured on the host (count misses per move) first.
+
+miss, which must be measured on the host (count misses per move) first.
 
 ## Priority next steps
 
