@@ -5285,213 +5285,16 @@ struct sp_coder *coder;
     opvar_free(vname);
 }
 
-/* Special level coder, creates the special level from the sp_lev codes.
- * Does not free the allocated memory.
- */
-STATIC_OVL boolean
-sp_level_coder(lvl)
+/* sp_level_coder() continued: the opcodes from SPO_COPY on (split so
+   that each function fits a code slot). */
+STATIC_OVL void
+sp_coder_rest(coder, lvl)
+struct sp_coder *coder;
 sp_lev *lvl;
 {
     static const char nhFunc[] = "sp_level_coder";
-    unsigned long exec_opcodes = 0;
-    int tmpi;
-    long room_stack = 0;
-    unsigned long max_execution = SPCODER_MAX_RUNTIME;
-    struct sp_coder *coder =
-        (struct sp_coder *) alloc(sizeof (struct sp_coder));
 
-    coder->frame = frame_new(0);
-    coder->stack = NULL;
-    coder->premapped = FALSE;
-    coder->solidify = FALSE;
-    coder->check_inaccessibles = FALSE;
-    coder->croom = NULL;
-    coder->n_subroom = 1;
-    coder->exit_script = FALSE;
-    coder->lvl_is_joined = 0;
-
-    splev_init_present = FALSE;
-    icedpools = FALSE;
-    /* achievement tracking; static init would suffice except we need to
-       reset if #wizmakemap is used to recreate mines' end or sokoban end;
-       once either level is created, these values can be forgotten */
-    mines_prize_count = soko_prize_count = 0;
-
-    if (wizard) {
-        char *met = nh_getenv("SPCODER_MAX_RUNTIME");
-
-        if (met && met[0] == '1')
-            max_execution = (1 << 30) - 1;
-    }
-
-    for (tmpi = 0; tmpi <= MAX_NESTED_ROOMS; tmpi++) {
-        coder->tmproomlist[tmpi] = (struct mkroom *) 0;
-        coder->failed_room[tmpi] = FALSE;
-    }
-
-    shuffle_alignments();
-
-    for (tmpi = 0; tmpi < MAX_CONTAINMENT; tmpi++)
-        container_obj[tmpi] = NULL;
-    container_idx = 0;
-
-    invent_carrying_monster = NULL;
-
-    splm_clear();
-
-    level.flags.is_maze_lev = 0;
-
-    xstart = 1;
-    ystart = 0;
-    xsize = COLNO - 1;
-    ysize = ROWNO;
-
-    while (coder->frame->n_opcode < lvl->n_opcodes && !coder->exit_script) {
-        coder->opcode = lvl->opcodes[coder->frame->n_opcode].opcode;
-        coder->opdat = lvl->opcodes[coder->frame->n_opcode].opdat;
-
-        coder->stack = coder->frame->stack;
-
-        if (exec_opcodes++ > max_execution) {
-            impossible("Level script is taking too much time, stopping.");
-            coder->exit_script = TRUE;
-        }
-
-        if (coder->failed_room[coder->n_subroom - 1]
-            && coder->opcode != SPO_ENDROOM && coder->opcode != SPO_ROOM
-            && coder->opcode != SPO_SUBROOM)
-            goto next_opcode;
-
-        coder->croom = coder->tmproomlist[coder->n_subroom - 1];
-
-        switch (coder->opcode) {
-        case SPO_NULL:
-            break;
-        case SPO_EXIT:
-            coder->exit_script = TRUE;
-            break;
-        case SPO_FRAME_PUSH:
-            spo_frame_push(coder);
-            break;
-        case SPO_FRAME_POP:
-            spo_frame_pop(coder);
-            break;
-        case SPO_CALL:
-            spo_call(coder);
-            break;
-        case SPO_RETURN:
-            spo_return(coder);
-            break;
-        case SPO_END_MONINVENT:
-            spo_end_moninvent(coder);
-            break;
-        case SPO_POP_CONTAINER:
-            spo_pop_container(coder);
-            break;
-        case SPO_POP: {
-            struct opvar *ov = splev_stack_pop(coder->stack);
-
-            opvar_free(ov);
-            break;
-        }
-        case SPO_PUSH:
-            splev_stack_push(coder->stack, opvar_clone(coder->opdat));
-            break;
-        case SPO_MESSAGE:
-            spo_message(coder);
-            break;
-        case SPO_MONSTER:
-            spo_monster(coder);
-            break;
-        case SPO_OBJECT:
-            spo_object(coder);
-            break;
-        case SPO_LEVEL_FLAGS:
-            spo_level_flags(coder);
-            break;
-        case SPO_INITLEVEL:
-            spo_initlevel(coder);
-            break;
-        case SPO_ENGRAVING:
-            spo_engraving(coder);
-            break;
-        case SPO_MINERALIZE:
-            spo_mineralize(coder);
-            break;
-        case SPO_SUBROOM:
-        case SPO_ROOM:
-            if (!coder->failed_room[coder->n_subroom - 1]) {
-                spo_room(coder);
-            } else
-                room_stack++;
-            break;
-        case SPO_ENDROOM:
-            if (coder->failed_room[coder->n_subroom - 1]) {
-                if (!room_stack)
-                    spo_endroom(coder);
-                else
-                    room_stack--;
-            } else {
-                spo_endroom(coder);
-            }
-            break;
-        case SPO_DOOR:
-            spo_door(coder);
-            break;
-        case SPO_STAIR:
-            spo_stair(coder);
-            break;
-        case SPO_LADDER:
-            spo_ladder(coder);
-            break;
-        case SPO_GRAVE:
-            spo_grave(coder);
-            break;
-        case SPO_ALTAR:
-            spo_altar(coder);
-            break;
-        case SPO_SINK:
-        case SPO_POOL:
-        case SPO_FOUNTAIN:
-            spo_feature(coder);
-            break;
-        case SPO_TRAP:
-            spo_trap(coder);
-            break;
-        case SPO_GOLD:
-            spo_gold(coder);
-            break;
-        case SPO_CORRIDOR:
-            spo_corridor(coder);
-            break;
-        case SPO_TERRAIN:
-            spo_terrain(coder);
-            break;
-        case SPO_REPLACETERRAIN:
-            spo_replace_terrain(coder);
-            break;
-        case SPO_LEVREGION:
-            spo_levregion(coder);
-            break;
-        case SPO_REGION:
-            spo_region(coder);
-            break;
-        case SPO_DRAWBRIDGE:
-            spo_drawbridge(coder);
-            break;
-        case SPO_MAZEWALK:
-            spo_mazewalk(coder);
-            break;
-        case SPO_NON_PASSWALL:
-        case SPO_NON_DIGGABLE:
-            spo_wall_property(coder);
-            break;
-        case SPO_ROOM_DOOR:
-            spo_room_door(coder);
-            break;
-        case SPO_WALLIFY:
-            spo_wallify(coder);
-            break;
+    switch (coder->opcode) {
         case SPO_COPY: {
             struct opvar *a = splev_stack_pop(coder->stack);
 
@@ -5970,6 +5773,219 @@ sp_lev *lvl;
         }
         default:
             panic("sp_level_coder: Unknown opcode %i", coder->opcode);
+        }
+}
+
+/* Special level coder, creates the special level from the sp_lev codes.
+ * Does not free the allocated memory.
+ */
+STATIC_OVL boolean
+sp_level_coder(lvl)
+sp_lev *lvl;
+{
+    static const char nhFunc[] = "sp_level_coder";
+    unsigned long exec_opcodes = 0;
+    int tmpi;
+    long room_stack = 0;
+    unsigned long max_execution = SPCODER_MAX_RUNTIME;
+    struct sp_coder *coder =
+        (struct sp_coder *) alloc(sizeof (struct sp_coder));
+
+    coder->frame = frame_new(0);
+    coder->stack = NULL;
+    coder->premapped = FALSE;
+    coder->solidify = FALSE;
+    coder->check_inaccessibles = FALSE;
+    coder->croom = NULL;
+    coder->n_subroom = 1;
+    coder->exit_script = FALSE;
+    coder->lvl_is_joined = 0;
+
+    splev_init_present = FALSE;
+    icedpools = FALSE;
+    /* achievement tracking; static init would suffice except we need to
+       reset if #wizmakemap is used to recreate mines' end or sokoban end;
+       once either level is created, these values can be forgotten */
+    mines_prize_count = soko_prize_count = 0;
+
+    if (wizard) {
+        char *met = nh_getenv("SPCODER_MAX_RUNTIME");
+
+        if (met && met[0] == '1')
+            max_execution = (1 << 30) - 1;
+    }
+
+    for (tmpi = 0; tmpi <= MAX_NESTED_ROOMS; tmpi++) {
+        coder->tmproomlist[tmpi] = (struct mkroom *) 0;
+        coder->failed_room[tmpi] = FALSE;
+    }
+
+    shuffle_alignments();
+
+    for (tmpi = 0; tmpi < MAX_CONTAINMENT; tmpi++)
+        container_obj[tmpi] = NULL;
+    container_idx = 0;
+
+    invent_carrying_monster = NULL;
+
+    splm_clear();
+
+    level.flags.is_maze_lev = 0;
+
+    xstart = 1;
+    ystart = 0;
+    xsize = COLNO - 1;
+    ysize = ROWNO;
+
+    while (coder->frame->n_opcode < lvl->n_opcodes && !coder->exit_script) {
+        coder->opcode = lvl->opcodes[coder->frame->n_opcode].opcode;
+        coder->opdat = lvl->opcodes[coder->frame->n_opcode].opdat;
+
+        coder->stack = coder->frame->stack;
+
+        if (exec_opcodes++ > max_execution) {
+            impossible("Level script is taking too much time, stopping.");
+            coder->exit_script = TRUE;
+        }
+
+        if (coder->failed_room[coder->n_subroom - 1]
+            && coder->opcode != SPO_ENDROOM && coder->opcode != SPO_ROOM
+            && coder->opcode != SPO_SUBROOM)
+            goto next_opcode;
+
+        coder->croom = coder->tmproomlist[coder->n_subroom - 1];
+
+        switch (coder->opcode) {
+        case SPO_NULL:
+            break;
+        case SPO_EXIT:
+            coder->exit_script = TRUE;
+            break;
+        case SPO_FRAME_PUSH:
+            spo_frame_push(coder);
+            break;
+        case SPO_FRAME_POP:
+            spo_frame_pop(coder);
+            break;
+        case SPO_CALL:
+            spo_call(coder);
+            break;
+        case SPO_RETURN:
+            spo_return(coder);
+            break;
+        case SPO_END_MONINVENT:
+            spo_end_moninvent(coder);
+            break;
+        case SPO_POP_CONTAINER:
+            spo_pop_container(coder);
+            break;
+        case SPO_POP: {
+            struct opvar *ov = splev_stack_pop(coder->stack);
+
+            opvar_free(ov);
+            break;
+        }
+        case SPO_PUSH:
+            splev_stack_push(coder->stack, opvar_clone(coder->opdat));
+            break;
+        case SPO_MESSAGE:
+            spo_message(coder);
+            break;
+        case SPO_MONSTER:
+            spo_monster(coder);
+            break;
+        case SPO_OBJECT:
+            spo_object(coder);
+            break;
+        case SPO_LEVEL_FLAGS:
+            spo_level_flags(coder);
+            break;
+        case SPO_INITLEVEL:
+            spo_initlevel(coder);
+            break;
+        case SPO_ENGRAVING:
+            spo_engraving(coder);
+            break;
+        case SPO_MINERALIZE:
+            spo_mineralize(coder);
+            break;
+        case SPO_SUBROOM:
+        case SPO_ROOM:
+            if (!coder->failed_room[coder->n_subroom - 1]) {
+                spo_room(coder);
+            } else
+                room_stack++;
+            break;
+        case SPO_ENDROOM:
+            if (coder->failed_room[coder->n_subroom - 1]) {
+                if (!room_stack)
+                    spo_endroom(coder);
+                else
+                    room_stack--;
+            } else {
+                spo_endroom(coder);
+            }
+            break;
+        case SPO_DOOR:
+            spo_door(coder);
+            break;
+        case SPO_STAIR:
+            spo_stair(coder);
+            break;
+        case SPO_LADDER:
+            spo_ladder(coder);
+            break;
+        case SPO_GRAVE:
+            spo_grave(coder);
+            break;
+        case SPO_ALTAR:
+            spo_altar(coder);
+            break;
+        case SPO_SINK:
+        case SPO_POOL:
+        case SPO_FOUNTAIN:
+            spo_feature(coder);
+            break;
+        case SPO_TRAP:
+            spo_trap(coder);
+            break;
+        case SPO_GOLD:
+            spo_gold(coder);
+            break;
+        case SPO_CORRIDOR:
+            spo_corridor(coder);
+            break;
+        case SPO_TERRAIN:
+            spo_terrain(coder);
+            break;
+        case SPO_REPLACETERRAIN:
+            spo_replace_terrain(coder);
+            break;
+        case SPO_LEVREGION:
+            spo_levregion(coder);
+            break;
+        case SPO_REGION:
+            spo_region(coder);
+            break;
+        case SPO_DRAWBRIDGE:
+            spo_drawbridge(coder);
+            break;
+        case SPO_MAZEWALK:
+            spo_mazewalk(coder);
+            break;
+        case SPO_NON_PASSWALL:
+        case SPO_NON_DIGGABLE:
+            spo_wall_property(coder);
+            break;
+        case SPO_ROOM_DOOR:
+            spo_room_door(coder);
+            break;
+        case SPO_WALLIFY:
+            spo_wallify(coder);
+            break;
+        default:
+            sp_coder_rest(coder, lvl);
+            break;
         }
 
     next_opcode:

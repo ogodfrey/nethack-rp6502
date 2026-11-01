@@ -179,11 +179,14 @@ items: `level` list heads 6.7 KB, `rooms` 5.2 KB, `could_see` 3.4 KB, `obufs`
 
 Decisions (2026-11-01, user): do (1) split the functions over 12 KB, and (2)
 page the per-level data through a RAM cache, backed by per-level files on the
-card. Feature removal (3) is not in scope. Status: (1) is analyzed, not yet
-changed. The nine functions over 12 KB are readobjnam (23.7 KB; about 40
-shared locals and gotos across phases), hmon_hitmon (17.9), parseoptions
-(16.9), m_move (16.5), special_handling (15.0), hitmu (13.8), seffects
-(13.1), dokick (13.1), sp_level_coder (12.9). (2) is not yet changed: the
+card. Feature removal (3) is not in scope. Status: the splits done so far are special_handling and parseoptions
+(options.c), sp_level_coder (sp_lev.c, the opcode switch from SPO_COPY on
+moved to sp_coder_rest) and seffects (read.c, the cases from SCR_CREATE_MONSTER
+on moved to seffects_rest). Measured with ovlpack.py plan at 12288 bytes, five
+functions remain over the slot: readobjnam (23.7 KB), hmon_hitmon (17.9),
+m_move (16.5), hitmu (13.8) and dokick (13.1). Verified by the full check set
+and by wizard-mode autoplay (seeds 2 and 3, no impossible/panic lines).
+(2) is not yet changed: the
 per-level state is rooms (5.2 KB, 199 uses), the object and monster list heads
 (6.7 KB, 128 uses), and could_see (3.4 KB). Paging each in 512-byte pages with
 a small cache saves about 13 KB minus the cache; the cost is one card read per

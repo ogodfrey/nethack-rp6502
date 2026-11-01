@@ -2039,6 +2039,8 @@ char c;
     return FALSE;
 }
 
+STATIC_DCL boolean FDECL(parseoptions_rest, (char *, BOOLEAN_P, BOOLEAN_P, BOOLEAN_P));
+
 boolean
 parseoptions(opts, tinitial, tfrom_file)
 register char *opts;
@@ -2050,7 +2052,6 @@ boolean tinitial, tfrom_file;
     int i;
     const char *fullname;
     boolean retval = TRUE;
-    static char optnm[OPTNAME_LEN]; /* a boolopt name held across the checks */
 
     initial = tinitial;
     from_file = tfrom_file;
@@ -3118,6 +3119,22 @@ boolean tinitial, tfrom_file;
         }
         return retval;
     }
+
+    return parseoptions_rest(opts, negated, retval, duplicate);
+}
+
+/* parseoptions() continued from the pile limit option: the rest of the
+   named options and then the boolean options (split to fit a code slot). */
+STATIC_OVL boolean
+parseoptions_rest(opts, negated, retval, duplicate)
+char *opts;
+boolean negated, retval, duplicate;
+{
+    char *op;
+    unsigned num;
+    int i;
+    const char *fullname;
+    static char optnm[OPTNAME_LEN]; /* a boolopt name held across the checks */
 
     /* pile limit: when walking over objects, number which triggers
        "there are several/many objects here" instead of listing them */
@@ -4820,6 +4837,8 @@ int numtotal;
 struct symsetentry *symset_list = 0; /* files.c will populate this with
                                       * list of available sets */
 
+STATIC_DCL boolean FDECL(special_handling_mid, (const char *, BOOLEAN_P, BOOLEAN_P));
+
 STATIC_OVL boolean
 special_handling(optname, setinitial, setfromfile)
 const char *optname;
@@ -5162,7 +5181,25 @@ boolean setinitial, setfromfile;
             free((genericptr_t) sortl_pick);
         }
         destroy_nhwindow(tmpwin);
-    } else if (!strcmp("align_message", optname)
+    } else {
+        return special_handling_mid(optname, setinitial, setfromfile);
+    }
+    return TRUE;
+}
+
+/* special_handling() continued: the options from align_message through
+   symset (the split keeps each function under a slot). */
+STATIC_OVL boolean
+special_handling_mid(optname, setinitial, setfromfile)
+const char *optname;
+boolean setinitial, setfromfile;
+{
+    winid tmpwin;
+    anything any;
+    int i, n;
+    char buf[BUFSZ];
+
+    if (!strcmp("align_message", optname)
                || !strcmp("align_status", optname)) {
         menu_item *window_pick = (menu_item *) 0;
         char abuf[BUFSZ];
