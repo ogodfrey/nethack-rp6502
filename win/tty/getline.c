@@ -259,12 +259,12 @@ char *base;
     int oindex, com_index;
 
     com_index = -1;
-    for (oindex = 0; extcmdlist[oindex].ef_txt != (char *) 0; oindex++) {
+    for (oindex = 0; extcmdlist[oindex].ef_txt != MSGNULL; oindex++) {
         if (extcmdlist[oindex].flags & CMD_NOT_AVAILABLE)
             continue;
         if ((extcmdlist[oindex].flags & AUTOCOMPLETE)
             && !(!wizard && (extcmdlist[oindex].flags & WIZMODECMD))
-            && !strncmpi(base, extcmdlist[oindex].ef_txt, strlen(base))) {
+            && !strncmpi(base, EXT_TXT(&extcmdlist[oindex]), strlen(base))) {
             if (com_index == -1) /* no matches yet */
                 com_index = oindex;
             else /* more than 1 match */
@@ -272,7 +272,7 @@ char *base;
         }
     }
     if (com_index >= 0) {
-        Strcpy(base, extcmdlist[com_index].ef_txt);
+        Strcpy(base, EXT_TXT(&extcmdlist[com_index]));
         return TRUE;
     }
 
@@ -306,8 +306,8 @@ tty_get_ext_cmd()
     if (buf[0] == 0 || buf[0] == '\033')
         return -1;
 
-    for (i = 0; extcmdlist[i].ef_txt != (char *) 0; i++)
-        if (!strcmpi(buf, extcmdlist[i].ef_txt))
+    for (i = 0; extcmdlist[i].ef_txt != MSGNULL; i++)
+        if (!strcmpi(buf, EXT_TXT(&extcmdlist[i])))
             break;
 
     if (!in_doagain) {
@@ -317,7 +317,7 @@ tty_get_ext_cmd()
         savech('\n');
     }
 
-    if (extcmdlist[i].ef_txt == (char *) 0) {
+    if (extcmdlist[i].ef_txt == MSGNULL) {
         pline("%s: unknown extended command.", buf);
         i = -1;
     }

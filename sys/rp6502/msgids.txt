@@ -6,3 +6,4 @@ shirt_msgs
 developers
 boolopt
 compopt
+extcmdlist

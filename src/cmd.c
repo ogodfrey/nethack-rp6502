@@ -357,7 +357,7 @@ doextcmd(VOID_ARGS)
         if (iflags.menu_requested && !accept_menu_prefix(func)) {
             pline("'%s' prefix has no effect for the %s command.",
                   visctrl(Cmd.spkeys[NHKF_REQMENU]),
-                  extcmdlist[idx].ef_txt);
+                  EXT_TXT(&extcmdlist[idx]));
             iflags.menu_requested = FALSE;
         }
         retval = (*func)();
@@ -441,7 +441,7 @@ doextlist(VOID_ARGS)
                commands are being integrated into a single list */
             if (pass == 1 && (onelist || !wizard))
                 break;
-            for (efp = extcmdlist; efp->ef_txt; efp++) {
+            for (efp = extcmdlist; efp->ef_txt != MSGNULL; efp++) {
                 int wizc;
 
                 if ((efp->flags & CMD_NOT_AVAILABLE) != 0)
@@ -452,11 +452,11 @@ doextlist(VOID_ARGS)
                 /* if searching, skip this command if it doesn't match */
                 if (*searchbuf
                     /* first try case-insensitive substring match */
-                    && !strstri(efp->ef_txt, searchbuf)
+                    && !strstri(EXT_TXT(efp), searchbuf)
                     && !strstri(MSGTXT(efp->ef_desc), searchbuf)
                     /* wildcard support; most interfaces use case-insensitve
                        pmatch rather than regexp for menu searching */
-                    && !pmatchi(searchbuf, efp->ef_txt)
+                    && !pmatchi(searchbuf, EXT_TXT(efp))
                     && !pmatchi(searchbuf, MSGTXT(efp->ef_desc)))
                     continue;
                 /* skip wizard mode commands if not in wizard mode;
@@ -479,7 +479,7 @@ doextlist(VOID_ARGS)
                     menushown[pass] = 1;
                 }
                 Sprintf(buf, " %-14s %-3s %s",
-                        efp->ef_txt,
+                        EXT_TXT(efp),
                         (efp->flags & AUTOCOMPLETE) ? "[A]" : " ",
                         MSGTXT(efp->ef_desc));
                 add_menu(menuwin, NO_GLYPH, &any, 0, 0, ATR_NONE,
@@ -574,12 +574,12 @@ extcmd_via_menu()
         i = n = 0;
         any = zeroany;
         /* populate choices */
-        for (efp = extcmdlist; efp->ef_txt; efp++) {
+        for (efp = extcmdlist; efp->ef_txt != MSGNULL; efp++) {
             if ((efp->flags & CMD_NOT_AVAILABLE)
                 || !(efp->flags & AUTOCOMPLETE)
                 || (!wizard && (efp->flags & WIZMODECMD)))
                 continue;
-            if (!matchlevel || !strncmp(efp->ef_txt, cbuf, matchlevel)) {
+            if (!matchlevel || !strncmp(EXT_TXT(efp), cbuf, matchlevel)) {
                 choices[i] = efp;
                 if ((len = (int) strlen(MSGTXT(efp->ef_desc))) > biggest)
                     biggest = len;
@@ -614,13 +614,13 @@ extcmd_via_menu()
         accelerator = prevaccelerator = 0;
         acount = 0;
         for (i = 0; choices[i]; ++i) {
-            accelerator = choices[i]->ef_txt[matchlevel];
+            accelerator = EXT_TXT(choices[i])[matchlevel];
             if (accelerator != prevaccelerator || one_per_line)
                 wastoolong = FALSE;
             if (accelerator != prevaccelerator || one_per_line
                 || (acount >= 2
                     /* +4: + sizeof " or " - sizeof "" */
-                    && (strlen(prompt) + 4 + strlen(choices[i]->ef_txt)
+                    && (strlen(prompt) + 4 + strlen(EXT_TXT(choices[i]))
                         /* -6: enough room for 1 space left margin
                          *   + "%c - " menu selector + 1 space right margin */
                         >= min(sizeof prompt, COLNO - 6)))) {
@@ -638,13 +638,13 @@ extcmd_via_menu()
             prevaccelerator = accelerator;
             if (!acount || one_per_line) {
                 Sprintf(prompt, "%s%s [%s]", wastoolong ? "or " : "",
-                        choices[i]->ef_txt, MSGTXT(choices[i]->ef_desc));
+                        EXT_TXT(choices[i]), MSGTXT(choices[i]->ef_desc));
             } else if (acount == 1) {
                 Sprintf(prompt, "%s%s or %s", wastoolong ? "or " : "",
-                        choices[i - 1]->ef_txt, choices[i]->ef_txt);
+                        EXT_TXT(choices[i - 1]), EXT_TXT(choices[i]));
             } else {
                 Strcat(prompt, " or ");
-                Strcat(prompt, choices[i]->ef_txt);
+                Strcat(prompt, EXT_TXT(choices[i]));
             }
             ++acount;
         }
@@ -3356,6 +3356,11 @@ int final;
 }
 
 /* ordered by command name */
+/* Occupation texts. set_occupation() keeps the pointer for the whole
+   occupation, so these stay plain strings (not text ids). */
+static const char occtxt_searching[] = "searching";
+static const char occtxt_waiting[] = "waiting";
+
 struct ext_func_tab extcmdlist[] = {
     { '#', "#", MSG_ST("perform an extended command"),
             doextcmd, IFBURIED | GENERALCMD },
@@ -3451,7 +3456,7 @@ struct ext_func_tab extcmdlist[] = {
     { M('r'), "rub", MSG_ST("rub a lamp or a stone"), dorub, AUTOCOMPLETE },
     { 'S', "save", MSG_ST("save the game and exit"), dosave, IFBURIED | GENERALCMD },
     { 's', "search", MSG_ST("search for traps and secret doors"),
-            dosearch, IFBURIED, "searching" },
+            dosearch, IFBURIED, occtxt_searching },
     { '*', "seeall", MSG_ST("show all equipment in use"), doprinuse, IFBURIED },
     { AMULET_SYM, "seeamulet", MSG_ST("show the amulet currently worn"),
             dopramulet, IFBURIED },
@@ -3512,7 +3517,7 @@ struct ext_func_tab extcmdlist[] = {
     { '\0', "vision", MSG_ST("show vision array"),
             wiz_show_vision, IFBURIED | AUTOCOMPLETE | WIZMODECMD },
     { '.', "wait", MSG_ST("rest one move while doing nothing"),
-            donull, IFBURIED, "waiting" },
+            donull, IFBURIED, occtxt_waiting },
     { 'W', "wear", MSG_ST("wear a piece of armor"), dowear },
     { '&', "whatdoes", MSG_ST("tell what a command does"), dowhatdoes, IFBURIED },
     { '/', "whatis", MSG_ST("show what type of thing a symbol corresponds to"),
@@ -3548,7 +3553,7 @@ struct ext_func_tab extcmdlist[] = {
     { '\0', "wmode", MSG_ST("show wall modes"),
             wiz_show_wmodes, IFBURIED | AUTOCOMPLETE | WIZMODECMD },
     { 'z', "zap", MSG_ST("zap a wand"), dozap },
-    { '\0', (char *) 0, 0, donull, 0, (char *) 0 } /* sentinel */
+    { '\0', MSGNULL, 0, donull, 0, (char *) 0 } /* sentinel */
 };
 
 /* for key2extcmddesc() to support dowhatdoes() */
@@ -3612,7 +3617,7 @@ uchar key;
             return key2cmdbuf;
     }
     if (Cmd.commands[key]) {
-        if (Cmd.commands[key]->ef_txt) {
+        if (Cmd.commands[key]->ef_txt != MSGNULL) {
             Strcpy(key2cmdbuf, MSGTXT(Cmd.commands[key]->ef_desc));
             return key2cmdbuf;
         }
@@ -3633,15 +3638,15 @@ const char *command;
         return TRUE;
     }
 
-    for (extcmd = extcmdlist; extcmd->ef_txt; extcmd++) {
-        if (strcmp(command, extcmd->ef_txt))
+    for (extcmd = extcmdlist; extcmd->ef_txt != MSGNULL; extcmd++) {
+        if (strcmp(command, EXT_TXT(extcmd)))
             continue;
         Cmd.commands[key] = extcmd;
 #if 0 /* silently accept key binding for unavailable command (!SHELL,&c) */
         if ((extcmd->flags & CMD_NOT_AVAILABLE) != 0) {
             char buf[BUFSZ];
 
-            Sprintf(buf, cmdnotavail, extcmd->ef_txt);
+            Sprintf(buf, cmdnotavail, EXT_TXT(extcmd));
             config_error_add("%s", buf);
         }
 #endif
@@ -3657,7 +3662,7 @@ commands_init()
 {
     struct ext_func_tab *extcmd;
 
-    for (extcmd = extcmdlist; extcmd->ef_txt; extcmd++)
+    for (extcmd = extcmdlist; extcmd->ef_txt != MSGNULL; extcmd++)
         if (extcmd->key)
             Cmd.commands[extcmd->key] = extcmd;
 
@@ -3713,7 +3718,7 @@ boolean *keys_used; /* boolean keys_used[256] */
                 continue;
             }
             Sprintf(buf, "%-8s %-12s %s", key2txt(key, buf2),
-                    extcmd->ef_txt,
+                    EXT_TXT(extcmd),
                     MSGTXT(extcmd->ef_desc));
             putstr(datawin, 0, buf);
             keys_used[i] = TRUE;
@@ -4465,8 +4470,8 @@ boolean condition;
     }
 
     /* find and modify the extended command */
-    for (efp = extcmdlist; efp->ef_txt; efp++) {
-        if (!strcmp(autocomplete, efp->ef_txt)) {
+    for (efp = extcmdlist; efp->ef_txt != MSGNULL; efp++) {
+        if (!strcmp(autocomplete, EXT_TXT(efp))) {
             if (condition)
                 efp->flags |= AUTOCOMPLETE;
             else

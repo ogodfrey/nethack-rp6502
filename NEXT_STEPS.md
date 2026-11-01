@@ -363,7 +363,14 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
      immediate uses, and copies (`opt_name_at`, the do-set branch, and a
      buffer in `doset_add_menu`) where a name is held. Checked on the host:
      the full `O` menu, and selecting `fruit` raises "Set fruit to what?".
-     The copy rule is the same as for boolopt (see the ring note above). `roles[]` rank names
+     The copy rule is the same as for boolopt (see the ring note above).
+     `extcmdlist[]` (cmd.c, about 60 names; `win/tty/getline.c` also reads
+     it) uses `msgid_t ef_txt`, with `EXT_TXT(p)` fetching the name at each
+     use, so no text pointer is stored. The `f_text` occupation strings
+     ("searching", "waiting") stay plain: `set_occupation()` keeps the pointer
+     for the whole occupation, and they are file-scope arrays so strtab does
+     not rewrite them. Checked on the host: `#?` lists the commands, and
+     `#version` runs. `roles[]` rank names
      (117 pairs, 17 characters at most) are converted to `struct RankName`
      (`msgid_t`, `MSGNULL` for no female title). `rank_of()` copies the title
      into a static 20-byte buffer, the same way `clr2colorname()` does, so the

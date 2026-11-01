@@ -17,12 +17,16 @@
 
 struct ext_func_tab {
     uchar key;
-    const char *ef_txt;
+    msgid_t ef_txt; /* the name; MSGNULL ends extcmdlist */
     msgid_t ef_desc;
     int NDECL((*ef_funct));
     int flags;
     const char *f_text;
 };
+
+/* The name of an extended command, read from storage at the point of use (a
+   text pointer is only valid for a few later fetches). */
+#define EXT_TXT(p) MSGTXT((p)->ef_txt)
 
 extern struct ext_func_tab extcmdlist[];
 
