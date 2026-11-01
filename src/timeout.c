@@ -23,80 +23,91 @@ STATIC_DCL void FDECL(cleanup_burn, (ANY_P *, long));
    for timeout countdown, where most won't occur in normal play */
 const struct propname {
     int prop_num;
-    const char *prop_name;
+    msgid_t prop_name;
 } propertynames[] = {
-    { INVULNERABLE, "invulnerable" },
-    { STONED, "petrifying" },
-    { SLIMED, "becoming slime" },
-    { STRANGLED, "strangling" },
-    { SICK, "fatally sick" },
-    { STUNNED, "stunned" },
-    { CONFUSION, "confused" },
-    { HALLUC, "hallucinating" },
-    { BLINDED, "blinded" },
-    { DEAF, "deafness" },
-    { VOMITING, "vomiting" },
-    { GLIB, "slippery fingers" },
-    { WOUNDED_LEGS, "wounded legs" },
-    { SLEEPY, "sleepy" },
-    { TELEPORT, "teleporting" },
-    { POLYMORPH, "polymorphing" },
-    { LEVITATION, "levitating" },
-    { FAST, "very fast" }, /* timed 'FAST' is very fast */
-    { CLAIRVOYANT, "clairvoyant" },
-    { DETECT_MONSTERS, "monster detection" },
-    { SEE_INVIS, "see invisible" },
-    { INVIS, "invisible" },
+    { INVULNERABLE, MSG_ST("invulnerable") },
+    { STONED, MSG_ST("petrifying") },
+    { SLIMED, MSG_ST("becoming slime") },
+    { STRANGLED, MSG_ST("strangling") },
+    { SICK, MSG_ST("fatally sick") },
+    { STUNNED, MSG_ST("stunned") },
+    { CONFUSION, MSG_ST("confused") },
+    { HALLUC, MSG_ST("hallucinating") },
+    { BLINDED, MSG_ST("blinded") },
+    { DEAF, MSG_ST("deafness") },
+    { VOMITING, MSG_ST("vomiting") },
+    { GLIB, MSG_ST("slippery fingers") },
+    { WOUNDED_LEGS, MSG_ST("wounded legs") },
+    { SLEEPY, MSG_ST("sleepy") },
+    { TELEPORT, MSG_ST("teleporting") },
+    { POLYMORPH, MSG_ST("polymorphing") },
+    { LEVITATION, MSG_ST("levitating") },
+    { FAST, MSG_ST("very fast") }, /* timed 'FAST' is very fast */
+    { CLAIRVOYANT, MSG_ST("clairvoyant") },
+    { DETECT_MONSTERS, MSG_ST("monster detection") },
+    { SEE_INVIS, MSG_ST("see invisible") },
+    { INVIS, MSG_ST("invisible") },
     /* properties beyond here don't have timed values during normal play,
        so there's not much point in trying to order them sensibly;
        they're either on or off based on equipment, role, actions, &c */
-    { FIRE_RES, "fire resistance" },
-    { COLD_RES, "cold resistance" },
-    { SLEEP_RES, "sleep resistance" },
-    { DISINT_RES, "disintegration resistance" },
-    { SHOCK_RES, "shock resistance" },
-    { POISON_RES, "poison resistance" },
-    { ACID_RES, "acid resistance" },
-    { STONE_RES, "stoning resistance" },
-    { DRAIN_RES, "drain resistance" },
-    { SICK_RES, "sickness resistance" },
-    { ANTIMAGIC, "magic resistance" },
-    { HALLUC_RES, "hallucination resistance" },
-    { FUMBLING, "fumbling" },
-    { HUNGER, "voracious hunger" },
-    { TELEPAT, "telepathic" },
-    { WARNING, "warning" },
-    { WARN_OF_MON, "warn: monster type or class" },
-    { WARN_UNDEAD, "warn: undead" },
-    { SEARCHING, "searching" },
-    { INFRAVISION, "infravision" },
-    { ADORNED, "adorned (+/- Cha)" },
-    { DISPLACED, "displaced" },
-    { STEALTH, "stealthy" },
-    { AGGRAVATE_MONSTER, "monster aggravation" },
-    { CONFLICT, "conflict" },
-    { JUMPING, "jumping" },
-    { TELEPORT_CONTROL, "teleport control" },
-    { FLYING, "flying" },
-    { WWALKING, "water walking" },
-    { SWIMMING, "swimming" },
-    { MAGICAL_BREATHING, "magical breathing" },
-    { PASSES_WALLS, "pass thru walls" },
-    { SLOW_DIGESTION, "slow digestion" },
-    { HALF_SPDAM, "half spell damage" },
-    { HALF_PHDAM, "half physical damage" },
-    { REGENERATION, "HP regeneration" },
-    { ENERGY_REGENERATION, "energy regeneration" },
-    { PROTECTION, "extra protection" },
-    { PROT_FROM_SHAPE_CHANGERS, "protection from shape changers" },
-    { POLYMORPH_CONTROL, "polymorph control" },
-    { UNCHANGING, "unchanging" },
-    { REFLECTING, "reflecting" },
-    { FREE_ACTION, "free action" },
-    { FIXED_ABIL, "fixed abilities" },
-    { LIFESAVED, "life will be saved" },
-    {  0, 0 },
+    { FIRE_RES, MSG_ST("fire resistance") },
+    { COLD_RES, MSG_ST("cold resistance") },
+    { SLEEP_RES, MSG_ST("sleep resistance") },
+    { DISINT_RES, MSG_ST("disintegration resistance") },
+    { SHOCK_RES, MSG_ST("shock resistance") },
+    { POISON_RES, MSG_ST("poison resistance") },
+    { ACID_RES, MSG_ST("acid resistance") },
+    { STONE_RES, MSG_ST("stoning resistance") },
+    { DRAIN_RES, MSG_ST("drain resistance") },
+    { SICK_RES, MSG_ST("sickness resistance") },
+    { ANTIMAGIC, MSG_ST("magic resistance") },
+    { HALLUC_RES, MSG_ST("hallucination resistance") },
+    { FUMBLING, MSG_ST("fumbling") },
+    { HUNGER, MSG_ST("voracious hunger") },
+    { TELEPAT, MSG_ST("telepathic") },
+    { WARNING, MSG_ST("warning") },
+    { WARN_OF_MON, MSG_ST("warn: monster type or class") },
+    { WARN_UNDEAD, MSG_ST("warn: undead") },
+    { SEARCHING, MSG_ST("searching") },
+    { INFRAVISION, MSG_ST("infravision") },
+    { ADORNED, MSG_ST("adorned (+/- Cha)") },
+    { DISPLACED, MSG_ST("displaced") },
+    { STEALTH, MSG_ST("stealthy") },
+    { AGGRAVATE_MONSTER, MSG_ST("monster aggravation") },
+    { CONFLICT, MSG_ST("conflict") },
+    { JUMPING, MSG_ST("jumping") },
+    { TELEPORT_CONTROL, MSG_ST("teleport control") },
+    { FLYING, MSG_ST("flying") },
+    { WWALKING, MSG_ST("water walking") },
+    { SWIMMING, MSG_ST("swimming") },
+    { MAGICAL_BREATHING, MSG_ST("magical breathing") },
+    { PASSES_WALLS, MSG_ST("pass thru walls") },
+    { SLOW_DIGESTION, MSG_ST("slow digestion") },
+    { HALF_SPDAM, MSG_ST("half spell damage") },
+    { HALF_PHDAM, MSG_ST("half physical damage") },
+    { REGENERATION, MSG_ST("HP regeneration") },
+    { ENERGY_REGENERATION, MSG_ST("energy regeneration") },
+    { PROTECTION, MSG_ST("extra protection") },
+    { PROT_FROM_SHAPE_CHANGERS, MSG_ST("protection from shape changers") },
+    { POLYMORPH_CONTROL, MSG_ST("polymorph control") },
+    { UNCHANGING, MSG_ST("unchanging") },
+    { REFLECTING, MSG_ST("reflecting") },
+    { FREE_ACTION, MSG_ST("free action") },
+    { FIXED_ABIL, MSG_ST("fixed abilities") },
+    { LIFESAVED, MSG_ST("life will be saved") },
+    { 0, MSGNULL },
 };
+
+/* Copy the name of propertynames[i] into buf (PROPNAME_LEN bytes). The text
+ * comes from the message store, so the copy is what the caller keeps. */
+void
+prop_name_text(i, buf)
+int i;
+char *buf;
+{
+    (void) strncpy(buf, MSGTXT(propertynames[i].prop_name), PROPNAME_LEN - 1);
+    buf[PROPNAME_LEN - 1] = '\0';
+}
 
 /* He is being petrified - dialogue by inmet!tower */
 static NEARDATA const char *const stoned_texts[] = {
@@ -1778,6 +1789,7 @@ wiz_timeout_queue()
     winid win;
     char buf[BUFSZ];
     const char *propname;
+    char pbuf[PROPNAME_LEN];
     long intrinsic;
     int i, p, count, longestlen, ln, specindx = 0;
 
@@ -1797,7 +1809,9 @@ wiz_timeout_queue()
      * normal play but those can be forced via the #wizintrinsic command.
      */
     count = longestlen = 0;
-    for (i = 0; (propname = propertynames[i].prop_name) != 0; ++i) {
+    for (i = 0; propertynames[i].prop_name != MSGNULL; ++i) {
+        prop_name_text(i, pbuf);
+        propname = pbuf;
         p = propertynames[i].prop_num;
         intrinsic = u.uprops[p].intrinsic;
         if (intrinsic & TIMEOUT) {
@@ -1814,7 +1828,9 @@ wiz_timeout_queue()
     } else {
         putstr(win, 0, "Timed properties:");
         putstr(win, 0, "");
-        for (i = 0; (propname = propertynames[i].prop_name) != 0; ++i) {
+        for (i = 0; propertynames[i].prop_name != MSGNULL; ++i) {
+            prop_name_text(i, pbuf);
+            propname = pbuf;
             p = propertynames[i].prop_num;
             intrinsic = u.uprops[p].intrinsic;
             if (intrinsic & TIMEOUT) {

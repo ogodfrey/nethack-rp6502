@@ -10,6 +10,8 @@
  * note:  propertynames[] array in timeout.c has string values for these.
  *        Property #0 is not used.
  */
+#define PROPNAME_LEN 40 /* longest propertynames[] text, with its NUL */
+
 /* Resistances to troubles */
 enum prop_types {
     FIRE_RES          =  1,

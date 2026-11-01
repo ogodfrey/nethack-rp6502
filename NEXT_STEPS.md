@@ -324,7 +324,14 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
      are matched at run time, so they need a fetch slot and a copy-out, not a
      plain `MSGID`. Progress on the names sweep: `developers[]` (mplayer.c,
      116 bytes) is converted through `msgids.txt` and `MSGTXT` at each use;
-     the rest are next. Plain `const char *` arrays take the msgids route;
+     `propertynames[]` (timeout.c, 67 names) is converted with an `MSG_ST`
+     marker per name, a `msgid_t` field and a `MSGNULL` sentinel, and each
+     loop copies the name into a `PROPNAME_LEN` buffer with
+     `prop_name_text()`. Its `#timeout` and `#wizintrinsic` paths compile and
+     pass the autoplay, but were not run interactively (the test driver could
+     not reach the extended-command prompt); check them by hand in wizard
+     mode. The rest are next. Plain `const char *` arrays take the msgids
+     route;
      struct tables need a per-field `MSG_ST` marker (as `compopt` and
      `extcmdlist` do); char-array tables (`blind_writing[][21]`) need their
      own accessor. Check each use: a `MSGTXT` pointer is valid for eight more

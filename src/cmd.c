@@ -1384,13 +1384,14 @@ wiz_intrinsic(VOID_ARGS)
     if (wizard) {
         extern const struct propname {
             int prop_num;
-            const char *prop_name;
+            msgid_t prop_name;
         } propertynames[]; /* timeout.c */
         static const char wizintrinsic[] = "#wizintrinsic";
         static const char fmt[] = "You are%s %s.";
         winid win;
         anything any;
         char buf[BUFSZ];
+        char pbuf[PROPNAME_LEN];
         int i, j, n, p, amt, typ;
         long oldtimeout, newtimeout;
         const char *propname;
@@ -1399,7 +1400,9 @@ wiz_intrinsic(VOID_ARGS)
         any = zeroany;
         win = create_nhwindow(NHW_MENU);
         start_menu(win);
-        for (i = 0; (propname = propertynames[i].prop_name) != 0; ++i) {
+        for (i = 0; propertynames[i].prop_name != MSGNULL; ++i) {
+            prop_name_text(i, pbuf);
+            propname = pbuf;
             p = propertynames[i].prop_num;
             if (p == HALLUC_RES) {
                 /* Grayswandir vs hallucination; ought to be redone to
@@ -1495,7 +1498,8 @@ wiz_intrinsic(VOID_ARGS)
                 /*FALLTHRU*/
             default:
  def_feedback:
-                pline("Timeout for %s %s %d.", propertynames[i].prop_name,
+                prop_name_text(i, pbuf);
+                pline("Timeout for %s %s %d.", pbuf,
                       oldtimeout ? "increased by" : "set to", amt);
                 if (p != GLIB)
                     incr_itimeout(&u.uprops[p].intrinsic, amt);

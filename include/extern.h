@@ -2487,6 +2487,7 @@ E void FDECL(restore_timers, (int, int, BOOLEAN_P, long));
 E void FDECL(timer_stats, (const char *, char *, long *, long *));
 E void FDECL(relink_timers, (BOOLEAN_P));
 E int NDECL(wiz_timeout_queue);
+E void FDECL(prop_name_text, (int, char *));
 E void NDECL(timer_sanity_check);
 
 /* ### topten.c ### */
