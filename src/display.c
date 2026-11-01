@@ -1463,12 +1463,9 @@ redraw_map()
 /* ======================================================================== */
 /* Glyph Buffering (3rd screen) =========================================== */
 
-typedef struct {
-    xchar new; /* perhaps move this bit into the rm structure. */
-    int glyph;
-} gbuf_entry;
-
+#ifndef RP6502_LEV_XRAM
 static gbuf_entry gbuf[ROWNO][COLNO];
+#endif
 static char gbuf_start[ROWNO];
 static char gbuf_stop[ROWNO];
 
@@ -1479,8 +1476,12 @@ void
 newsym_force(x, y)
 register int x, y;
 {
+    gbuf_entry e;
+
     newsym(x,y);
-    gbuf[y][x].new = 1;
+    e = gb_get(y, x);
+    e.new = 1;
+    gb_put(y, x, e);
     if (gbuf_start[y] > x)
         gbuf_start[y] = x;
     if (gbuf_stop[y] < x)
@@ -1560,9 +1561,12 @@ int x, y, glyph;
         return;
     }
 
-    if (gbuf[y][x].glyph != glyph || iflags.use_background_glyph) {
-        gbuf[y][x].glyph = glyph;
-        gbuf[y][x].new = 1;
+    if (gb_get(y, x).glyph != glyph || iflags.use_background_glyph) {
+        gbuf_entry e = gb_get(y, x);
+
+        e.glyph = glyph;
+        e.new = 1;
+        gb_put(y, x, e);
         if (gbuf_start[y] > x)
             gbuf_start[y] = x;
         if (gbuf_stop[y] < x)
@@ -1592,14 +1596,10 @@ void
 clear_glyph_buffer()
 {
     register int x, y;
-    register gbuf_entry *gptr;
 
-    for (y = 0; y < ROWNO; y++) {
-        gptr = &gbuf[y][0];
-        for (x = COLNO; x; x--) {
-            *gptr++ = nul_gbuf;
-        }
-    }
+    for (y = 0; y < ROWNO; y++)
+        for (x = 0; x < COLNO; x++)
+            gb_put(y, x, nul_gbuf);
     reset_glyph_bbox();
 }
 
@@ -1613,8 +1613,8 @@ int start, stop, y;
     register int x;
 
     for (x = start; x <= stop; x++)
-        if (gbuf[y][x].glyph != cmap_to_glyph(S_stone))
-            print_glyph(WIN_MAP, x, y, gbuf[y][x].glyph, get_bk_glyph(x, y));
+        if (gb_get(y, x).glyph != cmap_to_glyph(S_stone))
+            print_glyph(WIN_MAP, x, y, gb_get(y, x).glyph, get_bk_glyph(x, y));
 }
 
 void
@@ -1659,15 +1659,16 @@ int cursor_on_u;
         return;
 #endif
 
-    for (y = 0; y < ROWNO; y++) {
-        register gbuf_entry *gptr = &gbuf[y][x = gbuf_start[y]];
+    for (y = 0; y < ROWNO; y++)
+        for (x = gbuf_start[y]; x <= gbuf_stop[y]; x++) {
+            gbuf_entry e = gb_get(y, x);
 
-        for (; x <= gbuf_stop[y]; gptr++, x++)
-            if (gptr->new) {
-                print_glyph(WIN_MAP, x, y, gptr->glyph, get_bk_glyph(x, y));
-                gptr->new = 0;
+            if (e.new) {
+                print_glyph(WIN_MAP, x, y, e.glyph, get_bk_glyph(x, y));
+                e.new = 0;
+                gb_put(y, x, e);
             }
-    }
+        }
 
     if (cursor_on_u)
         curs(WIN_MAP, u.ux, u.uy); /* move cursor to the hero */
@@ -1879,7 +1880,7 @@ xchar x, y;
 {
     if (x < 0 || y < 0 || x >= COLNO || y >= ROWNO)
         return cmap_to_glyph(S_room); /* XXX */
-    return gbuf[y][x].glyph;
+    return gb_get(y, x).glyph;
 }
 
 /*
@@ -1903,7 +1904,7 @@ xchar x, y;
     
 
     if (iflags.use_background_glyph && lev_get(x, y).seenv != 0
-        && gbuf[y][x].glyph != cmap_to_glyph(S_stone)) {
+        && gb_get(y, x).glyph != cmap_to_glyph(S_stone)) {
         switch (lev_get(x, y).typ) {
         case SCORR:
         case STONE:

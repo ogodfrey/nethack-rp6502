@@ -10,7 +10,8 @@
  *   $9000-$B79F  level map  80 x 21 cells x 6 bytes (see rm.h)
  *   $B7A0-$BE2F  lastseentyp  80 x 21 bytes (see rm.h)
  *   $BE30-$C4BF  SpLev_Map    80 x 21 bytes (sp_lev.c, see rm.h)
- *   $D200-$FFFF  overlay descriptor, see ovlpack.py (3 bytes per entry)
+ *   $C4C0-$D86F  glyph buffer 21 x 80 entries (display.c, see rm.h)
+ *   $D900-$FFFF  overlay descriptor, see ovlpack.py (3 bytes per entry)
  * The SDK does not reserve XRAM; a device (keyboard, sound, video) needs its
  * own area here before the program maps it.
  */
@@ -27,8 +28,10 @@
 #define LST_XRAM_ADDR 0xB7A0
 /* Special-level map flags (SpLev_Map[][]), one byte each. */
 #define SPLM_XRAM_ADDR 0xBE30
+/* Glyph buffer of the map window (display.c gbuf), one entry per cell. */
+#define GB_XRAM_ADDR 0xC4C0
 /* Overlay runtime: descriptor and directory (the packer's defaults). */
-#define OVL_DESC_XRAM 0xD200
+#define OVL_DESC_XRAM 0xD900
 #define OVL_DIR_XRAM 0x0000
 
 #endif /* RP6502_XRAM_H */

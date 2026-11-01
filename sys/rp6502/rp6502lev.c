@@ -14,8 +14,11 @@ _Static_assert(LEV_XRAM_ADDR + COLNO * ROWNO * sizeof(struct rm)
                "the level map overlaps lastseentyp in XRAM");
 _Static_assert(LST_XRAM_ADDR + COLNO * ROWNO <= SPLM_XRAM_ADDR,
                "lastseentyp overlaps SpLev_Map in XRAM");
-_Static_assert(SPLM_XRAM_ADDR + COLNO * ROWNO <= OVL_DESC_XRAM,
-               "SpLev_Map overlaps the overlay descriptor in XRAM");
+_Static_assert(SPLM_XRAM_ADDR + COLNO * ROWNO <= GB_XRAM_ADDR,
+               "SpLev_Map overlaps the glyph buffer in XRAM");
+_Static_assert(GB_XRAM_ADDR + ROWNO * COLNO * sizeof(gbuf_entry)
+                   <= OVL_DESC_XRAM,
+               "the glyph buffer overlaps the overlay descriptor in XRAM");
 
 #define LEV_ADDR(x, y) \
     ((unsigned) (LEV_XRAM_ADDR + ((x) * ROWNO + (y)) * sizeof(struct rm)))
@@ -97,4 +100,33 @@ rpl_splm_clear(void)
 
     for (x = 0; x < COLNO; x++)
         xram0_write(BYTE_ADDR(SPLM_XRAM_ADDR, x, 0), zero, sizeof zero);
+}
+
+/* The glyph buffer is row-major: entry (row, col) is at row * COLNO + col. */
+#define GBUF_ADDR(row, col) \
+    ((unsigned) (GB_XRAM_ADDR + ((row) * COLNO + (col)) * sizeof(gbuf_entry)))
+
+gbuf_entry
+rpg_get(int row, int col)
+{
+    gbuf_entry e;
+
+    xram0_read(&e, GBUF_ADDR(row, col), sizeof e);
+    return e;
+}
+
+void
+rpg_put(int row, int col, gbuf_entry e)
+{
+    xram0_write(GBUF_ADDR(row, col), &e, sizeof e);
+}
+
+void
+rpg_clear(void)
+{
+    static const unsigned char zero[COLNO * sizeof(gbuf_entry)];
+    int y;
+
+    for (y = 0; y < ROWNO; y++)
+        xram0_write(GBUF_ADDR(y, 0), zero, sizeof zero);
 }

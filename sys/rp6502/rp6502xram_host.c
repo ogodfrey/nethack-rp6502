@@ -181,4 +181,36 @@ rpl_splm_clear(void)
 {
     memset(rp6502_splm_image, 0, sizeof rp6502_splm_image);
 }
+
+static gbuf_entry rp6502_gbuf_image[ROWNO][COLNO];
+
+static void
+gbuf_check(int row, int col, const char *what)
+{
+    if (row < 0 || row >= ROWNO || col < 0 || col >= COLNO) {
+        fprintf(stderr, "%s: entry (%d,%d) is outside the glyph buffer\n",
+                what, row, col);
+        abort();
+    }
+}
+
+gbuf_entry
+rpg_get(int row, int col)
+{
+    gbuf_check(row, col, "gb_get");
+    return rp6502_gbuf_image[row][col];
+}
+
+void
+rpg_put(int row, int col, gbuf_entry e)
+{
+    gbuf_check(row, col, "gb_put");
+    rp6502_gbuf_image[row][col] = e;
+}
+
+void
+rpg_clear(void)
+{
+    memset(rp6502_gbuf_image, 0, sizeof rp6502_gbuf_image);
+}
 #endif /* RP6502_LEV_XRAM */

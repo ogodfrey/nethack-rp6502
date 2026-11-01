@@ -643,6 +643,12 @@ extern dlevel_t level; /* structure describing the current level */
  * lastseentyp[][] and splm_get()/splm_put() for SpLev_Map[][]; lst_clear()
  * and splm_clear() zero them.
  */
+/* One cell of the map window's glyph buffer (display.c, gbuf[row][col]). */
+typedef struct {
+    xchar new; /* perhaps move this bit into the rm structure. */
+    int glyph;
+} gbuf_entry;
+
 #ifdef RP6502_LEV_XRAM
 struct rm rpl_get(int x, int y);
 void rpl_put(int x, int y, struct rm v);
@@ -653,6 +659,9 @@ void rpl_lst_clear(void);
 char rpl_splm_get(int x, int y);
 void rpl_splm_put(int x, int y, char v);
 void rpl_splm_clear(void);
+gbuf_entry rpg_get(int row, int col);
+void rpg_put(int row, int col, gbuf_entry e);
+void rpg_clear(void);
 #define lev_get(x, y) rpl_get((x), (y))
 #define lev_put(x, y, v) rpl_put((x), (y), (v))
 #define lst_get(x, y) rpl_lst_get((x), (y))
@@ -661,6 +670,8 @@ void rpl_splm_clear(void);
 #define splm_get(x, y) rpl_splm_get((x), (y))
 #define splm_put(x, y, v) rpl_splm_put((x), (y), (v))
 #define splm_clear() rpl_splm_clear()
+#define gb_get(row, col) rpg_get((row), (col))
+#define gb_put(row, col, e) rpg_put((row), (col), (e))
 #else
 #define lev_get(x, y) (level.locations[(x)][(y)])
 #define lev_put(x, y, v) (level.locations[(x)][(y)] = (v))
@@ -673,6 +684,9 @@ extern schar lastseentyp[COLNO][ROWNO]; /* last seen/touched dungeon typ */
 #define splm_put(x, y, v) (SpLev_Map[(x)][(y)] = (v))
 #define splm_clear() \
     (void) memset((genericptr_t) SpLev_Map, 0, sizeof SpLev_Map)
+/* gbuf is the display.c array, which is the only user. */
+#define gb_get(row, col) (gbuf[(row)][(col)])
+#define gb_put(row, col, e) (gbuf[(row)][(col)] = (e))
 #endif
 
 /*

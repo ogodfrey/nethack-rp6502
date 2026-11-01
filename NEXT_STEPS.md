@@ -229,11 +229,11 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
    XRAM map (defined in [xram.h](include/xram.h)): `mons[]` at $1000
    (19864 bytes), `objects[]` at $6100 (11804 bytes, ending at $8F1B), the
    level map at $9000 (10080 bytes), `lastseentyp` at $B7A0 and `SpLev_Map`
-   at $BE30 (1680 bytes each), the overlay directory at $0000 and the overlay
-   descriptor at $D200. The earlier overlay defaults ($8000 for the
-   descriptor, $A000/$C000 for the directory and descriptor) overlapped the
-   tables, so they moved. Compile-time checks in
-   [rp6502xram.c](sys/rp6502/rp6502xram.c) and
+   at $BE30 (1680 bytes each), the glyph buffer at $C4C0 (5040 bytes), the
+   overlay directory at $0000 and the overlay descriptor at $D900. The earlier
+   overlay defaults ($8000 for the descriptor, $A000/$C000 for the directory
+   and descriptor) overlapped the tables, so they moved. Compile-time checks
+   in [rp6502xram.c](sys/rp6502/rp6502xram.c) and
    [rp6502lev.c](sys/rp6502/rp6502lev.c) keep the regions apart. The SDK
    reserves no XRAM; device areas (keyboard, sound, video) must be added to
    the map before the program maps them.
@@ -255,11 +255,17 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
    ($B7A0) and `SpLev_Map[][]` ($BE30) also moved, one byte per cell, through
    `lst_get`/`lst_put` and `splm_get`/`splm_put`. Save and restore write and
    read the maps one column at a time, the same bytes as before; a save and a
-   restore round trip on the XRAM host build works. Still in RAM: `gbuf`
-   (5 KB), the vision arrays (`could_see`, `viz_clear`, `left_ptrs`,
-   `right_ptrs`, `cs_rows0/1`, about 12 KB), `rooms` (5 KB), `obufs` (3 KB) and
-   `status_hilites` (2 KB), and the per-cell object and monster list heads
-   (3360 bytes each, pointers to RAM structures, which need a separate design).
+   restore round trip on the XRAM host build works. The glyph buffer `gbuf`
+   (5 KB, row-major, `gb_get(row, col)`/`gb_put`) moved too. Still in RAM:
+   the vision arrays (`could_see`, `viz_clear`, `left_ptrs`, `right_ptrs`,
+   `cs_rows0/1`, about 12 KB), `rooms` (5 KB), `obufs` (3 KB, `char *` text
+   buffers) and `status_hilites` (2 KB, linked by pointers, so it needs a
+   redesign or a build-time choice), and the per-cell object and monster list
+   heads (3360 bytes each, pointers to RAM structures). `.bss` is now about
+   50 KB. Open: one SIGSEGV in the XRAM host harness (seed 1, during a prayer,
+   after the glyph-buffer move). It has not reproduced in 14 further runs or
+   under gdb, and no core file was written. If it recurs, take a core dump
+   and check the glyph buffer and the prayer path first.
    2.6 MB of code and about 293 KB of rodata, mostly strings, and the XRAM
    tables remove 31668 bytes of linked data (`.bss` is about 67 KB in both).
    Budget plan (measured, XRAM-tables configuration, sums of the object
@@ -274,7 +280,7 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
      are matched at run time, so they need an accessor with a fetch slot, not
      a plain `MSGID`.
    - Initialized `.data` tables (about 41 KB, role, race and similar).
-   - `.bss` buffers: `gbuf` (5 KB), the vision arrays (`could_see`,
+   - `.bss` buffers: the vision arrays (`could_see`,
      `viz_clear`, `left_ptrs`, `right_ptrs`, `cs_rows0/1`, about 12 KB, hot
      paths, with pointer swaps), `rooms` (5 KB, 199 uses), `obufs` (3 KB, used
      as `char *` text buffers, so not XRAM-friendly), `status_hilites` (2 KB).
