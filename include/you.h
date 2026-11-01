@@ -11,6 +11,7 @@
 #ifndef PROP_H
 #include "prop.h" /* (needed here for util/makedefs.c) */
 #endif
+#include "msg.h"
 #include "skills.h"
 
 /*** Substructures ***/
@@ -18,6 +19,12 @@
 struct RoleName {
     const char *m; /* name when character is male */
     const char *f; /* when female; null if same as male */
+};
+
+/* rank titles are text ids (see msg.h); MSGNULL when there is no title */
+struct RankName {
+    msgid_t m;
+    msgid_t f;
 };
 
 struct RoleAdvance {
@@ -105,7 +112,7 @@ struct u_roleplay {
 struct Role {
     /*** Strings that name various things ***/
     struct RoleName name;    /* the role's name (from u_init.c) */
-    struct RoleName rank[9]; /* names for experience levels (from botl.c) */
+    struct RankName rank[9]; /* names for experience levels (from botl.c) */
     const char *lgod, *ngod, *cgod; /* god names (from pray.c) */
     const char *filecode;           /* abbreviation for use in file names */
     const char *homebase; /* quest leader's location (from questpgr.c) */

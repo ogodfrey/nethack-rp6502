@@ -278,6 +278,22 @@ int rank;
 }
 #endif
 
+/* Rank titles are read from storage (see msg.h). The copy is kept here
+   because MSGTXT is only valid for a few fetches, and the caller keeps the
+   result. The longest title is 17 characters. */
+#define RANK_TEXT_LEN 20
+
+static const char *
+rank_text(id)
+msgid_t id;
+{
+    static char rankbuf[RANK_TEXT_LEN];
+
+    (void) strncpy(rankbuf, MSGTXT(id), sizeof rankbuf - 1);
+    rankbuf[sizeof rankbuf - 1] = '\0';
+    return rankbuf;
+}
+
 const char *
 rank_of(lev, monnum, female)
 int lev;
@@ -296,10 +312,10 @@ boolean female;
 
     /* Find the rank */
     for (i = xlev_to_rank((int) lev); i >= 0; i--) {
-        if (female && role->rank[i].f)
-            return role->rank[i].f;
-        if (role->rank[i].m)
-            return role->rank[i].m;
+        if (female && role->rank[i].f != MSGNULL)
+            return rank_text(role->rank[i].f);
+        if (role->rank[i].m != MSGNULL)
+            return rank_text(role->rank[i].m);
     }
 
     /* Try the role name, instead */
@@ -326,24 +342,29 @@ int *rank_indx, *title_length;
     /* Loop through each of the roles */
     for (i = 0; roles[i].name.m; i++)
         for (j = 0; j < 9; j++) {
-            if (roles[i].rank[j].m
-                && !strncmpi(str, roles[i].rank[j].m,
-                             strlen(roles[i].rank[j].m))) {
-                if (rank_indx)
-                    *rank_indx = j;
-                if (title_length)
-                    *title_length = strlen(roles[i].rank[j].m);
-                return roles[i].malenum;
+            const char *t;
+
+            if (roles[i].rank[j].m != MSGNULL) {
+                t = MSGTXT(roles[i].rank[j].m);
+                if (!strncmpi(str, t, strlen(t))) {
+                    if (rank_indx)
+                        *rank_indx = j;
+                    if (title_length)
+                        *title_length = strlen(t);
+                    return roles[i].malenum;
+                }
             }
-            if (roles[i].rank[j].f
-                && !strncmpi(str, roles[i].rank[j].f,
-                             strlen(roles[i].rank[j].f))) {
-                if (rank_indx)
-                    *rank_indx = j;
-                if (title_length)
-                    *title_length = strlen(roles[i].rank[j].f);
-                return (roles[i].femalenum != NON_PM) ? roles[i].femalenum
-                                                      : roles[i].malenum;
+            if (roles[i].rank[j].f != MSGNULL) {
+                t = MSGTXT(roles[i].rank[j].f);
+                if (!strncmpi(str, t, strlen(t))) {
+                    if (rank_indx)
+                        *rank_indx = j;
+                    if (title_length)
+                        *title_length = strlen(t);
+                    return (roles[i].femalenum != NON_PM)
+                               ? roles[i].femalenum
+                               : roles[i].malenum;
+                }
             }
         }
     return NON_PM;
@@ -354,9 +375,11 @@ max_rank_sz()
 {
     register int i, r, maxr = 0;
     for (i = 0; i < 9; i++) {
-        if (urole.rank[i].m && (r = strlen(urole.rank[i].m)) > maxr)
+        if (urole.rank[i].m != MSGNULL
+            && (r = strlen(MSGTXT(urole.rank[i].m))) > maxr)
             maxr = r;
-        if (urole.rank[i].f && (r = strlen(urole.rank[i].f)) > maxr)
+        if (urole.rank[i].f != MSGNULL
+            && (r = strlen(MSGTXT(urole.rank[i].f))) > maxr)
             maxr = r;
     }
     mrank_sz = maxr;
@@ -3396,9 +3419,9 @@ choose_value:
             int i, j, rv;
 
             for (i = j = 0; i < 9; i++) {
-                Sprintf(mbuf, "\"%s\"", urole.rank[i].m);
-                if (urole.rank[i].f) {
-                    Sprintf(fbuf, "\"%s\"", urole.rank[i].f);
+                Sprintf(mbuf, "\"%s\"", MSGTXT(urole.rank[i].m));
+                if (urole.rank[i].f != MSGNULL) {
+                    Sprintf(fbuf, "\"%s\"", MSGTXT(urole.rank[i].f));
                     Sprintf(obuf, "%s or %s",
                             flags.female ? fbuf : mbuf,
                             flags.female ? mbuf : fbuf);

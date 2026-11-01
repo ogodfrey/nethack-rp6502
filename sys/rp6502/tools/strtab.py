@@ -210,7 +210,13 @@ def rewrite(text, table, stats, ids=frozenset()):
             i += 1
             continue
         if text.startswith('//', i) or text.startswith('/*', i):
-            j = skip_space(text, i)
+            # Only the comment itself: the newline after it must still set at_bol.
+            if text.startswith('//', i):
+                j = text.find('\n', i)
+                j = n if j < 0 else j
+            else:
+                j = text.find('*/', i + 2)
+                j = n if j < 0 else j + 2
             out.append(text[i:j])
             i = j
             continue

@@ -308,15 +308,15 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
    Budget plan (measured from the linker's kept sections with
    [mapsizes.py](sys/rp6502/tools/mapsizes.py) on the map that CMake writes to
    `build/.../nethack.map` in the XRAM-tables configuration):
-   `.text` 2,766,517 bytes (overlays), `.rodata` 85,122 bytes, `.data` 9,040
-   bytes, `.bss` 43,929 bytes. The earlier figure of 41 KB of `.data` counted
+   `.text` 2,771,730 bytes (overlays), `.rodata` 73,386 bytes, `.data` 9,040
+   bytes, `.bss` 43,972 bytes. The earlier figure of 41 KB of `.data` counted
    the RAM copies of `mons[]` and `objects[]` that the linker drops, so the
    static RAM is about 138 KB, and `.rodata` is most of it. The 64 KB CPU
    address space must also hold the stack, the zero page and system area,
    resident code, and overlay slots, so the static data has to drop to a few
    tens of KB. The largest parts, in order:
-   - `.rodata` (85 KB): about 44 KB of literal names and text still in RAM
-     (the `compopt`, `extcmdlist`, `boolopt`, `roles` and similar tables keep
+   - `.rodata` (73 KB): about 40 KB of literal names and text still in RAM
+     (the `compopt`, `extcmdlist`, `boolopt`, role names and similar tables keep
      their names; `mons_names` and the object names are outside the rewrite),
      plus the const structure tables (`roles`, `races`, `defsyms`,
      `def_monsyms`, `shtypes`, and others). Storage streaming is the plan
@@ -348,9 +348,16 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
      `dupstr()` in `files.c` (about line 3377) fills a `struct symsetentry`,
      not a `symparse`, and all `symparse` entries are static. `match_sym`
      (options.c) reads the name with `MSGTXT`. The build and storage test pass;
-     no run-time symbol-option test has been done yet. `roles[]` needs a
-     decision: `rank_of()` returns a name pointer to its callers, so the
-     planned approach is to copy the rank name into a caller buffer. The rest
+     no run-time symbol-option test has been done yet. `roles[]` rank names
+     (117 pairs, 17 characters at most) are converted to `struct RankName`
+     (`msgid_t`, `MSGNULL` for no female title). `rank_of()` copies the title
+     into a static 20-byte buffer, the same way `clr2colorname()` does, so the
+     result stays valid until the next `rank_of()` call; the callers use one
+     result at a time. The role names (`name`, `individual`, about 160 uses)
+     stay in RAM for now. `strtab.py` had a bug: `skip_space` consumed the
+     newline after a comment, so a `#` line that followed a comment was not
+     seen as a directive (the `#if 0` in `roles[]` then hid its markers). The
+     comment branch now consumes only the comment. The rest
      are next. Plain `const char *` arrays take the msgids route;
      struct tables need a per-field `MSG_ST` marker (as `compopt` and
      `extcmdlist` do); char-array tables (`blind_writing[][21]`) need their
