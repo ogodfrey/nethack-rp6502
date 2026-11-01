@@ -14,7 +14,7 @@ STATIC_DCL void FDECL(mk_mplayer_armor, (struct monst *, SHORT_P));
  * Keep in alphabetical order within teams.
  * Same first name is entered once within each team.
  */
-static const char *developers[] = {
+static const msgid_t developers[] = {
     /* devteam */
     "Alex",    "Dave",   "Dean",    "Derek",   "Eric",    "Izchak",
     "Janet",   "Jessie", "Ken",     "Kevin",   "Michael", "Mike",
@@ -53,8 +53,9 @@ dev_name()
         for (mtmp = fmon; mtmp; mtmp = mtmp->nmon) {
             if (!is_mplayer(mtmp->data))
                 continue;
-            if (!strncmp(developers[i], (has_mname(mtmp)) ? MNAME(mtmp) : "",
-                         strlen(developers[i]))) {
+            if (!strncmp(MSGTXT(developers[i]),
+                         (has_mname(mtmp)) ? MNAME(mtmp) : "",
+                         strlen(MSGTXT(developers[i])))) {
                 match = TRUE;
                 break;
             }
@@ -64,7 +65,7 @@ dev_name()
 
     if (match)
         return (const char *) 0;
-    return (developers[i]);
+    return MSGTXT(developers[i]);
 }
 
 STATIC_OVL void

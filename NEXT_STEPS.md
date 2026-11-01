@@ -322,7 +322,13 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
      `def_monsyms`, `shtypes`, and others). Storage streaming is the plan
      (decided 2026-11-01): packaged as ROM assets and read on demand. Names
      are matched at run time, so they need a fetch slot and a copy-out, not a
-     plain `MSGID`.
+     plain `MSGID`. Progress on the names sweep: `developers[]` (mplayer.c,
+     116 bytes) is converted through `msgids.txt` and `MSGTXT` at each use;
+     the rest are next. Plain `const char *` arrays take the msgids route;
+     struct tables need a per-field `MSG_ST` marker (as `compopt` and
+     `extcmdlist` do); char-array tables (`blind_writing[][21]`) need their
+     own accessor. Check each use: a `MSGTXT` pointer is valid for eight more
+     fetches, so copy it out before the next message.
    - `.bss` (44 KB): `rooms` (5 KB, 199 uses), `obufs` (3 KB, `char *` text
      buffers), `cs_rows0/1` with `could_see` (3.4 KB, see the vision note),
      and the per-cell object and monster list heads (6.7 KB, RAM pointers).

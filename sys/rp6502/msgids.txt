@@ -3,3 +3,4 @@
 # source that strtab.py rewrites. The declaration's type must be msgid_t.
 rip_txt
 shirt_msgs
+developers
