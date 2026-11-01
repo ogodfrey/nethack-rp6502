@@ -4290,50 +4290,50 @@ wiz_migrate_mons()
 struct {
     int nhkf;
     char key;
-    const char *name;
+    msgid_t name;
 } const spkeys_binds[] = {
-    { NHKF_ESC,              '\033', (char *) 0 }, /* no binding */
-    { NHKF_DOAGAIN,          DOAGAIN, "repeat" },
-    { NHKF_REQMENU,          'm', "reqmenu" },
-    { NHKF_RUN,              'G', "run" },
-    { NHKF_RUN2,             '5', "run.numpad" },
-    { NHKF_RUSH,             'g', "rush" },
-    { NHKF_FIGHT,            'F', "fight" },
-    { NHKF_FIGHT2,           '-', "fight.numpad" },
-    { NHKF_NOPICKUP,         'm', "nopickup" },
-    { NHKF_RUN_NOPICKUP,     'M', "run.nopickup" },
-    { NHKF_DOINV,            '0', "doinv" },
-    { NHKF_TRAVEL,           CMD_TRAVEL, (char *) 0 }, /* no binding */
-    { NHKF_CLICKLOOK,        CMD_CLICKLOOK, (char *) 0 }, /* no binding */
-    { NHKF_REDRAW,           C('r'), "redraw" },
-    { NHKF_REDRAW2,          C('l'), "redraw.numpad" },
-    { NHKF_GETDIR_SELF,      '.', "getdir.self" },
-    { NHKF_GETDIR_SELF2,     's', "getdir.self2" },
-    { NHKF_GETDIR_HELP,      '?', "getdir.help" },
-    { NHKF_COUNT,            'n', "count" },
-    { NHKF_GETPOS_SELF,      '@', "getpos.self" },
-    { NHKF_GETPOS_PICK,      '.', "getpos.pick" },
-    { NHKF_GETPOS_PICK_Q,    ',', "getpos.pick.quick" },
-    { NHKF_GETPOS_PICK_O,    ';', "getpos.pick.once" },
-    { NHKF_GETPOS_PICK_V,    ':', "getpos.pick.verbose" },
-    { NHKF_GETPOS_SHOWVALID, '$', "getpos.valid" },
-    { NHKF_GETPOS_AUTODESC,  '#', "getpos.autodescribe" },
-    { NHKF_GETPOS_MON_NEXT,  'm', "getpos.mon.next" },
-    { NHKF_GETPOS_MON_PREV,  'M', "getpos.mon.prev" },
-    { NHKF_GETPOS_OBJ_NEXT,  'o', "getpos.obj.next" },
-    { NHKF_GETPOS_OBJ_PREV,  'O', "getpos.obj.prev" },
-    { NHKF_GETPOS_DOOR_NEXT, 'd', "getpos.door.next" },
-    { NHKF_GETPOS_DOOR_PREV, 'D', "getpos.door.prev" },
-    { NHKF_GETPOS_UNEX_NEXT, 'x', "getpos.unexplored.next" },
-    { NHKF_GETPOS_UNEX_PREV, 'X', "getpos.unexplored.prev" },
-    { NHKF_GETPOS_VALID_NEXT, 'z', "getpos.valid.next" },
-    { NHKF_GETPOS_VALID_PREV, 'Z', "getpos.valid.prev" },
-    { NHKF_GETPOS_INTERESTING_NEXT, 'a', "getpos.all.next" },
-    { NHKF_GETPOS_INTERESTING_PREV, 'A', "getpos.all.prev" },
-    { NHKF_GETPOS_HELP,      '?', "getpos.help" },
-    { NHKF_GETPOS_LIMITVIEW, '"', "getpos.filter" },
-    { NHKF_GETPOS_MOVESKIP,  '*', "getpos.moveskip" },
-    { NHKF_GETPOS_MENU,      '!', "getpos.menu" }
+    { NHKF_ESC,              '\033', MSGNULL }, /* no binding */
+    { NHKF_DOAGAIN,          DOAGAIN, MSG_ST("repeat") },
+    { NHKF_REQMENU,          'm', MSG_ST("reqmenu") },
+    { NHKF_RUN,              'G', MSG_ST("run") },
+    { NHKF_RUN2,             '5', MSG_ST("run.numpad") },
+    { NHKF_RUSH,             'g', MSG_ST("rush") },
+    { NHKF_FIGHT,            'F', MSG_ST("fight") },
+    { NHKF_FIGHT2,           '-', MSG_ST("fight.numpad") },
+    { NHKF_NOPICKUP,         'm', MSG_ST("nopickup") },
+    { NHKF_RUN_NOPICKUP,     'M', MSG_ST("run.nopickup") },
+    { NHKF_DOINV,            '0', MSG_ST("doinv") },
+    { NHKF_TRAVEL,           CMD_TRAVEL, MSGNULL }, /* no binding */
+    { NHKF_CLICKLOOK,        CMD_CLICKLOOK, MSGNULL }, /* no binding */
+    { NHKF_REDRAW,           C('r'), MSG_ST("redraw") },
+    { NHKF_REDRAW2,          C('l'), MSG_ST("redraw.numpad") },
+    { NHKF_GETDIR_SELF,      '.', MSG_ST("getdir.self") },
+    { NHKF_GETDIR_SELF2,     's', MSG_ST("getdir.self2") },
+    { NHKF_GETDIR_HELP,      '?', MSG_ST("getdir.help") },
+    { NHKF_COUNT,            'n', MSG_ST("count") },
+    { NHKF_GETPOS_SELF,      '@', MSG_ST("getpos.self") },
+    { NHKF_GETPOS_PICK,      '.', MSG_ST("getpos.pick") },
+    { NHKF_GETPOS_PICK_Q,    ',', MSG_ST("getpos.pick.quick") },
+    { NHKF_GETPOS_PICK_O,    ';', MSG_ST("getpos.pick.once") },
+    { NHKF_GETPOS_PICK_V,    ':', MSG_ST("getpos.pick.verbose") },
+    { NHKF_GETPOS_SHOWVALID, '$', MSG_ST("getpos.valid") },
+    { NHKF_GETPOS_AUTODESC,  '#', MSG_ST("getpos.autodescribe") },
+    { NHKF_GETPOS_MON_NEXT,  'm', MSG_ST("getpos.mon.next") },
+    { NHKF_GETPOS_MON_PREV,  'M', MSG_ST("getpos.mon.prev") },
+    { NHKF_GETPOS_OBJ_NEXT,  'o', MSG_ST("getpos.obj.next") },
+    { NHKF_GETPOS_OBJ_PREV,  'O', MSG_ST("getpos.obj.prev") },
+    { NHKF_GETPOS_DOOR_NEXT, 'd', MSG_ST("getpos.door.next") },
+    { NHKF_GETPOS_DOOR_PREV, 'D', MSG_ST("getpos.door.prev") },
+    { NHKF_GETPOS_UNEX_NEXT, 'x', MSG_ST("getpos.unexplored.next") },
+    { NHKF_GETPOS_UNEX_PREV, 'X', MSG_ST("getpos.unexplored.prev") },
+    { NHKF_GETPOS_VALID_NEXT, 'z', MSG_ST("getpos.valid.next") },
+    { NHKF_GETPOS_VALID_PREV, 'Z', MSG_ST("getpos.valid.prev") },
+    { NHKF_GETPOS_INTERESTING_NEXT, 'a', MSG_ST("getpos.all.next") },
+    { NHKF_GETPOS_INTERESTING_PREV, 'A', MSG_ST("getpos.all.prev") },
+    { NHKF_GETPOS_HELP,      '?', MSG_ST("getpos.help") },
+    { NHKF_GETPOS_LIMITVIEW, '"', MSG_ST("getpos.filter") },
+    { NHKF_GETPOS_MOVESKIP,  '*', MSG_ST("getpos.moveskip") },
+    { NHKF_GETPOS_MENU,      '!', MSG_ST("getpos.menu") }
 };
 
 boolean
@@ -4343,7 +4343,8 @@ const char *command;
 {
     int i;
     for (i = 0; i < SIZE(spkeys_binds); i++) {
-        if (!spkeys_binds[i].name || strcmp(command, spkeys_binds[i].name))
+        if (spkeys_binds[i].name == MSGNULL
+            || strcmp(command, MSGTXT(spkeys_binds[i].name)))
             continue;
         Cmd.spkeys[spkeys_binds[i].nhkf] = key;
         return TRUE;
