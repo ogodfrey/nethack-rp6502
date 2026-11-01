@@ -6202,7 +6202,9 @@ char *buf;
         len = (int) (p - buf);
     }
     while (sp->range) {
-        if ((len >= strlen(sp->name)) && !strncmpi(buf, sp->name, len))
+        const char *nm = MSGTXT(sp->name);
+
+        if ((len >= strlen(nm)) && !strncmpi(buf, nm, len))
             return sp;
         sp++;
     }

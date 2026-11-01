@@ -6,6 +6,8 @@
 #ifndef RM_H
 #define RM_H
 
+#include "msg.h"
+
 /*
  * The dungeon presentation graphics code and data structures were rewritten
  * and generalized for NetHack's release 2 by Eric S. Raymond (eric@snark)
@@ -260,7 +262,7 @@ struct symparse {
 #define SYM_MON 4     /* index into monsyms   */
 #define SYM_OTH 5     /* misc                 */
     int idx;
-    const char *name;
+    msgid_t name;
 };
 
 /* misc symbol definitions */

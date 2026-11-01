@@ -23,7 +23,9 @@ HOSTCC=${HOSTCC:-cc}
 
 mkdir -p "$OUT/include" "$OUT/util" "$OUT/dat" "$OUT/src"
 OUT=$(cd "$OUT" && pwd)
-CFLAGS="-O1 -w -DRP6502 -DRP6502_HOST -I$OUT/include -I$SRC/include"
+# The naming sources are compiled unrewritten, so the MSG_ST text markers
+# (rewritten by strtab.py for the game) are stood in by a constant id.
+CFLAGS="-O1 -w -DRP6502 -DRP6502_HOST -DMSG_ST(s)=0 -I$OUT/include -I$SRC/include"
 
 cp "$SRC"/dat/* "$OUT/dat/"
 

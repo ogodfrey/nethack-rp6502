@@ -343,14 +343,15 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
      it with `MSGTXT`. They compile and pass the verification, but no test sets
      a window option at run time. Menus are safe
      with `MSGTXT` pointers: the tty port copies the text in `add_menu`.
-     `loadsyms[]` (drawing.c, 1.8 KB) is next in size but needs a design
-     step first: `struct symparse` also holds the dynamic entries that
-     `files.c` builds with `dupstr()` (`tmpsp->name = dupstr(...)`), so a
-     static entry needs a message id and a dynamic one keeps its pointer, for
-     example a second field. `roles[]` needs the same kind of decision,
-     because `rank_of()` returns a name pointer to its callers. The rest are
-     next. Plain `const char *` arrays take the msgids
-     route;
+     `loadsyms[]` (drawing.c, 185 names) is converted with a single
+     `msgid_t name` field: `struct symparse` has no dynamic entries. The
+     `dupstr()` in `files.c` (about line 3377) fills a `struct symsetentry`,
+     not a `symparse`, and all `symparse` entries are static. `match_sym`
+     (options.c) reads the name with `MSGTXT`. The build and storage test pass;
+     no run-time symbol-option test has been done yet. `roles[]` needs a
+     decision: `rank_of()` returns a name pointer to its callers, so the
+     planned approach is to copy the rank name into a caller buffer. The rest
+     are next. Plain `const char *` arrays take the msgids route;
      struct tables need a per-field `MSG_ST` marker (as `compopt` and
      `extcmdlist` do); char-array tables (`blind_writing[][21]`) need their
      own accessor. Check each use: a `MSGTXT` pointer is valid for eight more
