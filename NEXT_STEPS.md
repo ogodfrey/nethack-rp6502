@@ -31,6 +31,28 @@ cannot execute code.
   design is still a proposal; the `mons[]` storage and fetch mechanism is
   validated only by the `xramtest` prototype (see priority 2).
 
+## Decisions in force
+
+- **Scope: the RP6502 build is the only target.** The other ports (win32,
+  Qt, Mac, Amiga, and the rest under `sys/` and `win/`) are out of scope, so
+  portability constraints for them do not apply. The build uses `src/`,
+  `sys/rp6502`, `sys/share/random.c`, and `win/tty`. The host builds are kept
+  only as test harnesses (autoplay, the checked XRAM stand-ins).
+- **Turn-based play.** Latency matters per player move, not per memory access.
+  An XRAM or storage access that costs tens of cycles is acceptable if the
+  whole move (vision, monsters, display) stays responsive. Measure a move on
+  the target before accepting a new access path in a hot loop.
+- **Consequence: XRAM is nearly full.** The fixed tables use about 54 KB of
+  the 64 KB XRAM: `mons[]` 19.9 KB, `objects[]` 11.8 KB, the level map 10.1 KB,
+  `lastseentyp` and `SpLev_Map` 1.7 KB each, the glyph buffer 5.0 KB, and the
+  vision planes 5.0 KB. The overlay directory and descriptor use the rest.
+  The remaining static data (about 87 KB of `.rodata`, 41 KB of `.data`, and
+  41 KB of `.bss` in the latest measurement) cannot go to XRAM, so it must
+  live in storage (read on demand, as `msg.dat` is) or be shrunk.
+- **Consequence: overlays and storage streaming both fit a turn budget.** Code
+  overlays (priority 4) and streamed read-only tables are the main path. The
+  remaining `.bss` buffers are small next to that.
+
 ## Set up the new machine
 
 Authenticate to GitHub for the private repository, then clone it:
