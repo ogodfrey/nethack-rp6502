@@ -259,10 +259,12 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
    (5 KB, row-major, `gb_get(row, col)`/`gb_put`) moved too. Still in RAM:
    the vision arrays (`could_see`, `viz_clear`, `left_ptrs`, `right_ptrs`,
    `cs_rows0/1`, about 12 KB), `rooms` (5 KB), `obufs` (3 KB, `char *` text
-   buffers) and `status_hilites` (2 KB, linked by pointers, so it needs a
-   redesign or a build-time choice), and the per-cell object and monster list
-   heads (3360 bytes each, pointers to RAM structures). `.bss` is now about
-   50 KB. Open: one SIGSEGV in the XRAM host harness (seed 1, during a prayer,
+   buffers), and the per-cell object and monster list heads (3360 bytes each,
+   pointers to RAM structures). `STATUS_HILITES` is off for the RP6502 build
+   (`rp6502conf.h`): its entries are linked by pointers, and the feature is
+   not worth its RAM here; `botl.c` skips the highlight-rule checks without
+   it. That also shrank `.text` by about 48 KB. `.bss` is now about 46 KB.
+   Open: one SIGSEGV in the XRAM host harness (seed 1, during a prayer,
    after the glyph-buffer move). It has not reproduced in 14 further runs or
    under gdb, and no core file was written. If it recurs, take a core dump
    and check the glyph buffer and the prayer path first.
@@ -283,7 +285,8 @@ preservation, callbacks, tail calls, and pointers to overlay-owned data.
    - `.bss` buffers: the vision arrays (`could_see`,
      `viz_clear`, `left_ptrs`, `right_ptrs`, `cs_rows0/1`, about 12 KB, hot
      paths, with pointer swaps), `rooms` (5 KB, 199 uses), `obufs` (3 KB, used
-     as `char *` text buffers, so not XRAM-friendly), `status_hilites` (2 KB).
+     as `char *` text buffers, so not XRAM-friendly); `status_hilites` is off
+     for this port now.
    - The per-cell object and monster list heads (6.7 KB, RAM pointers).
    Each moved structure needs the same kind of accessor as the level map, and
    each access costs an XRAM transfer. The XRAM access cost is not measured on

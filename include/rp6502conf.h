@@ -26,6 +26,9 @@
 #define RANDOM /* sys/share/random.c; ISAAC64 needs 64-bit integers */
 #endif
 #define NO_SIGNAL
+/* No status-field highlighting: its entries are linked by pointers, which
+   cannot live in XRAM, and the RAM it takes is needed for the game. */
+#undef STATUS_HILITES
 #define SELF_RECOVER /* recover a crashed game from its level files */
 
 #undef USE_ISAAC64

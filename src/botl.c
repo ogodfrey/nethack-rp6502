@@ -414,6 +414,12 @@ char *buf;
 
 #define MAXVALWIDTH 80 /* actually less, but was using 80 to allocate title
                         * and leveldesc then using QBUFSZ everywhere else   */
+/* a field with highlight thresholds; without highlighting there are none */
+#ifdef STATUS_HILITES
+#define HAS_THRESHOLDS(c) ((c)->thresholds != (struct hilite_s *) 0)
+#else
+#define HAS_THRESHOLDS(c) 0
+#endif
 #ifdef STATUS_HILITES
 struct hilite_s {
     enum statusfields fld;
@@ -791,7 +797,7 @@ boolean *valsetlist;
      *  [Affects exp_percent_changing() too.]
      */
     if (((chg || update_all || fld == BL_XP)
-         && curr->percent_matters && curr->thresholds)
+         && curr->percent_matters && HAS_THRESHOLDS(curr))
         /* when 'hitpointbar' is On, percent matters even if HP
            hasn't changed and has no percentage rules (in case HPmax
            has changed when HP hasn't, where we ordinarily wouldn't
@@ -1331,7 +1337,9 @@ exp_percent_changing()
 {
     int pc, color_dummy;
     anything a;
+#ifdef STATUS_HILITES
     struct hilite_s *rule;
+#endif
     struct istat_s *curr;
 
     /* if status update is already requested, skip this processing */
@@ -1343,6 +1351,7 @@ exp_percent_changing()
         curr = &blstats[now_or_before_idx][BL_XP];
         /* TODO: [see eval_notify_windowport_field() about percent_matters
            and the check against 'thresholds'] */
+#ifdef STATUS_HILITES
         if (curr->percent_matters && curr->thresholds
             && (pc = exp_percentage()) != curr->percent_value) {
             a = zeroany;
@@ -1352,6 +1361,7 @@ exp_percent_changing()
             if (rule != curr->hilite_rule)
                 return TRUE; /* caller should set 'context.botl' to True */
         }
+#endif
     }
     return FALSE;
 }
